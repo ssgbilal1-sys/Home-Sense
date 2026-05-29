@@ -302,7 +302,7 @@ function TextReveal({ text, className }: { text: string; className?: string }) {
           initial={{ opacity: 0, y: 20, filter: 'blur(8px)' }}
           animate={isInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : { opacity: 0, y: 20, filter: 'blur(8px)' }}
           transition={{ delay: i * 0.03, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="inline-block"
+          className="inline-block whitespace-pre"
         >
           {char === ' ' ? '\u00A0' : char}
         </motion.span>
@@ -715,11 +715,10 @@ export default function Home() {
   // HERO TEXT REVEAL VARIANTS — Staggered luxury reveal
   // ───────────────────────────────────────────────────────
   const heroTextVariants = {
-    hidden: { opacity: 0, y: 60, skewY: 3 },
+    hidden: { opacity: 0, y: 40 },
     visible: (i: number) => ({
       opacity: 1,
       y: 0,
-      skewY: 0,
       transition: {
         delay: 0.3 + i * 0.15,
         duration: 0.8,
@@ -1152,7 +1151,7 @@ export default function Home() {
                 </motion.div>
 
                 {/* Title — Character-by-character text reveal */}
-                <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold leading-[1.05] mb-6 overflow-hidden">
+                <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold leading-none mb-6">
                   <motion.span
                     custom={1}
                     variants={heroTextVariants}
