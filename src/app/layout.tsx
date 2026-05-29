@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   description: "Home Sense is the authorized distributor of Zilver Concetti Italiano Sanitary Wares. Complete range of bathroom & kitchen solutions — faucets, showers, wash basins, and more.",
   keywords: ["Home Sense", "Zilver", "Sanitary Ware", "Bathroom Solutions", "Kitchen Solutions", "Faucets", "Showers", "Wash Basins", "Authorized Distributor"],
   icons: {
-    icon: "/logo-zilver.png",
+    icon: "/logo-homesense.jpg",
   },
 };
 

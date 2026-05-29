@@ -135,11 +135,11 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #3b82f6, #06b6d4);
+  background: linear-gradient(180deg, #0f766e, #00a8c6);
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #60a5fa, #22d3ee);
+  background: linear-gradient(180deg, #14b8a6, #22d3ee);
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -174,10 +174,10 @@
    ═══════════════════════════════════════════════════════════ */
 @keyframes glow-pulse {
   0%, 100% {
-    box-shadow: 0 0 8px rgba(6, 182, 212, 0.15), 0 0 20px rgba(59, 130, 246, 0.05);
+    box-shadow: 0 0 8px rgba(0, 168, 198, 0.15), 0 0 20px rgba(15, 118, 110, 0.05);
   }
   50% {
-    box-shadow: 0 0 16px rgba(6, 182, 212, 0.35), 0 0 40px rgba(59, 130, 246, 0.15);
+    box-shadow: 0 0 16px rgba(0, 168, 198, 0.35), 0 0 40px rgba(15, 118, 110, 0.15);
   }
 }
 
@@ -269,12 +269,12 @@
    ═══════════════════════════════════════════════════════════ */
 @keyframes border-glow {
   0%, 100% {
-    border-color: rgba(59, 130, 246, 0.2);
-    box-shadow: 0 0 10px rgba(6, 182, 212, 0.05);
+    border-color: rgba(15, 118, 110, 0.2);
+    box-shadow: 0 0 10px rgba(0, 168, 198, 0.05);
   }
   50% {
-    border-color: rgba(6, 182, 212, 0.5);
-    box-shadow: 0 0 20px rgba(6, 182, 212, 0.15), 0 0 40px rgba(59, 130, 246, 0.08);
+    border-color: rgba(0, 168, 198, 0.5);
+    box-shadow: 0 0 20px rgba(0, 168, 198, 0.15), 0 0 40px rgba(15, 118, 110, 0.08);
   }
 }
 
@@ -386,10 +386,10 @@
    ═══════════════════════════════════════════════════════════ */
 @keyframes logo-glow {
   0%, 100% {
-    filter: drop-shadow(0 0 4px rgba(6, 182, 212, 0.2));
+    filter: drop-shadow(0 0 4px rgba(0, 168, 198, 0.2));
   }
   50% {
-    filter: drop-shadow(0 0 12px rgba(6, 182, 212, 0.5)) drop-shadow(0 0 24px rgba(59, 130, 246, 0.2));
+    filter: drop-shadow(0 0 12px rgba(0, 168, 198, 0.5)) drop-shadow(0 0 24px rgba(15, 118, 110, 0.2));
   }
 }
 
@@ -473,7 +473,7 @@
   left: 0;
   width: 0;
   height: 2px;
-  background: linear-gradient(90deg, #3b82f6, #06b6d4);
+  background: linear-gradient(90deg, #0f766e, #00a8c6);
   border-radius: 2px;
   transition: width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
@@ -525,8 +525,8 @@
    TEXT GLOW — Animated glow effect for premium text
    ═══════════════════════════════════════════════════════════ */
 @keyframes text-glow {
-  0%, 100% { text-shadow: 0 0 10px rgba(6, 182, 212, 0.3), 0 0 20px rgba(59, 130, 246, 0.1); }
-  50% { text-shadow: 0 0 20px rgba(6, 182, 212, 0.5), 0 0 40px rgba(59, 130, 246, 0.2); }
+  0%, 100% { text-shadow: 0 0 10px rgba(0, 168, 198, 0.3), 0 0 20px rgba(15, 118, 110, 0.1); }
+  50% { text-shadow: 0 0 20px rgba(0, 168, 198, 0.5), 0 0 40px rgba(15, 118, 110, 0.2); }
 }
 
 .text-glow {
@@ -542,7 +542,7 @@
 }
 
 .card-glow-trail:hover {
-  background-image: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.1), transparent);
+  background-image: linear-gradient(90deg, transparent, rgba(0, 168, 198, 0.1), transparent);
   background-size: 200% 100%;
   animation: glow-trail 1.5s linear infinite;
 }
