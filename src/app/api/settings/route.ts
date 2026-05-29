@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 // GET /api/settings — Fetch site settings
 export async function GET() {
   try {
-    let settings = await prisma.siteSettings.findUnique({ where: { id: 'main' } })
+    let settings = await db.siteSettings.findUnique({ where: { id: 'main' } })
     if (!settings) {
       // Create default settings if not exist
-      settings = await prisma.siteSettings.create({ data: { id: 'main' } })
+      settings = await db.siteSettings.create({
+        data: { id: 'main' }
+      })
     }
     return NextResponse.json(settings)
   } catch (error) {
@@ -32,7 +32,7 @@ export async function PUT(request: Request) {
       }
     }
 
-    const settings = await prisma.siteSettings.upsert({
+    const settings = await db.siteSettings.upsert({
       where: { id: 'main' },
       update: data,
       create: { id: 'main', ...data },
