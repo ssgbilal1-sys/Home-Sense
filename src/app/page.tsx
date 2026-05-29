@@ -1131,10 +1131,23 @@ export default function Home() {
           </AnimatePresence>
         </nav>
 
-        {/* Hero Section — Staggered text reveal, shimmer, badge glow */}
-        <section id="home" ref={heroRef} className="relative z-10 flex-1 flex items-center">
+        {/* Hero Section — Bathroom background with overlay */}
+        <section id="home" ref={heroRef} className="relative z-10 flex-1 flex items-center overflow-hidden">
+          {/* Bathroom Background Image */}
+          <div className="absolute inset-0 z-0">
+            <img
+              src="/bathroom-hero.jpg"
+              alt="Luxury Bathroom Interior"
+              className="w-full h-full object-cover object-center"
+            />
+            {/* Dark gradient overlay for text readability */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#080c14]/95 via-[#080c14]/80 to-[#080c14]/50 sm:from-[#080c14]/90 sm:via-[#080c14]/70 sm:to-[#080c14]/40 lg:from-[#080c14]/85 lg:via-[#080c14]/65 lg:to-[#080c14]/30" />
+            {/* Bottom fade into next section */}
+            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#080c14] to-transparent" />
+          </div>
+
           <div
-            className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 lg:py-32 w-full"
+            className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 lg:py-32 w-full"
           >
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div>
@@ -1219,39 +1232,40 @@ export default function Home() {
                 </motion.div>
               </div>
 
-              {/* Hero right — Floating elements with enhanced animation */}
+              {/* Hero right — Glass card floating over bathroom image */}
               <motion.div
-                initial={{ opacity: 0, scale: 0.9, rotateY: 10 }}
-                animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-                transition={{ duration: 1, delay: 0.4, ...springTransition }}
-                className="relative hidden lg:block"
+                initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+                className="relative hidden lg:flex items-center justify-center"
               >
-                <div className="relative w-full aspect-square max-w-md mx-auto">
-                  {/* Glow behind image */}
-                  <motion.div
-                    animate={{ scale: [1, 1.05, 1], opacity: [0.25, 0.35, 0.25] }}
-                    transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
-                    className="absolute inset-0 rounded-3xl bg-gradient-to-br from-teal-700/25 to-teal-500/25 blur-3xl"
-                  />
-                  <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-8">
-                    <img src="/logo-homesense.jpg" alt="Home Sense" className="w-full h-full object-contain rounded-2xl" />
+                <motion.div
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ repeat: Infinity, duration: 5, ease: 'easeInOut' }}
+                  className="relative"
+                >
+                  {/* Glass card */}
+                  <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl p-6 shadow-2xl shadow-black/20">
+                    <img src="/logo-homesense.jpg" alt="Home Sense" className="h-16 w-auto object-contain rounded-lg mx-auto mb-3" />
+                    <p className="text-center text-white/80 text-sm font-medium">Authorized Distributor</p>
+                    <p className="text-center text-teal-300 text-xs mt-1">Zilver Concetti Italiano</p>
                   </div>
-                  {/* Floating badges with spring physics */}
+                  {/* Floating icon badges */}
                   <motion.div
-                    animate={{ y: [0, -12, 0], rotate: [0, 5, 0] }}
+                    animate={{ y: [0, -8, 0], rotate: [0, 5, 0] }}
                     transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut' }}
-                    className="absolute -top-4 -right-4 bg-gradient-to-r from-teal-700 to-teal-500 rounded-2xl p-4 shadow-xl shadow-teal-600/20"
+                    className="absolute -top-3 -right-3 bg-gradient-to-r from-teal-700 to-teal-500 rounded-xl p-3 shadow-lg shadow-teal-600/30"
                   >
-                    <Droplets className="w-6 h-6 text-white" />
+                    <Droplets className="w-5 h-5 text-white" />
                   </motion.div>
                   <motion.div
-                    animate={{ y: [0, 12, 0], rotate: [0, -5, 0] }}
+                    animate={{ y: [0, 8, 0], rotate: [0, -5, 0] }}
                     transition={{ repeat: Infinity, duration: 3.5, delay: 1.2, ease: 'easeInOut' }}
-                    className="absolute -bottom-4 -left-4 bg-gradient-to-r from-teal-500 to-teal-500 rounded-2xl p-4 shadow-xl shadow-teal-500/20"
+                    className="absolute -bottom-3 -left-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-3 shadow-lg shadow-amber-500/30"
                   >
-                    <CheckCircle className="w-6 h-6 text-white" />
+                    <Star className="w-5 h-5 text-white fill-white" />
                   </motion.div>
-                </div>
+                </motion.div>
               </motion.div>
             </div>
           </div>
