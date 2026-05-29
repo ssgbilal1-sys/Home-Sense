@@ -1041,7 +1041,7 @@ export default function Home() {
                   <img
                     src="/logo-homesense.jpg"
                     alt="Home Sense"
-                    className="h-10 sm:h-12 w-auto object-contain rounded-lg"
+                    className="h-14 sm:h-16 w-auto object-contain rounded-lg"
                   />
                 </motion.div>
                 <span className="text-xl sm:text-2xl font-extrabold tracking-wider">
@@ -1280,9 +1280,8 @@ export default function Home() {
                 >
                   {/* Glass card */}
                   <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl p-6 shadow-2xl shadow-black/20">
-                    <img src="/logo-homesense.jpg" alt="Home Sense" className="h-16 w-auto object-contain rounded-lg mx-auto mb-3" />
-                    <p className="text-center text-white/80 text-sm font-medium">Authorized Distributor</p>
-                    <p className="text-center text-sky-300 text-xs mt-1">Zilver Concetti Italiano</p>
+                    <img src="/logo-homesense.jpg" alt="Home Sense" className="h-20 w-auto object-contain rounded-lg mx-auto mb-3" />
+                    <p className="text-center text-white/90 text-sm font-semibold tracking-wide">Authorized & Trusted Dealer</p>
                   </div>
                   {/* Floating icon badges */}
                   <motion.div
@@ -1615,7 +1614,7 @@ export default function Home() {
                       transition={{ delay: 0.2, ...springBouncy }}
                       className="mx-auto mb-6"
                     >
-                      <img src="/logo-homesense.jpg" alt="Home Sense" className="h-20 w-auto object-contain rounded-xl mx-auto" />
+                      <img src="/logo-homesense.jpg" alt="Home Sense" className="h-24 w-auto object-contain rounded-xl mx-auto" />
                     </motion.div>
                     <motion.h3
                       initial={{ opacity: 0, y: 15 }}
@@ -1791,7 +1790,7 @@ export default function Home() {
                 <img
                   src="/logo-homesense.jpg"
                   alt="Home Sense"
-                  className="h-10 w-auto object-contain rounded-lg"
+                  className="h-12 w-auto object-contain rounded-lg"
                 />
               </motion.div>
               <motion.div
