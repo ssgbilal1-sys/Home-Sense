@@ -8,7 +8,8 @@ import {
   ArrowRight, Eye, Settings, Shield,
   Facebook, Instagram, Youtube, MessageCircle,
   Wrench, Bath, ShowerHead, CookingPot,
-  Star, CheckCircle, Loader2, Package
+  Star, CheckCircle, Loader2, Package, Video,
+  Play, Film
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -27,6 +28,7 @@ interface Product {
   description: string
   price: string
   image: string
+  video: string | null
   category: string
   featured: boolean
   order: number
@@ -53,13 +55,16 @@ export default function Home() {
     description: '',
     price: '',
     image: '',
+    video: '',
     category: 'Bathroom',
     featured: true,
     order: 0,
   })
+  const [uploadingVideo, setUploadingVideo] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [videoModal, setVideoModal] = useState<Product | null>(null)
 
   const { toast } = useToast()
 
@@ -115,18 +120,40 @@ export default function Home() {
     }
   }
 
+  // Video upload handler
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingVideo(true)
+    try {
+      const formDataUpload = new FormData()
+      formDataUpload.append('file', file)
+      const res = await fetch('/api/upload', { method: 'POST', body: formDataUpload })
+      const data = await res.json()
+      if (data.url) {
+        setFormData(prev => ({ ...prev, video: data.url }))
+        toast({ title: 'Video Uploaded', description: 'Product video uploaded successfully.' })
+      }
+    } catch (error) {
+      console.error('Error uploading video:', error)
+      toast({ title: 'Upload Failed', description: 'Failed to upload video.', variant: 'destructive' })
+    } finally {
+      setUploadingVideo(false)
+    }
+  }
+
   // Open product dialog for add/edit
   const openProductDialog = (product?: Product) => {
     if (product) {
       setEditingProduct(product)
       setFormData({
         name: product.name, description: product.description, price: product.price,
-        image: product.image, category: product.category, featured: product.featured, order: product.order,
+        image: product.image, video: product.video || '', category: product.category, featured: product.featured, order: product.order,
       })
     } else {
       setEditingProduct(null)
       setFormData({
-        name: '', description: '', price: '', image: '',
+        name: '', description: '', price: '', image: '', video: '',
         category: 'Bathroom', featured: true, order: products.length + 1,
       })
     }
@@ -401,7 +428,10 @@ export default function Home() {
                     whileHover={{ y: -8 }}
                     className="group"
                   >
-                    <div className="relative rounded-2xl overflow-hidden bg-white/5 border border-white/8 hover:border-blue-500/40 transition-all duration-500">
+                    <div
+                      className="relative rounded-2xl overflow-hidden bg-white/5 border border-white/8 hover:border-blue-500/40 transition-all duration-500 cursor-pointer"
+                      onClick={() => { if (product.video) setVideoModal(product) }}
+                    >
                       {/* Product Image */}
                       <div className="relative aspect-square overflow-hidden">
                         <img
@@ -417,11 +447,25 @@ export default function Home() {
                             {product.category}
                           </span>
                         </div>
+                        {/* Video badge */}
+                        {product.video && (
+                          <div className="absolute top-3 right-3">
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-500/80 backdrop-blur-sm text-white flex items-center gap-1">
+                              <Play className="w-3 h-3 fill-white" /> Video
+                            </span>
+                          </div>
+                        )}
                         {/* Quick view overlay */}
                         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                            <Eye className="w-6 h-6 text-white" />
-                          </div>
+                          {product.video ? (
+                            <div className="w-14 h-14 rounded-full bg-white/25 backdrop-blur-sm flex items-center justify-center border-2 border-white/40">
+                              <Play className="w-7 h-7 text-white fill-white ml-1" />
+                            </div>
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                              <Eye className="w-6 h-6 text-white" />
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -571,6 +615,37 @@ export default function Home() {
             </motion.div>
           </div>
         </section>
+
+        {/* Video Modal */}
+        <Dialog open={!!videoModal} onOpenChange={() => setVideoModal(null)}>
+          <DialogContent className="bg-[#0d1220] border-white/10 text-white sm:max-w-2xl p-0 overflow-hidden">
+            {videoModal && (
+              <>
+                <div className="relative bg-black">
+                  <video
+                    src={videoModal.video}
+                    controls
+                    autoPlay
+                    className="w-full aspect-video object-contain"
+                    poster={videoModal.image}
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
+                <div className="p-5">
+                  <h3 className="text-lg font-semibold text-white mb-1">{videoModal.name}</h3>
+                  <p className="text-sm text-gray-400 line-clamp-2">{videoModal.description}</p>
+                  <div className="flex items-center justify-between mt-3">
+                    <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                      {videoModal.price}
+                    </span>
+                    <span className="text-xs text-cyan-400">{videoModal.category}</span>
+                  </div>
+                </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* Footer */}
         <footer className="relative z-10 border-t border-white/8 py-8 mt-auto">
@@ -741,6 +816,11 @@ export default function Home() {
                   <div className="relative aspect-video overflow-hidden bg-black/30">
                     <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute top-2 right-2 flex gap-1">
+                      {product.video && (
+                        <span className="px-2 py-1 rounded-full text-xs bg-red-500/80 text-white flex items-center gap-1">
+                          <Play className="w-3 h-3 fill-white" /> Video
+                        </span>
+                      )}
                       {product.featured && (
                         <span className="px-2 py-1 rounded-full text-xs bg-yellow-500/80 text-white flex items-center gap-1">
                           <Star className="w-3 h-3 fill-white" /> Featured
@@ -827,6 +907,37 @@ export default function Home() {
               <Input value={formData.name} onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 placeholder="e.g. Zilver Art Wash Basin"
                 className="mt-2 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-blue-500 focus:ring-blue-500/20" />
+            </div>
+
+            {/* Video Upload */}
+            <div>
+              <Label className="text-gray-300 flex items-center gap-2">
+                <Film className="w-4 h-4 text-cyan-400" />
+                Product Video (Optional)
+              </Label>
+              <div className="mt-2">
+                {formData.video ? (
+                  <div className="relative rounded-xl overflow-hidden border border-white/10">
+                    <video src={formData.video} controls className="w-full aspect-video object-contain bg-black/50" />
+                    <div className="flex gap-2 mt-2">
+                      <Button onClick={() => setFormData(prev => ({ ...prev, video: '' }))} variant="destructive" size="sm" className="text-xs">
+                        <X className="w-3 h-3 mr-1" /> Remove Video
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-white/10 hover:border-cyan-500/50 transition-colors cursor-pointer py-6 bg-white/3">
+                    {uploadingVideo ? (
+                      <Loader2 className="w-8 h-8 text-cyan-400 animate-spin mb-2" />
+                    ) : (
+                      <Video className="w-8 h-8 text-gray-500 mb-2" />
+                    )}
+                    <span className="text-sm text-gray-400">{uploadingVideo ? 'Uploading video...' : 'Click to upload video'}</span>
+                    <span className="text-xs text-gray-600 mt-1">MP4, WebM, MOV supported</span>
+                    <input type="file" accept="video/*" onChange={handleVideoUpload} className="hidden" disabled={uploadingVideo} />
+                  </label>
+                )}
+              </div>
             </div>
 
             {/* Description */}

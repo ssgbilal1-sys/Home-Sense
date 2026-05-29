@@ -13,7 +13,8 @@ model Product {
   description String
   price       String
   image       String
-  category    String   @default("Jewelry")
+  video       String?
+  category    String   @default("Bathroom")
   featured    Boolean  @default(true)
   order       Int      @default(0)
   createdAt   DateTime @default(now())
