@@ -7,7 +7,7 @@ import {
   Upload, Save, ChevronRight, Phone, Mail,
   ArrowRight, Eye, Settings, Shield,
   Facebook, Instagram, Youtube, MessageCircle,
-  Wrench, Bath, CookingPot,
+  Wrench, Bath, CookingPot, MapPin,
   Star, CheckCircle, Loader2, Package, Video,
   Play, Film, ChevronLeft, ImageIcon, XCircle
 } from 'lucide-react'
@@ -1487,16 +1487,19 @@ export default function Home() {
               </p>
             </ScrollReveal>
 
-            <ScrollReveal delay={0.15} className="max-w-2xl mx-auto">
+            <ScrollReveal delay={0.15} className="max-w-4xl mx-auto">
               <div className="rounded-2xl border border-white/8 bg-white/3 backdrop-blur-sm p-8 sm:p-12 card-shine">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {/* Contact Cards Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
                   {[
                     { icon: Phone, label: 'Call Us', value: settings.phone, href: `tel:${settings.phone}`, color: 'from-green-500/20 to-green-600/20 border-green-500/20', iconColor: 'text-green-400' },
                     { icon: MessageCircle, label: 'WhatsApp', value: settings.whatsapp, href: `https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}`, color: 'from-green-500/20 to-green-600/20 border-green-500/20', iconColor: 'text-green-400' },
-                    { icon: Instagram, label: 'Instagram', value: settings.instagram, href: `https://instagram.com/${settings.instagram.replace('@', '')}`, color: 'from-pink-500/20 to-purple-600/20 border-pink-500/20', iconColor: 'text-pink-400' },
                     { icon: Mail, label: 'Email', value: settings.email, href: `mailto:${settings.email}`, color: 'from-cyan-500/20 to-blue-600/20 border-cyan-500/20 border-cyan-500/20', iconColor: 'text-cyan-400' },
+                    { icon: Instagram, label: 'Instagram', value: settings.instagram, href: `https://instagram.com/${settings.instagram.replace('@', '')}`, color: 'from-pink-500/20 to-purple-600/20 border-pink-500/20', iconColor: 'text-pink-400' },
+                    ...(settings.facebook ? [{ icon: Facebook, label: 'Facebook', value: settings.facebook.replace(/https?:\/\/(www\.)?facebook\.com\/?/i, '').replace(/\/$/, '') || 'Facebook Page', href: settings.facebook, color: 'from-blue-500/20 to-blue-700/20 border-blue-500/20', iconColor: 'text-blue-400' }] : []),
+                    ...(settings.youtube ? [{ icon: Youtube, label: 'YouTube', value: settings.youtube.replace(/https?:\/\/(www\.)?youtube\.com\/(c\/|@)?/i, '').replace(/\/$/, '') || 'YouTube Channel', href: settings.youtube, color: 'from-red-500/20 to-red-700/20 border-red-500/20', iconColor: 'text-red-400' }] : []),
                   ].map((contact, i) => (
-                    <ScrollReveal key={i} delay={0.2 + i * 0.1} distance={20}>
+                    <ScrollReveal key={i} delay={0.2 + i * 0.08} distance={20}>
                       <motion.a
                         href={contact.href}
                         target={contact.href.startsWith('http') ? '_blank' : undefined}
@@ -1513,12 +1516,36 @@ export default function Home() {
                         </motion.div>
                         <div className="text-center">
                           <div className="font-semibold text-white text-xs">{contact.label}</div>
-                          <div className="text-gray-500 text-[10px] mt-0.5">{contact.value}</div>
+                          <div className="text-gray-400 text-[11px] mt-0.5 break-all leading-tight max-w-[140px]">{contact.value}</div>
                         </div>
                       </motion.a>
                     </ScrollReveal>
                   ))}
                 </div>
+
+                {/* Address Section - Full width below */}
+                {settings.address && (
+                  <ScrollReveal delay={0.6} distance={20}>
+                    <div className="border-t border-white/8 pt-5 mt-2">
+                      <motion.div
+                        whileHover={{ scale: 1.01, x: 4 }}
+                        className="flex items-start gap-3 p-4 rounded-xl hover:bg-white/5 transition-colors"
+                      >
+                        <motion.div
+                          whileHover={{ scale: 1.15, rotate: [0, -10, 10, 0] }}
+                          transition={springBouncy}
+                          className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-600/20 border border-amber-500/20 flex items-center justify-center shrink-0"
+                        >
+                          <MapPin className="w-5 h-5 text-amber-400" />
+                        </motion.div>
+                        <div>
+                          <div className="font-semibold text-white text-sm mb-1">Our Address</div>
+                          <div className="text-gray-400 text-sm leading-relaxed">{settings.address}</div>
+                        </div>
+                      </motion.div>
+                    </div>
+                  </ScrollReveal>
+                )}
               </div>
             </ScrollReveal>
           </div>
@@ -1816,7 +1843,7 @@ export default function Home() {
 
                 <div className="space-y-2 sm:col-span-2">
                   <Label className="text-gray-300 text-sm flex items-center gap-2">
-                    <ArrowRight className="w-4 h-4 text-gray-400" /> Address
+                    <MapPin className="w-4 h-4 text-amber-400" /> Address
                   </Label>
                   <Textarea
                     value={settingsForm.address}
