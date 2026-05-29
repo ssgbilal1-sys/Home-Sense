@@ -39,6 +39,17 @@ interface Product {
 
 type ViewMode = 'storefront' | 'admin'
 
+// Settings interface
+interface SiteSettings {
+  phone: string
+  whatsapp: string
+  email: string
+  instagram: string
+  facebook: string
+  youtube: string
+  address: string
+}
+
 // ───────────────────────────────────────────────────────
 // COUNTER ANIMATION HOOK — Counts up from 0 when visible, resets on scroll away
 // ───────────────────────────────────────────────────────
@@ -335,6 +346,28 @@ export default function Home() {
   const [detailImageIndex, setDetailImageIndex] = useState(0)
   const [detailImageKey, setDetailImageKey] = useState(0)
 
+  // Site settings state
+  const [settings, setSettings] = useState<SiteSettings>({
+    phone: '+92 300 1234567',
+    whatsapp: '+92 300 1234567',
+    email: 'info@zilver.co',
+    instagram: '@zilver.co',
+    facebook: '',
+    youtube: '',
+    address: '',
+  })
+  const [settingsForm, setSettingsForm] = useState<SiteSettings>({
+    phone: '',
+    whatsapp: '',
+    email: '',
+    instagram: '',
+    facebook: '',
+    youtube: '',
+    address: '',
+  })
+  const [savingSettings, setSavingSettings] = useState(false)
+  const [adminTab, setAdminTab] = useState<'products' | 'settings'>('products')
+
   const { toast } = useToast()
   const extraImageInputRef = useRef<HTMLInputElement>(null)
 
@@ -386,6 +419,48 @@ export default function Home() {
   useEffect(() => {
     fetchProducts()
   }, [fetchProducts])
+
+  // Fetch site settings
+  const fetchSettings = useCallback(async () => {
+    try {
+      const res = await fetch('/api/settings')
+      if (res.ok) {
+        const data = await res.json()
+        setSettings(data)
+        setSettingsForm(data)
+      }
+    } catch (error) {
+      console.error('Error fetching settings:', error)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchSettings()
+  }, [fetchSettings])
+
+  // Save settings handler
+  const handleSaveSettings = async () => {
+    setSavingSettings(true)
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settingsForm),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setSettings(data)
+        toast({ title: 'Settings Updated', description: 'Contact details have been saved successfully.' })
+      } else {
+        toast({ title: 'Save Failed', description: 'Failed to save settings.', variant: 'destructive' })
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error)
+      toast({ title: 'Save Failed', description: 'Failed to save settings.', variant: 'destructive' })
+    } finally {
+      setSavingSettings(false)
+    }
+  }
 
   // Check if already authenticated on mount
   useEffect(() => {
@@ -850,7 +925,7 @@ export default function Home() {
                     Get Quote
                   </RippleButton>
                 </a>
-                <a href="https://wa.me/923001234567" target="_blank" rel="noopener noreferrer">
+                <a href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer">
                   <Button size="lg" variant="outline" className="border-green-500/50 text-green-400 hover:bg-green-500/10 hover:border-green-400">
                     <MessageCircle className="w-5 h-5 mr-2" />
                     WhatsApp
@@ -1416,14 +1491,16 @@ export default function Home() {
               <div className="rounded-2xl border border-white/8 bg-white/3 backdrop-blur-sm p-8 sm:p-12 card-shine">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   {[
-                    { icon: Phone, label: 'Call Us', value: '+92 300 1234567', color: 'from-green-500/20 to-green-600/20 border-green-500/20', iconColor: 'text-green-400' },
-                    { icon: MessageCircle, label: 'WhatsApp', value: '+92 300 1234567', color: 'from-green-500/20 to-green-600/20 border-green-500/20', iconColor: 'text-green-400' },
-                    { icon: Instagram, label: 'Instagram', value: '@zilver.co', color: 'from-pink-500/20 to-purple-600/20 border-pink-500/20', iconColor: 'text-pink-400' },
-                    { icon: Mail, label: 'Email', value: 'info@zilver.co', color: 'from-cyan-500/20 to-blue-600/20 border-cyan-500/20', iconColor: 'text-cyan-400' },
+                    { icon: Phone, label: 'Call Us', value: settings.phone, href: `tel:${settings.phone}`, color: 'from-green-500/20 to-green-600/20 border-green-500/20', iconColor: 'text-green-400' },
+                    { icon: MessageCircle, label: 'WhatsApp', value: settings.whatsapp, href: `https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}`, color: 'from-green-500/20 to-green-600/20 border-green-500/20', iconColor: 'text-green-400' },
+                    { icon: Instagram, label: 'Instagram', value: settings.instagram, href: `https://instagram.com/${settings.instagram.replace('@', '')}`, color: 'from-pink-500/20 to-purple-600/20 border-pink-500/20', iconColor: 'text-pink-400' },
+                    { icon: Mail, label: 'Email', value: settings.email, href: `mailto:${settings.email}`, color: 'from-cyan-500/20 to-blue-600/20 border-cyan-500/20 border-cyan-500/20', iconColor: 'text-cyan-400' },
                   ].map((contact, i) => (
                     <ScrollReveal key={i} delay={0.2 + i * 0.1} distance={20}>
                       <motion.a
-                        href="#"
+                        href={contact.href}
+                        target={contact.href.startsWith('http') ? '_blank' : undefined}
+                        rel={contact.href.startsWith('http') ? 'noopener noreferrer' : undefined}
                         whileHover={{ scale: 1.05, y: -3 }}
                         className="flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-white/5 transition-colors group"
                       >
@@ -1485,13 +1562,15 @@ export default function Home() {
                 className="flex items-center gap-4"
               >
                 {[
-                  { Icon: Facebook, href: '#' },
-                  { Icon: Instagram, href: '#' },
-                  { Icon: Youtube, href: '#' },
-                ].map((social, i) => (
+                  { Icon: Facebook, href: settings.facebook || '#' },
+                  { Icon: Instagram, href: settings.instagram ? `https://instagram.com/${settings.instagram.replace('@', '')}` : '#' },
+                  { Icon: Youtube, href: settings.youtube || '#' },
+                ].filter(s => s.href !== '#').map((social, i) => (
                   <motion.a
                     key={i}
                     href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     whileHover={{ scale: 1.2, y: -2 }}
                     whileTap={{ scale: 0.9 }}
                     className="text-gray-500 hover:text-gray-300 transition-colors"
@@ -1618,6 +1697,162 @@ export default function Home() {
           ))}
         </div>
 
+        {/* Admin Tabs — Products & Settings */}
+        <div className="flex gap-2 mb-6 border-b border-white/8 pb-0">
+          <button
+            onClick={() => setAdminTab('products')}
+            className={`px-5 py-3 text-sm font-medium transition-all border-b-2 -mb-px ${
+              adminTab === 'products'
+                ? 'text-cyan-400 border-cyan-400'
+                : 'text-gray-400 border-transparent hover:text-white hover:border-white/20'
+            }`}
+          >
+            <Package className="w-4 h-4 inline mr-2" />
+            Products
+          </button>
+          <button
+            onClick={() => setAdminTab('settings')}
+            className={`px-5 py-3 text-sm font-medium transition-all border-b-2 -mb-px ${
+              adminTab === 'settings'
+                ? 'text-cyan-400 border-cyan-400'
+                : 'text-gray-400 border-transparent hover:text-white hover:border-white/20'
+            }`}
+          >
+            <Settings className="w-4 h-4 inline mr-2" />
+            Contact Details
+          </button>
+        </div>
+
+        {/* Settings Tab Content */}
+        {adminTab === 'settings' && (
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={springTransition}
+          >
+            <div className="rounded-2xl border border-white/8 bg-white/3 backdrop-blur-sm p-6 sm:p-8 max-w-3xl">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600/20 to-cyan-500/20 border border-white/8 flex items-center justify-center">
+                  <Phone className="w-5 h-5 text-cyan-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Contact Details</h3>
+                  <p className="text-xs text-gray-500">Update your store contact information</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="space-y-2">
+                  <Label className="text-gray-300 text-sm flex items-center gap-2">
+                    <Phone className="w-4 h-4 text-green-400" /> Phone Number
+                  </Label>
+                  <Input
+                    value={settingsForm.phone}
+                    onChange={(e) => setSettingsForm(prev => ({ ...prev, phone: e.target.value }))}
+                    placeholder="+92 300 1234567"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-cyan-500"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-gray-300 text-sm flex items-center gap-2">
+                    <MessageCircle className="w-4 h-4 text-green-400" /> WhatsApp Number
+                  </Label>
+                  <Input
+                    value={settingsForm.whatsapp}
+                    onChange={(e) => setSettingsForm(prev => ({ ...prev, whatsapp: e.target.value }))}
+                    placeholder="+92 300 1234567"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-cyan-500"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-gray-300 text-sm flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-cyan-400" /> Email Address
+                  </Label>
+                  <Input
+                    value={settingsForm.email}
+                    onChange={(e) => setSettingsForm(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="info@zilver.co"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-cyan-500"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-gray-300 text-sm flex items-center gap-2">
+                    <Instagram className="w-4 h-4 text-pink-400" /> Instagram
+                  </Label>
+                  <Input
+                    value={settingsForm.instagram}
+                    onChange={(e) => setSettingsForm(prev => ({ ...prev, instagram: e.target.value }))}
+                    placeholder="@zilver.co"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-cyan-500"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-gray-300 text-sm flex items-center gap-2">
+                    <Facebook className="w-4 h-4 text-blue-400" /> Facebook Page URL
+                  </Label>
+                  <Input
+                    value={settingsForm.facebook}
+                    onChange={(e) => setSettingsForm(prev => ({ ...prev, facebook: e.target.value }))}
+                    placeholder="https://facebook.com/zilver"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-cyan-500"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-gray-300 text-sm flex items-center gap-2">
+                    <Youtube className="w-4 h-4 text-red-400" /> YouTube Channel URL
+                  </Label>
+                  <Input
+                    value={settingsForm.youtube}
+                    onChange={(e) => setSettingsForm(prev => ({ ...prev, youtube: e.target.value }))}
+                    placeholder="https://youtube.com/@zilver"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-cyan-500"
+                  />
+                </div>
+
+                <div className="space-y-2 sm:col-span-2">
+                  <Label className="text-gray-300 text-sm flex items-center gap-2">
+                    <ArrowRight className="w-4 h-4 text-gray-400" /> Address
+                  </Label>
+                  <Textarea
+                    value={settingsForm.address}
+                    onChange={(e) => setSettingsForm(prev => ({ ...prev, address: e.target.value }))}
+                    placeholder="Your business address"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-cyan-500 min-h-[80px]"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end">
+                <Button
+                  onClick={handleSaveSettings}
+                  disabled={savingSettings}
+                  className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white border-0 min-w-[160px]"
+                >
+                  {savingSettings ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Settings
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Products Tab Content */}
+        {adminTab === 'products' && (
+        <>
         {/* Products Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl sm:text-2xl font-bold">Products</h2>
@@ -1707,6 +1942,8 @@ export default function Home() {
               )
             })}
           </div>
+        )}
+        </>
         )}
       </main>
 
