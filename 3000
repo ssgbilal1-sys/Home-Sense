@@ -4,5 +4,6 @@
 - Environments: .env
 
 ✓ Starting...
-✓ Ready in 748ms
- GET / 200 in 2.3s (compile: 1995ms, render: 269ms)
+✓ Ready in 739ms
+ GET / 200 in 2.3s (compile: 1996ms, render: 279ms)
+ GET / 200 in 61ms (compile: 4ms, render: 57ms)
