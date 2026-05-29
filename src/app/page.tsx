@@ -40,21 +40,19 @@ interface Product {
 type ViewMode = 'storefront' | 'admin'
 
 // ───────────────────────────────────────────────────────
-// COUNTER ANIMATION HOOK — Counts up from 0 when visible
+// COUNTER ANIMATION HOOK — Counts up from 0 when visible, resets on scroll away
 // ───────────────────────────────────────────────────────
-function useCounter(target: number, duration: number = 2000, startOnView: boolean = true) {
+function useCounter(target: number, duration: number = 2000) {
   const [count, setCount] = useState(0)
   const ref = useRef<HTMLDivElement>(null)
-  const isInView = useInView(ref, { once: true })
-  const hasStarted = useRef(false)
+  const isInView = useInView(ref, { once: false, amount: 0.3 })
 
   useEffect(() => {
-    if (startOnView && !isInView) return
-    if (hasStarted.current) return
-    hasStarted.current = true
-
+    if (!isInView) return
     let startTime: number | null = null
+    let cancelled = false
     const step = (timestamp: number) => {
+      if (cancelled) return
       if (!startTime) startTime = timestamp
       const progress = Math.min((timestamp - startTime) / duration, 1)
       // Ease out cubic
@@ -63,9 +61,10 @@ function useCounter(target: number, duration: number = 2000, startOnView: boolea
       if (progress < 1) requestAnimationFrame(step)
     }
     requestAnimationFrame(step)
-  }, [isInView, target, duration, startOnView])
+    return () => { cancelled = true }
+  }, [isInView, target, duration])
 
-  return { count, ref }
+  return { count: isInView ? count : 0, ref }
 }
 
 // ───────────────────────────────────────────────────────
@@ -200,6 +199,107 @@ const springTransition = { type: 'spring' as const, stiffness: 100, damping: 15 
 const springBouncy = { type: 'spring' as const, stiffness: 200, damping: 12 }
 const springGentle = { type: 'spring' as const, stiffness: 80, damping: 20 }
 
+// ───────────────────────────────────────────────────────
+// SCROLL REVEAL — Dramatic scroll-triggered reveal with blur+scale+slide
+// ───────────────────────────────────────────────────────
+function ScrollReveal({ children, className, delay = 0, direction = 'up', distance = 40 }: {
+  children: React.ReactNode
+  className?: string
+  delay?: number
+  direction?: 'up' | 'down' | 'left' | 'right'
+  distance?: number
+}) {
+  const ref = useRef(null)
+  const isInView = useInView(ref, { once: false, amount: 0.15 })
+
+  const directionMap = {
+    up: { y: distance, x: 0 },
+    down: { y: -distance, x: 0 },
+    left: { x: distance, y: 0 },
+    right: { x: -distance, y: 0 },
+  }
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, ...directionMap[direction], scale: 0.95, filter: 'blur(8px)' }}
+      animate={isInView
+        ? { opacity: 1, x: 0, y: 0, scale: 1, filter: 'blur(0px)' }
+        : { opacity: 0, ...directionMap[direction], scale: 0.95, filter: 'blur(8px)' }
+      }
+      transition={{
+        delay,
+        duration: 0.7,
+        ease: [0.25, 0.46, 0.45, 0.94],
+      }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
+// ───────────────────────────────────────────────────────
+// MAGNETIC HOVER — Mouse-following magnetic effect on cards
+// ───────────────────────────────────────────────────────
+function MagneticHover({ children, className }: { children: React.ReactNode; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const x = useMotionValue(0)
+  const y = useMotionValue(0)
+  const springX = useSpring(x, { stiffness: 150, damping: 15 })
+  const springY = useSpring(y, { stiffness: 150, damping: 15 })
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!ref.current) return
+    const rect = ref.current.getBoundingClientRect()
+    const centerX = rect.left + rect.width / 2
+    const centerY = rect.top + rect.height / 2
+    x.set((e.clientX - centerX) * 0.15)
+    y.set((e.clientY - centerY) * 0.15)
+  }
+
+  const handleMouseLeave = () => {
+    x.set(0)
+    y.set(0)
+  }
+
+  return (
+    <motion.div
+      ref={ref}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{ x: springX, y: springY }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
+// ───────────────────────────────────────────────────────
+// TEXT REVEAL — Character-by-character staggered text animation
+// ───────────────────────────────────────────────────────
+function TextReveal({ text, className }: { text: string; className?: string }) {
+  const ref = useRef(null)
+  const isInView = useInView(ref, { once: false, amount: 0.5 })
+
+  return (
+    <motion.span ref={ref} className={className}>
+      {text.split('').map((char, i) => (
+        <motion.span
+          key={i}
+          initial={{ opacity: 0, y: 20, filter: 'blur(8px)' }}
+          animate={isInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : { opacity: 0, y: 20, filter: 'blur(8px)' }}
+          transition={{ delay: i * 0.03, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="inline-block"
+        >
+          {char === ' ' ? '\u00A0' : char}
+        </motion.span>
+      ))}
+    </motion.span>
+  )
+}
+
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([])
   const [viewMode, setViewMode] = useState<ViewMode>('storefront')
@@ -243,6 +343,12 @@ export default function Home() {
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
   const heroY = useTransform(scrollYProgress, [0, 1], [0, -100])
   const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0])
+
+  // Scroll-linked parallax for background orbs
+  const { scrollYProgress: orbScrollProgress } = useScroll()
+  const orbY1 = useTransform(orbScrollProgress, [0, 1], [0, -200])
+  const orbY2 = useTransform(orbScrollProgress, [0, 1], [0, -150])
+  const orbY3 = useTransform(orbScrollProgress, [0, 1], [0, -100])
 
   // Counter animations for stats
   const counter500 = useCounter(500, 2000)
@@ -759,11 +865,11 @@ export default function Home() {
   if (viewMode === 'storefront') {
     return (
       <div className="min-h-screen flex flex-col bg-[#080c14] text-white overflow-x-hidden">
-        {/* Animated background — Floating Orbs with smooth movement */}
+        {/* Animated background — Floating Orbs with scroll-linked parallax */}
         <div className="fixed inset-0 z-0 pointer-events-none">
-          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-600/15 rounded-full blur-[180px] orb-float-1" />
-          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[150px] orb-float-2" />
-          <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-teal-500/8 rounded-full blur-[120px] orb-float-3" />
+          <motion.div style={{ y: orbY1 }} className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-600/15 rounded-full blur-[180px] orb-float-1" />
+          <motion.div style={{ y: orbY2 }} className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[150px] orb-float-2" />
+          <motion.div style={{ y: orbY3 }} className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-teal-500/8 rounded-full blur-[120px] orb-float-3" />
         </div>
 
         {/* Navigation — Enhanced with logo glow, active indicators, smooth mobile menu */}
@@ -898,7 +1004,7 @@ export default function Home() {
                   <span className="text-sm text-gray-400">Quality Bathroom & Kitchen Solutions</span>
                 </motion.div>
 
-                {/* Title — staggered text reveal, line by line */}
+                {/* Title — Character-by-character text reveal */}
                 <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold leading-tight mb-6 overflow-hidden">
                   <motion.span
                     custom={1}
@@ -907,7 +1013,7 @@ export default function Home() {
                     animate="visible"
                     className="block"
                   >
-                    Innovative,
+                    <TextReveal text="Innovative," />
                   </motion.span>
                   <motion.span
                     custom={2}
@@ -917,7 +1023,7 @@ export default function Home() {
                     className="block"
                   >
                     <span className="bg-gradient-to-r from-blue-400 via-cyan-300 to-teal-400 bg-clip-text text-transparent text-shimmer" style={{ backgroundSize: '200% auto' }}>
-                      Efficient
+                      <TextReveal text="Efficient" />
                     </span>
                   </motion.span>
                   <motion.span
@@ -927,7 +1033,7 @@ export default function Home() {
                     animate="visible"
                     className="block"
                   >
-                    & Elegant
+                    <TextReveal text="& Elegant" />
                   </motion.span>
                 </h1>
 
@@ -1018,26 +1124,23 @@ export default function Home() {
                 { name: 'Showers', icon: Droplets, count: '36' },
                 { name: 'Kitchen', icon: CookingPot, count: '9' },
               ].map((cat, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1, ...springBouncy }}
-                  whileHover={{ scale: 1.03 }}
-                  className="group cursor-pointer"
-                >
-                  <div className="rounded-xl border border-white/8 bg-white/3 hover:bg-white/5 hover:border-blue-500/30 transition-all duration-300 p-5 text-center card-shine card-glow">
-                    <motion.div
-                      whileHover={{ scale: 1.2, rotate: 5 }}
-                      transition={springBouncy}
-                    >
-                      <cat.icon className="w-8 h-8 mx-auto mb-3 text-cyan-400 group-hover:scale-110 transition-transform" />
-                    </motion.div>
-                    <h3 className="font-semibold text-white text-sm mb-1">{cat.name}</h3>
-                    <span className="text-xs text-gray-500">{cat.count} Products</span>
-                  </div>
-                </motion.div>
+                <ScrollReveal key={i} delay={i * 0.1} direction="up" distance={30}>
+                  <motion.div
+                    whileHover={{ scale: 1.03 }}
+                    className="group cursor-pointer"
+                  >
+                    <div className="rounded-xl border border-white/8 bg-white/3 hover:bg-white/5 hover:border-blue-500/30 transition-all duration-300 p-5 text-center card-shine card-glow card-glow-trail">
+                      <motion.div
+                        whileHover={{ scale: 1.2, rotate: 5 }}
+                        transition={springBouncy}
+                      >
+                        <cat.icon className="w-8 h-8 mx-auto mb-3 text-cyan-400 group-hover:scale-110 transition-transform" />
+                      </motion.div>
+                      <h3 className="font-semibold text-white text-sm mb-1">{cat.name}</h3>
+                      <span className="text-xs text-gray-500">{cat.count} Products</span>
+                    </div>
+                  </motion.div>
+                </ScrollReveal>
               ))}
             </div>
           </div>
@@ -1049,32 +1152,15 @@ export default function Home() {
         {/* Products Section — 3D tilt, shine sweep, stagger, price float */}
         <section id="products" className="relative z-10 py-16 sm:py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={springTransition}
-              className="text-center mb-12 sm:mb-16"
-            >
-              <motion.h2
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4"
-              >
+            <ScrollReveal className="text-center mb-12 sm:mb-16">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
                 Featured
                 <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent text-shimmer" style={{ backgroundSize: '200% auto' }}> Products</span>
-              </motion.h2>
-              <motion.p
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.15 }}
-                className="text-gray-400 text-lg max-w-2xl mx-auto"
-              >
+              </h2>
+              <p className="text-gray-400 text-lg max-w-2xl mx-auto">
                 The Zilver Concetti Italiano has multifaceted solutions for the modern bathroom — versatile faucets, head showers, washbasins and more.
-              </motion.p>
-            </motion.div>
+              </p>
+            </ScrollReveal>
 
             {loading ? (
               <ProductSkeleton />
@@ -1084,14 +1170,9 @@ export default function Home() {
                   const productImages = getProductImages(product)
                   const totalImages = productImages.length + (product.video ? 1 : 0)
                   return (
-                    <motion.div
-                      key={product.id}
-                      initial={{ opacity: 0, y: 40, scale: 0.95 }}
-                      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                      viewport={{ once: true, margin: '-50px' }}
-                      transition={{ delay: index * 0.1, ...springTransition }}
-                    >
-                      <TiltCard className="group">
+                    <ScrollReveal key={product.id} delay={index * 0.12} direction="up" distance={60}>
+                      <MagneticHover>
+                        <TiltCard className="group">
                         <motion.div
                           whileHover={{ y: -8 }}
                           transition={springTransition}
@@ -1169,9 +1250,10 @@ export default function Home() {
                               </RippleButton>
                             </div>
                           </div>
-                        </motion.div>
+                            </motion.div>
                       </TiltCard>
-                    </motion.div>
+                      </MagneticHover>
+                    </ScrollReveal>
                   )
                 })}
               </div>
@@ -1186,16 +1268,11 @@ export default function Home() {
         <section id="about" className="relative z-10 py-16 sm:py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <motion.div
-                initial={{ opacity: 0, x: -40 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={springTransition}
-              >
+              <ScrollReveal direction="left" distance={60}>
                 <motion.h2
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
+                  viewport={{ once: false, amount: 0.15 }}
                   className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6"
                 >
                   All-in-One
@@ -1204,7 +1281,7 @@ export default function Home() {
                 <motion.p
                   initial={{ opacity: 0, y: 15 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
+                  viewport={{ once: false, amount: 0.15 }}
                   transition={{ delay: 0.1 }}
                   className="text-gray-400 text-lg mb-8"
                 >
@@ -1216,38 +1293,29 @@ export default function Home() {
                     { icon: Star, title: 'Innovative Design', desc: 'Modern multifaceted solutions with aesthetically appealing and functional products that match your lifestyle.' },
                     { icon: Wrench, title: 'Spare Parts Available', desc: 'Long-term performance guaranteed with full compatibility of all components and readily available spare parts.' },
                   ].map((item, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: -30 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.15, ...springBouncy }}
-                      whileHover={{ x: 5 }}
-                      className="flex gap-4 group cursor-default"
-                    >
+                    <ScrollReveal key={i} delay={i * 0.15} direction="left" distance={30}>
                       <motion.div
-                        whileHover={{ scale: 1.1, rotate: 5 }}
-                        transition={springBouncy}
-                        className="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600/20 to-cyan-500/20 border border-white/8 flex items-center justify-center"
+                        whileHover={{ x: 5 }}
+                        className="flex gap-4 group cursor-default"
                       >
-                        <item.icon className="w-6 h-6 text-cyan-400" />
+                        <motion.div
+                          whileHover={{ scale: 1.1, rotate: 5 }}
+                          transition={springBouncy}
+                          className="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600/20 to-cyan-500/20 border border-white/8 flex items-center justify-center"
+                        >
+                          <item.icon className="w-6 h-6 text-cyan-400" />
+                        </motion.div>
+                        <div>
+                          <h3 className="font-semibold text-white mb-1 group-hover:text-cyan-300 transition-colors">{item.title}</h3>
+                          <p className="text-gray-400 text-sm">{item.desc}</p>
+                        </div>
                       </motion.div>
-                      <div>
-                        <h3 className="font-semibold text-white mb-1 group-hover:text-cyan-300 transition-colors">{item.title}</h3>
-                        <p className="text-gray-400 text-sm">{item.desc}</p>
-                      </div>
-                    </motion.div>
+                    </ScrollReveal>
                   ))}
                 </div>
-              </motion.div>
+              </ScrollReveal>
 
-              <motion.div
-                initial={{ opacity: 0, x: 40 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={springTransition}
-                className="relative"
-              >
+              <ScrollReveal direction="right" distance={60}>
                 <motion.div
                   animate={{ scale: [1, 1.02, 1], opacity: [0.15, 0.2, 0.15] }}
                   transition={{ repeat: Infinity, duration: 5, ease: 'easeInOut' }}
@@ -1258,7 +1326,7 @@ export default function Home() {
                     <motion.div
                       initial={{ opacity: 0, scale: 0.8 }}
                       whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true }}
+                      viewport={{ once: false, amount: 0.15 }}
                       transition={{ delay: 0.2, ...springBouncy }}
                       className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center mb-6"
                     >
@@ -1267,7 +1335,7 @@ export default function Home() {
                     <motion.h3
                       initial={{ opacity: 0, y: 15 }}
                       whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
+                      viewport={{ once: false, amount: 0.15 }}
                       transition={{ delay: 0.3 }}
                       className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2 text-shimmer"
                       style={{ backgroundSize: '200% auto' }}
@@ -1277,7 +1345,7 @@ export default function Home() {
                     <motion.p
                       initial={{ opacity: 0 }}
                       whileInView={{ opacity: 1 }}
-                      viewport={{ once: true }}
+                      viewport={{ once: false, amount: 0.15 }}
                       transition={{ delay: 0.4 }}
                       className="text-sm text-gray-400 mb-2"
                     >
@@ -1286,7 +1354,7 @@ export default function Home() {
                     <motion.p
                       initial={{ opacity: 0 }}
                       whileInView={{ opacity: 1 }}
-                      viewport={{ once: true }}
+                      viewport={{ once: false, amount: 0.15 }}
                       transition={{ delay: 0.45 }}
                       className="text-gray-500 text-xs mb-8"
                     >
@@ -1295,40 +1363,28 @@ export default function Home() {
 
                     {/* Counter animation stats */}
                     <div className="grid grid-cols-3 gap-4" ref={counter500.ref}>
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.5, ...springTransition }}
-                        className="text-center"
-                      >
-                        <div className="text-2xl sm:text-3xl font-bold text-white">{counter500.count}+</div>
-                        <div className="text-xs text-gray-500 mt-1">Projects</div>
-                      </motion.div>
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.6, ...springTransition }}
-                        className="text-center"
-                      >
-                        <div className="text-2xl sm:text-3xl font-bold text-white">{counter300.count}+</div>
-                        <div className="text-xs text-gray-500 mt-1">Products</div>
-                      </motion.div>
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.7, ...springTransition }}
-                        className="text-center"
-                      >
-                        <div className="text-2xl sm:text-3xl font-bold text-white">{counter100.count}%</div>
-                        <div className="text-xs text-gray-500 mt-1">Quality</div>
-                      </motion.div>
+                      <ScrollReveal delay={0.5} distance={20}>
+                        <div className="text-center">
+                          <div className="text-2xl sm:text-3xl font-bold text-white">{counter500.count}+</div>
+                          <div className="text-xs text-gray-500 mt-1">Projects</div>
+                        </div>
+                      </ScrollReveal>
+                      <ScrollReveal delay={0.6} distance={20}>
+                        <div className="text-center">
+                          <div className="text-2xl sm:text-3xl font-bold text-white">{counter300.count}+</div>
+                          <div className="text-xs text-gray-500 mt-1">Products</div>
+                        </div>
+                      </ScrollReveal>
+                      <ScrollReveal delay={0.7} distance={20}>
+                        <div className="text-center">
+                          <div className="text-2xl sm:text-3xl font-bold text-white">{counter100.count}%</div>
+                          <div className="text-xs text-gray-500 mt-1">Quality</div>
+                        </div>
+                      </ScrollReveal>
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </ScrollReveal>
             </div>
           </div>
         </section>
@@ -1339,13 +1395,7 @@ export default function Home() {
         {/* Contact Section — Icon animations, card stagger */}
         <section id="contact" className="relative z-10 py-16 sm:py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={springTransition}
-              className="text-center mb-12"
-            >
+            <ScrollReveal className="text-center mb-12">
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
                 Get in
                 <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent text-shimmer" style={{ backgroundSize: '200% auto' }}> Touch</span>
@@ -1353,15 +1403,9 @@ export default function Home() {
               <p className="text-gray-400 text-lg max-w-2xl mx-auto">
                 Have a question or need a quote? We would love to hear from you.
               </p>
-            </motion.div>
+            </ScrollReveal>
 
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.15, ...springTransition }}
-              className="max-w-2xl mx-auto"
-            >
+            <ScrollReveal delay={0.15} className="max-w-2xl mx-auto">
               <div className="rounded-2xl border border-white/8 bg-white/3 backdrop-blur-sm p-8 sm:p-12 card-shine">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   {[
@@ -1370,32 +1414,29 @@ export default function Home() {
                     { icon: Instagram, label: 'Instagram', value: '@zilver.co', color: 'from-pink-500/20 to-purple-600/20 border-pink-500/20', iconColor: 'text-pink-400' },
                     { icon: Mail, label: 'Email', value: 'info@zilver.co', color: 'from-cyan-500/20 to-blue-600/20 border-cyan-500/20', iconColor: 'text-cyan-400' },
                   ].map((contact, i) => (
-                    <motion.a
-                      key={i}
-                      href="#"
-                      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: 0.2 + i * 0.1, ...springBouncy }}
-                      whileHover={{ scale: 1.05, y: -3 }}
-                      className="flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-white/5 transition-colors group"
-                    >
-                      <motion.div
-                        whileHover={{ scale: 1.15, rotate: [0, -10, 10, 0] }}
-                        transition={springBouncy}
-                        className={`w-12 h-12 rounded-xl bg-gradient-to-br ${contact.color} border flex items-center justify-center icon-bounce-hover`}
+                    <ScrollReveal key={i} delay={0.2 + i * 0.1} distance={20}>
+                      <motion.a
+                        href="#"
+                        whileHover={{ scale: 1.05, y: -3 }}
+                        className="flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-white/5 transition-colors group"
                       >
-                        <contact.icon className={`w-5 h-5 ${contact.iconColor}`} />
-                      </motion.div>
-                      <div className="text-center">
-                        <div className="font-semibold text-white text-xs">{contact.label}</div>
-                        <div className="text-gray-500 text-[10px] mt-0.5">{contact.value}</div>
-                      </div>
-                    </motion.a>
+                        <motion.div
+                          whileHover={{ scale: 1.15, rotate: [0, -10, 10, 0] }}
+                          transition={springBouncy}
+                          className={`w-12 h-12 rounded-xl bg-gradient-to-br ${contact.color} border flex items-center justify-center icon-bounce-hover`}
+                        >
+                          <contact.icon className={`w-5 h-5 ${contact.iconColor}`} />
+                        </motion.div>
+                        <div className="text-center">
+                          <div className="font-semibold text-white text-xs">{contact.label}</div>
+                          <div className="text-gray-500 text-[10px] mt-0.5">{contact.value}</div>
+                        </div>
+                      </motion.a>
+                    </ScrollReveal>
                   ))}
                 </div>
               </div>
-            </motion.div>
+            </ScrollReveal>
           </div>
         </section>
 
@@ -1404,12 +1445,12 @@ export default function Home() {
           {selectedProduct && renderProductDetail()}
         </AnimatePresence>
 
-        {/* Footer — Slide up reveal */}
+        {/* Footer — Scroll reveal */}
         <motion.footer
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={springTransition}
+          initial={{ opacity: 0, y: 30, filter: 'blur(8px)' }}
+          whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          viewport={{ once: false, amount: 0.15 }}
+          transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="relative z-10 border-t border-white/8 py-8 mt-auto"
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1417,8 +1458,8 @@ export default function Home() {
               <motion.div
                 initial={{ opacity: 0, x: -15 }}
                 whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.1 }}
+                viewport={{ once: false, amount: 0.15 }}
+                transition={{ delay: 0.1, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
                 className="flex items-center gap-2"
               >
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
@@ -1432,8 +1473,8 @@ export default function Home() {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.2 }}
+                viewport={{ once: false, amount: 0.15 }}
+                transition={{ delay: 0.2, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
                 className="flex items-center gap-4"
               >
                 {[
@@ -1455,8 +1496,8 @@ export default function Home() {
               <motion.p
                 initial={{ opacity: 0, x: 15 }}
                 whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.3 }}
+                viewport={{ once: false, amount: 0.15 }}
+                transition={{ delay: 0.3, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
                 className="text-gray-600 text-xs"
               >
                 &copy; {new Date().getFullYear()} Zilver. All rights reserved.
