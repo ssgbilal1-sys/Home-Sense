@@ -367,6 +367,8 @@ export default function Home() {
   })
   const [savingSettings, setSavingSettings] = useState(false)
   const [adminTab, setAdminTab] = useState<'products' | 'settings'>('products')
+  const [showCustomCategory, setShowCustomCategory] = useState(false)
+  const [customCategoryInput, setCustomCategoryInput] = useState('')
 
   const { toast } = useToast()
   const extraImageInputRef = useRef<HTMLInputElement>(null)
@@ -675,14 +677,24 @@ export default function Home() {
     setDetailImageKey(prev => prev + 1)
   }
 
-  // Category configuration — order matches document specification
-  const CATEGORIES = [
+  // Category configuration — predefined + dynamic from products
+  const PREDEFINED_CATEGORIES = [
     { name: 'Vanities', icon: Bath, isPrimary: true, badge: 'Manufactured by Us', description: 'We design and manufacture every vanity in-house — ensuring premium quality, custom options, and factory-direct pricing.' },
     { name: 'Commode', icon: Package, isPrimary: false },
     { name: 'Basin', icon: Bath, isPrimary: false },
     { name: 'Shower Sets', icon: Droplets, isPrimary: false },
     { name: 'Art Bowls', icon: Star, isPrimary: false },
-  ] as const
+  ]
+
+  // Build full category list: predefined + any custom categories from DB
+  const dbCategoryNames = [...new Set(products.map(p => p.category))]
+  const customCategoryNames = dbCategoryNames.filter(
+    name => !PREDEFINED_CATEGORIES.some(c => c.name.toLowerCase() === name.toLowerCase())
+  )
+  const CATEGORIES = [
+    ...PREDEFINED_CATEGORIES,
+    ...customCategoryNames.map(name => ({ name, icon: Droplets, isPrimary: false })),
+  ]
 
   // Category icons mapping
   const getCategoryIcon = (category: string) => {
@@ -2205,17 +2217,73 @@ export default function Home() {
               </div>
               <div>
                 <Label className="text-gray-300">Category</Label>
-                <select
-                  value={formData.category}
-                  onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                  className="mt-2 w-full rounded-md border border-white/10 bg-white/5 text-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500/20 focus:outline-none"
-                >
-                  {CATEGORIES.map(cat => (
-                    <option key={cat.name} value={cat.name} className="bg-[#0d1220] text-white">
-                      {cat.name}{cat.isPrimary ? ' ⭐ Primary' : ''}
-                    </option>
-                  ))}
-                </select>
+                <div className="mt-2 flex gap-2">
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                    className="flex-1 rounded-md border border-white/10 bg-white/5 text-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500/20 focus:outline-none"
+                  >
+                    {CATEGORIES.map(cat => (
+                      <option key={cat.name} value={cat.name} className="bg-[#0d1220] text-white">
+                        {cat.name}{cat.isPrimary ? ' ⭐ Primary' : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowCustomCategory(true)}
+                    className="shrink-0 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-400"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+                {showCustomCategory && (
+                  <div className="mt-2 flex gap-2">
+                    <Input
+                      value={customCategoryInput}
+                      onChange={(e) => setCustomCategoryInput(e.target.value)}
+                      placeholder="Type new category name..."
+                      className="flex-1 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-cyan-500 focus:ring-cyan-500/20"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          if (customCategoryInput.trim()) {
+                            setFormData(prev => ({ ...prev, category: customCategoryInput.trim() }))
+                            setCustomCategoryInput('')
+                            setShowCustomCategory(false)
+                            toast({ title: 'Category Added', description: `"${customCategoryInput.trim()}" will appear when you save this product.` })
+                          }
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => {
+                        if (customCategoryInput.trim()) {
+                          setFormData(prev => ({ ...prev, category: customCategoryInput.trim() }))
+                          setCustomCategoryInput('')
+                          setShowCustomCategory(false)
+                          toast({ title: 'Category Added', description: `"${customCategoryInput.trim()}" will appear when you save this product.` })
+                        }
+                      }}
+                      className="shrink-0 bg-gradient-to-r from-cyan-500 to-blue-500 text-white border-0"
+                    >
+                      Add
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => { setShowCustomCategory(false); setCustomCategoryInput('') }}
+                      className="shrink-0 text-gray-500 hover:text-white"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
 
