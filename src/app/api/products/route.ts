@@ -40,7 +40,7 @@ export async function POST(request: Request) {
         image,
         images: images || '[]',
         video: video || null,
-        category: category || 'Bathroom',
+        category: category || 'Vanities',
         featured: featured ?? true,
         order: order ?? 0,
       }

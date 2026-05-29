@@ -331,7 +331,7 @@ export default function Home() {
     image: '',
     images: [] as string[],
     video: '',
-    category: 'Bathroom',
+    category: 'Vanities',
     featured: true,
     order: 0,
   })
@@ -616,7 +616,7 @@ export default function Home() {
       setEditingProduct(null)
       setFormData({
         name: '', description: '', price: '', image: '', images: [],
-        video: '', category: 'Bathroom', featured: true, order: products.length + 1,
+        video: '', category: 'Vanities', featured: true, order: products.length + 1,
       })
     }
     setShowProductDialog(true)
@@ -675,17 +675,29 @@ export default function Home() {
     setDetailImageKey(prev => prev + 1)
   }
 
+  // Category configuration — order matches document specification
+  const CATEGORIES = [
+    { name: 'Vanities', icon: Bath, isPrimary: true, badge: 'Manufactured by Us', description: 'We design and manufacture every vanity in-house — ensuring premium quality, custom options, and factory-direct pricing.' },
+    { name: 'Commode', icon: Package, isPrimary: false },
+    { name: 'Basin', icon: Bath, isPrimary: false },
+    { name: 'Shower Sets', icon: Droplets, isPrimary: false },
+    { name: 'Art Bowls', icon: Star, isPrimary: false },
+  ] as const
+
   // Category icons mapping
   const getCategoryIcon = (category: string) => {
     switch (category.toLowerCase()) {
-      case 'wash basins': return Bath
-      case 'tap & mixers': return Wrench
-      case 'showers': return Droplets
+      case 'vanities': return Bath
       case 'commode': return Package
-      case 'kitchen': return CookingPot
+      case 'basin': return Bath
+      case 'shower sets': return Droplets
+      case 'art bowls': return Star
       default: return Droplets
     }
   }
+
+  // Check if a category is the primary (Vanities)
+  const isPrimaryCategory = (category: string) => category.toLowerCase() === 'vanities'
 
   // ───────────────────────────────────────────────────────
   // HERO TEXT REVEAL VARIANTS — Staggered luxury reveal
@@ -852,16 +864,26 @@ export default function Home() {
               transition={{ delay: 0.35, ...springGentle }}
               className="p-6 lg:p-8 flex flex-col justify-center"
             >
-              {/* Category badge */}
+              {/* Category badge — Vanities highlighted */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
                 className="mb-4"
               >
-                <span className="px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-600/80 to-cyan-500/80 backdrop-blur-sm text-white flex items-center gap-1 w-fit">
-                  {(() => { const Icon = getCategoryIcon(selectedProduct.category); return <Icon className="w-3 h-3" /> })()}
+                <span className={`px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm text-white flex items-center gap-1.5 w-fit ${
+                  isPrimaryCategory(selectedProduct.category)
+                    ? 'bg-gradient-to-r from-amber-500/90 to-orange-500/90 shadow-lg shadow-amber-500/30'
+                    : 'bg-gradient-to-r from-blue-600/80 to-cyan-500/80'
+                }`}>
+                  {(() => { const Icon = getCategoryIcon(selectedProduct.category); return <Icon className="w-3.5 h-3.5" /> })()}
                   {selectedProduct.category}
+                  {isPrimaryCategory(selectedProduct.category) && (
+                    <>
+                      <Star className="w-3 h-3 fill-amber-200" />
+                      <span className="text-[10px] text-amber-100/80 ml-1">Manufactured by Us</span>
+                    </>
+                  )}
                 </span>
               </motion.div>
 
@@ -983,6 +1005,7 @@ export default function Home() {
               <div className="hidden md:flex items-center gap-8">
                 {[
                   { label: 'Home', href: '#home' },
+                  { label: 'Vanities', href: '#products', isPrimary: true },
                   { label: 'Products', href: '#products' },
                   { label: 'About', href: '#about' },
                   { label: 'Contact', href: '#contact' },
@@ -993,8 +1016,13 @@ export default function Home() {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 + i * 0.05, ...springTransition }}
-                    className="text-sm text-gray-300 hover:text-white transition-colors nav-link"
+                    className={`text-sm transition-colors nav-link ${
+                      (link as any).isPrimary
+                        ? 'text-amber-400 hover:text-amber-300 font-semibold'
+                        : 'text-gray-300 hover:text-white'
+                    }`}
                   >
+                    {(link as any).isPrimary && <Star className="w-3 h-3 inline mr-1 fill-amber-400" />}
                     {link.label}
                   </motion.a>
                 ))}
@@ -1046,6 +1074,7 @@ export default function Home() {
                 <div className="px-4 py-4 space-y-1">
                   {[
                     { label: 'Home', href: '#home' },
+                    { label: 'Vanities', href: '#products', isPrimary: true },
                     { label: 'Products', href: '#products' },
                     { label: 'About', href: '#about' },
                     { label: 'Contact', href: '#contact' },
@@ -1057,8 +1086,13 @@ export default function Home() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.05 + i * 0.05, ...springTransition }}
-                      className="block text-gray-300 hover:text-white py-2 px-3 rounded-lg hover:bg-white/5 transition-colors"
+                      className={`block py-2 px-3 rounded-lg transition-colors ${
+                        (link as any).isPrimary
+                          ? 'text-amber-400 font-semibold hover:text-amber-300 hover:bg-amber-500/10'
+                          : 'text-gray-300 hover:text-white hover:bg-white/5'
+                      }`}
                     >
+                      {(link as any).isPrimary && <Star className="w-3 h-3 inline mr-1 fill-amber-400" />}
                       {link.label}
                     </motion.a>
                   ))}
@@ -1129,7 +1163,7 @@ export default function Home() {
                   animate="visible"
                   className="text-lg sm:text-xl text-gray-400 mb-8 max-w-lg"
                 >
-                  Home Sense brings you Zilver Concetti Italiano — premium sanitary wares. We have the complete range of solutions for day to day living in the bathroom, public and private places.
+                  Home Sense brings you premium sanitary wares — vanities manufactured by us, plus the complete Zilver range of commodes, basins, shower sets, and art bowls for every space.
                 </motion.p>
 
                 {/* CTA Buttons — with gradient shift and ripple */}
@@ -1202,27 +1236,34 @@ export default function Home() {
         <section className="relative z-10 py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-              {[
-                { name: 'Tap & Mixers', icon: Wrench },
-                { name: 'Wash Basins', icon: Bath },
-                { name: 'Showers', icon: Droplets },
-                { name: 'Commode', icon: Package },
-                { name: 'Kitchen', icon: CookingPot },
-              ].filter(cat => (categoryCounts[cat.name] || 0) > 0).map((cat, i) => (
+              {CATEGORIES.filter(cat => (categoryCounts[cat.name] || 0) > 0).map((cat, i) => (
                 <ScrollReveal key={i} delay={i * 0.1} direction="up" distance={30}>
                   <motion.div
                     whileHover={{ scale: 1.03 }}
                     className="group cursor-pointer"
                   >
-                    <div className="rounded-xl border border-white/8 bg-white/3 hover:bg-white/5 hover:border-blue-500/30 transition-all duration-300 p-5 text-center card-shine card-glow card-glow-trail">
+                    <div className={`rounded-xl transition-all duration-300 p-5 text-center card-shine card-glow card-glow-trail ${
+                      cat.isPrimary
+                        ? 'border-2 border-amber-500/50 bg-gradient-to-b from-amber-500/10 to-transparent hover:border-amber-400/70 hover:from-amber-500/15'
+                        : 'border border-white/8 bg-white/3 hover:bg-white/5 hover:border-blue-500/30'
+                    }`}>
                       <motion.div
                         whileHover={{ scale: 1.2, rotate: 5 }}
                         transition={springBouncy}
                       >
-                        <cat.icon className="w-8 h-8 mx-auto mb-3 text-cyan-400 group-hover:scale-110 transition-transform" />
+                        <cat.icon className={`w-8 h-8 mx-auto mb-3 group-hover:scale-110 transition-transform ${
+                          cat.isPrimary ? 'text-amber-400' : 'text-cyan-400'
+                        }`} />
                       </motion.div>
-                      <h3 className="font-semibold text-white text-sm mb-1">{cat.name}</h3>
+                      <h3 className={`font-semibold text-sm mb-1 ${
+                        cat.isPrimary ? 'text-amber-300' : 'text-white'
+                      }`}>{cat.name}</h3>
                       <span className="text-xs text-gray-500">{categoryCounts[cat.name] || 0} Products</span>
+                      {cat.isPrimary && (
+                        <div className="mt-2 flex items-center justify-center gap-1">
+                          <span className="text-[9px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-medium">Manufactured by Us</span>
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 </ScrollReveal>
@@ -1243,9 +1284,30 @@ export default function Home() {
                 <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent text-shimmer" style={{ backgroundSize: '200% auto' }}> Products</span>
               </h2>
               <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-                Zilver Concetti Italiano has multifaceted solutions for the modern bathroom — versatile faucets, head showers, washbasins and more. Available at Home Sense.
+                Discover our premium collection of vanities, commodes, basins, shower sets, and art bowls. Factory-direct vanities manufactured by us, plus the finest Zilver products — all available at Home Sense.
               </p>
             </ScrollReveal>
+
+            {/* Vanities Manufacturer Banner */}
+            {products.some(p => isPrimaryCategory(p.category)) && (
+              <ScrollReveal className="mb-10">
+                <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-orange-500/10 p-6 sm:p-8">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-[100px]" />
+                  <div className="relative flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/30">
+                      <Star className="w-7 h-7 text-white fill-white" />
+                    </div>
+                    <div className="text-center sm:text-left">
+                      <h3 className="text-lg sm:text-xl font-bold text-amber-300 mb-1">Vanities — Manufactured by Us</h3>
+                      <p className="text-gray-400 text-sm max-w-xl">We design and manufacture every vanity in-house — ensuring premium quality, custom options, and factory-direct pricing. No middlemen, no compromises.</p>
+                    </div>
+                    <span className="shrink-0 px-4 py-2 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 text-sm font-medium">
+                      Direct from Factory
+                    </span>
+                  </div>
+                </div>
+              </ScrollReveal>
+            )}
 
             {loading ? (
               <ProductSkeleton />
@@ -1274,11 +1336,16 @@ export default function Home() {
                               transition={{ duration: 0.7 }}
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                            {/* Category badge */}
+                            {/* Category badge — Vanities gets special highlight */}
                             <div className="absolute top-3 left-3">
-                              <span className="px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-600/80 to-cyan-500/80 backdrop-blur-sm text-white flex items-center gap-1">
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm text-white flex items-center gap-1 ${
+                                isPrimaryCategory(product.category)
+                                  ? 'bg-gradient-to-r from-amber-500/90 to-orange-500/90 shadow-lg shadow-amber-500/30'
+                                  : 'bg-gradient-to-r from-blue-600/80 to-cyan-500/80'
+                              }`}>
                                 {(() => { const Icon = getCategoryIcon(product.category); return <Icon className="w-3 h-3" /> })()}
                                 {product.category}
+                                {isPrimaryCategory(product.category) && <Star className="w-3 h-3 ml-0.5 fill-amber-200" />}
                               </span>
                             </div>
                             {/* Media count badge */}
@@ -1370,7 +1437,7 @@ export default function Home() {
                   transition={{ delay: 0.1 }}
                   className="text-gray-400 text-lg mb-8"
                 >
-                  Excellent details, durable components, compatible hardware result in Zilver quality. High standard, long life combined with Zilver mixers superior performance thanks to the compatibility of all components, spare parts and durability. Available exclusively at Home Sense.
+                  Excellent details, durable components, compatible hardware result in Zilver quality. High standard, long life combined with superior performance thanks to the compatibility of all components, spare parts and durability. As the authorized distributor, Home Sense brings you the finest vanities, commodes, basins, shower sets, and art bowls — with our own manufactured vanities line.
                 </motion.p>
                 <div className="space-y-6">
                   {[
@@ -1443,7 +1510,7 @@ export default function Home() {
                       transition={{ delay: 0.45 }}
                       className="text-gray-500 text-xs mb-8"
                     >
-                      Quality Bathroom & Kitchen Solutions
+                      Quality Sanitary Ware Solutions
                     </motion.p>
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
@@ -1963,7 +2030,10 @@ export default function Home() {
                       <div className="flex items-start justify-between mb-2">
                         <div>
                           <h3 className="font-semibold text-white">{product.name}</h3>
-                          <span className="text-xs text-cyan-400">{product.category}</span>
+                          <span className={`text-xs ${isPrimaryCategory(product.category) ? 'text-amber-400 font-medium' : 'text-cyan-400'}`}>
+                            {product.category}
+                            {isPrimaryCategory(product.category) && ' ⭐'}
+                          </span>
                         </div>
                         <span className="text-sm font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
                           {product.price}
@@ -2082,7 +2152,7 @@ export default function Home() {
             <div>
               <Label className="text-gray-300">Product Name *</Label>
               <Input value={formData.name} onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="e.g. Zilver Art Wash Basin"
+                placeholder="e.g. Luxury Vanity Unit"
                 className="mt-2 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-blue-500 focus:ring-blue-500/20" />
             </div>
 
@@ -2135,9 +2205,17 @@ export default function Home() {
               </div>
               <div>
                 <Label className="text-gray-300">Category</Label>
-                <Input value={formData.category} onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                  placeholder="e.g. Wash Basins"
-                  className="mt-2 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-blue-500 focus:ring-blue-500/20" />
+                <select
+                  value={formData.category}
+                  onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                  className="mt-2 w-full rounded-md border border-white/10 bg-white/5 text-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500/20 focus:outline-none"
+                >
+                  {CATEGORIES.map(cat => (
+                    <option key={cat.name} value={cat.name} className="bg-[#0d1220] text-white">
+                      {cat.name}{cat.isPrimary ? ' ⭐ Primary' : ''}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 

@@ -16,7 +16,7 @@ model Product {
   image       String
   images      String   @default("[]")
   video       String?
-  category    String   @default("Bathroom")
+  category    String   @default("Vanities")
   featured    Boolean  @default(true)
   order       Int      @default(0)
   createdAt   DateTime @default(now())
