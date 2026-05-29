@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { writeFile } from 'fs/promises'
-import path from 'path'
+import { createClient } from '@supabase/supabase-js'
 import { v4 as uuidv4 } from 'uuid'
 import { verifyAdmin } from '@/lib/auth'
 
@@ -8,6 +7,13 @@ import { verifyAdmin } from '@/lib/auth'
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']
 const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo']
 const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100MB for videos
+
+// Initialize Supabase client
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+  return createClient(supabaseUrl, supabaseKey)
+}
 
 // POST upload file (ADMIN ONLY)
 export async function POST(request: Request) {
@@ -39,31 +45,34 @@ export async function POST(request: Request) {
       )
     }
 
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
+    // Generate unique filename
+    const ext = file.name.split('.').pop()?.toLowerCase() || (isVideo ? 'mp4' : 'png')
+    const safeExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'mp4', 'webm', 'mov', 'avi']
+    const safeExt = safeExtensions.includes(ext) ? ext : 'bin'
+    const filename = `${uuidv4()}.${safeExt}`
+    const storagePath = isVideo ? `videos/${filename}` : `images/${filename}`
 
-    // Generate unique filename with sanitized extension
-    const ext = path.extname(file.name).toLowerCase() || (isVideo ? '.mp4' : '.png')
-    const safeExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.mp4', '.webm', '.mov', '.avi']
-    const safeExt = safeExtensions.includes(ext) ? ext : '.bin'
-    const filename = `${uuidv4()}${safeExt}`
+    // Upload to Supabase Storage
+    const supabase = getSupabaseClient()
+    const { data, error } = await supabase.storage
+      .from('products')
+      .upload(storagePath, file, {
+        contentType: file.type,
+        upsert: false,
+      })
 
-    // Ensure the path stays within public/products
-    const dir = path.join(process.cwd(), 'public', 'products')
-    const { mkdir } = await import('fs/promises')
-    await mkdir(dir, { recursive: true })
-
-    const filepath = path.join(dir, filename)
-
-    // Security check: ensure filepath is within the expected directory
-    if (!filepath.startsWith(path.join(process.cwd(), 'public'))) {
-      return NextResponse.json({ error: 'Invalid file path' }, { status: 400 })
+    if (error) {
+      console.error('Supabase upload error:', error)
+      return NextResponse.json({ error: 'Failed to upload file to storage: ' + error.message }, { status: 500 })
     }
 
-    await writeFile(filepath, buffer)
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('products')
+      .getPublicUrl(storagePath)
 
     return NextResponse.json({
-      url: `/products/${filename}`,
+      url: urlData.publicUrl,
       filename,
       type: isVideo ? 'video' : 'image',
     })
