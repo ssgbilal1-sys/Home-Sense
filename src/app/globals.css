@@ -209,17 +209,17 @@
 }
 
 .orb-float-1 {
-  animation: float-orb-1 20s ease-in-out infinite;
+  animation: float-orb-1 25s ease-in-out infinite;
   will-change: transform;
 }
 
 .orb-float-2 {
-  animation: float-orb-2 25s ease-in-out infinite;
+  animation: float-orb-2 30s ease-in-out infinite;
   will-change: transform;
 }
 
 .orb-float-3 {
-  animation: float-orb-3 18s ease-in-out infinite;
+  animation: float-orb-3 22s ease-in-out infinite;
   will-change: transform;
 }
 

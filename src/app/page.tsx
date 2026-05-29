@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { motion, AnimatePresence, useScroll, useTransform, useInView, useMotionValue, useSpring } from 'framer-motion'
+import { motion, AnimatePresence, useInView, useMotionValue, useSpring } from 'framer-motion'
 import {
   Droplets, Menu, X, Plus, Trash2, Edit3,
   Upload, Save, ChevronRight, Phone, Mail,
@@ -56,7 +56,7 @@ interface SiteSettings {
 function useCounter(target: number, duration: number = 2000) {
   const [count, setCount] = useState(0)
   const ref = useRef<HTMLDivElement>(null)
-  const isInView = useInView(ref, { once: false, amount: 0.3 })
+  const isInView = useInView(ref, { once: true, amount: 0.3 })
 
   useEffect(() => {
     if (!isInView) return
@@ -66,7 +66,6 @@ function useCounter(target: number, duration: number = 2000) {
       if (cancelled) return
       if (!startTime) startTime = timestamp
       const progress = Math.min((timestamp - startTime) / duration, 1)
-      // Ease out cubic
       const eased = 1 - Math.pow(1 - progress, 3)
       setCount(Math.floor(eased * target))
       if (progress < 1) requestAnimationFrame(step)
@@ -75,7 +74,7 @@ function useCounter(target: number, duration: number = 2000) {
     return () => { cancelled = true }
   }, [isInView, target, duration])
 
-  return { count: isInView ? count : 0, ref }
+  return { count, ref }
 }
 
 // ───────────────────────────────────────────────────────
@@ -221,7 +220,7 @@ function ScrollReveal({ children, className, delay = 0, direction = 'up', distan
   distance?: number
 }) {
   const ref = useRef(null)
-  const isInView = useInView(ref, { once: false, amount: 0.15 })
+  const isInView = useInView(ref, { once: true, amount: 0.1 })
 
   const directionMap = {
     up: { y: distance, x: 0 },
@@ -233,14 +232,14 @@ function ScrollReveal({ children, className, delay = 0, direction = 'up', distan
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, ...directionMap[direction], scale: 0.95, filter: 'blur(8px)' }}
+      initial={{ opacity: 0, ...directionMap[direction], scale: 0.95, filter: 'blur(6px)' }}
       animate={isInView
         ? { opacity: 1, x: 0, y: 0, scale: 1, filter: 'blur(0px)' }
-        : { opacity: 0, ...directionMap[direction], scale: 0.95, filter: 'blur(8px)' }
+        : undefined
       }
       transition={{
         delay,
-        duration: 0.7,
+        duration: 0.6,
         ease: [0.25, 0.46, 0.45, 0.94],
       }}
       className={className}
@@ -292,7 +291,7 @@ function MagneticHover({ children, className }: { children: React.ReactNode; cla
 // ───────────────────────────────────────────────────────
 function TextReveal({ text, className }: { text: string; className?: string }) {
   const ref = useRef(null)
-  const isInView = useInView(ref, { once: false, amount: 0.5 })
+  const isInView = useInView(ref, { once: true, amount: 0.5 })
 
   return (
     <motion.span ref={ref} className={className}>
@@ -376,15 +375,6 @@ export default function Home() {
 
   // Parallax scroll for hero
   const heroRef = useRef<HTMLElement>(null)
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
-  const heroY = useTransform(scrollYProgress, [0, 1], [0, -100])
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0])
-
-  // Scroll-linked parallax for background orbs
-  const { scrollYProgress: orbScrollProgress } = useScroll()
-  const orbY1 = useTransform(orbScrollProgress, [0, 1], [0, -200])
-  const orbY2 = useTransform(orbScrollProgress, [0, 1], [0, -150])
-  const orbY3 = useTransform(orbScrollProgress, [0, 1], [0, -100])
 
   // Counter animations for stats
   const counter500 = useCounter(500, 2000)
@@ -980,11 +970,11 @@ export default function Home() {
   if (viewMode === 'storefront') {
     return (
       <div className="min-h-screen flex flex-col bg-[#080c14] text-white overflow-x-hidden">
-        {/* Animated background — Floating Orbs with scroll-linked parallax */}
+        {/* Animated background — Floating Orbs (CSS-only animation) */}
         <div className="fixed inset-0 z-0 pointer-events-none">
-          <motion.div style={{ y: orbY1 }} className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-teal-700/15 rounded-full blur-[180px] orb-float-1" />
-          <motion.div style={{ y: orbY2 }} className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-teal-500/10 rounded-full blur-[150px] orb-float-2" />
-          <motion.div style={{ y: orbY3 }} className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-teal-500/8 rounded-full blur-[120px] orb-float-3" />
+          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-teal-700/15 rounded-full blur-[180px] orb-float-1" />
+          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-teal-500/10 rounded-full blur-[150px] orb-float-2" />
+          <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-teal-500/8 rounded-full blur-[120px] orb-float-3" />
         </div>
 
         {/* Navigation — Enhanced with logo glow, active indicators, smooth mobile menu */}
@@ -1141,10 +1131,9 @@ export default function Home() {
           </AnimatePresence>
         </nav>
 
-        {/* Hero Section — Parallax, staggered text reveal, shimmer, badge glow */}
+        {/* Hero Section — Staggered text reveal, shimmer, badge glow */}
         <section id="home" ref={heroRef} className="relative z-10 flex-1 flex items-center">
-          <motion.div
-            style={{ y: heroY, opacity: heroOpacity }}
+          <div
             className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 lg:py-32 w-full"
           >
             <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -1265,7 +1254,7 @@ export default function Home() {
                 </div>
               </motion.div>
             </div>
-          </motion.div>
+          </div>
         </section>
 
         {/* Wave Divider */}
@@ -1403,12 +1392,10 @@ export default function Home() {
                   const totalImages = productImages.length + (product.video ? 1 : 0)
                   return (
                     <ScrollReveal key={product.id} delay={index * 0.12} direction="up" distance={60}>
-                      <MagneticHover>
-                        <TiltCard className="group">
-                        <motion.div
-                          whileHover={{ y: -8 }}
+                      <motion.div
+                          whileHover={{ y: -6 }}
                           transition={springTransition}
-                          className="relative rounded-2xl overflow-hidden bg-white/5 border border-white/8 hover:border-teal-600/40 transition-all duration-500 cursor-pointer card-shine"
+                          className="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/8 hover:border-teal-600/40 transition-all duration-500 cursor-pointer card-shine"
                           onClick={() => openProductDetail(product)}
                         >
                           {/* Product Image — enhanced zoom with parallax */}
@@ -1416,9 +1403,7 @@ export default function Home() {
                             <motion.img
                               src={product.image}
                               alt={product.name}
-                              className="w-full h-full object-cover group-hover:scale-115 transition-transform duration-700 ease-out"
-                              whileHover={{ scale: 1.15 }}
-                              transition={{ duration: 0.7 }}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                             {/* Category badge — Vanities gets special highlight */}
@@ -1488,8 +1473,6 @@ export default function Home() {
                             </div>
                           </div>
                             </motion.div>
-                      </TiltCard>
-                      </MagneticHover>
                     </ScrollReveal>
                   )
                 })}
@@ -1526,7 +1509,7 @@ export default function Home() {
                 <motion.h2
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: false, amount: 0.15 }}
+                  viewport={{ once: true, amount: 0.15 }}
                   className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6"
                 >
                   All-in-One
@@ -1535,7 +1518,7 @@ export default function Home() {
                 <motion.p
                   initial={{ opacity: 0, y: 15 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: false, amount: 0.15 }}
+                  viewport={{ once: true, amount: 0.15 }}
                   transition={{ delay: 0.1 }}
                   className="text-gray-400 text-lg mb-8"
                 >
@@ -1580,7 +1563,7 @@ export default function Home() {
                     <motion.div
                       initial={{ opacity: 0, scale: 0.8 }}
                       whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: false, amount: 0.15 }}
+                      viewport={{ once: true, amount: 0.15 }}
                       transition={{ delay: 0.2, ...springBouncy }}
                       className="mx-auto mb-6"
                     >
@@ -1589,7 +1572,7 @@ export default function Home() {
                     <motion.h3
                       initial={{ opacity: 0, y: 15 }}
                       whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: false, amount: 0.15 }}
+                      viewport={{ once: true, amount: 0.15 }}
                       transition={{ delay: 0.3 }}
                       className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-teal-500 to-teal-400 bg-clip-text text-transparent mb-2 text-shimmer"
                       style={{ backgroundSize: '200% auto' }}
@@ -1599,7 +1582,7 @@ export default function Home() {
                     <motion.p
                       initial={{ opacity: 0 }}
                       whileInView={{ opacity: 1 }}
-                      viewport={{ once: false, amount: 0.15 }}
+                      viewport={{ once: true, amount: 0.15 }}
                       transition={{ delay: 0.4 }}
                       className="text-sm text-gray-400 mb-2"
                     >
@@ -1608,7 +1591,7 @@ export default function Home() {
                     <motion.p
                       initial={{ opacity: 0 }}
                       whileInView={{ opacity: 1 }}
-                      viewport={{ once: false, amount: 0.15 }}
+                      viewport={{ once: true, amount: 0.15 }}
                       transition={{ delay: 0.45 }}
                       className="text-gray-500 text-xs mb-8"
                     >
@@ -1617,7 +1600,7 @@ export default function Home() {
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: false, amount: 0.15 }}
+                      viewport={{ once: true, amount: 0.15 }}
                       transition={{ delay: 0.48 }}
                       className="mb-6"
                     >
@@ -1744,7 +1727,7 @@ export default function Home() {
         <motion.footer
           initial={{ opacity: 0, y: 30, filter: 'blur(8px)' }}
           whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          viewport={{ once: false, amount: 0.15 }}
+          viewport={{ once: true, amount: 0.15 }}
           transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="relative z-10 border-t border-white/8 py-8 mt-auto"
         >
@@ -1753,7 +1736,7 @@ export default function Home() {
               <motion.div
                 initial={{ opacity: 0, x: -15 }}
                 whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: false, amount: 0.15 }}
+                viewport={{ once: true, amount: 0.15 }}
                 transition={{ delay: 0.1, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
                 className="flex items-center gap-2"
               >
@@ -1766,7 +1749,7 @@ export default function Home() {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.15 }}
+                viewport={{ once: true, amount: 0.15 }}
                 transition={{ delay: 0.2, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
                 className="flex items-center gap-4"
               >
@@ -1791,7 +1774,7 @@ export default function Home() {
               <motion.p
                 initial={{ opacity: 0, x: 15 }}
                 whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: false, amount: 0.15 }}
+                viewport={{ once: true, amount: 0.15 }}
                 transition={{ delay: 0.3, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
                 className="text-gray-600 text-xs"
               >
