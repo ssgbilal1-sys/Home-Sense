@@ -422,9 +422,9 @@ export default function Home() {
   const heroRef = useRef<HTMLElement>(null)
 
   // Counter animations for stats
-  const counter500 = useCounter(500, 2000)
-  const counter300 = useCounter(300, 2000)
-  const counter100 = useCounter(100, 1500)
+  const counter50 = useCounter(50, 2000)
+  const counter150 = useCounter(150, 2000)
+  const counter99 = useCounter(99, 1500)
 
   // Calculate category counts from products
   const categoryCounts = products.reduce((acc, p) => {
@@ -1658,22 +1658,22 @@ export default function Home() {
                     </motion.div>
 
                     {/* Counter animation stats */}
-                    <div className="grid grid-cols-3 gap-4" ref={counter500.ref}>
+                    <div className="grid grid-cols-3 gap-4">
                       <ScrollReveal delay={0.5} distance={20}>
                         <div className="text-center">
-                          <div className="text-2xl sm:text-3xl font-bold text-white">{counter500.count}+</div>
+                          <div className="text-2xl sm:text-3xl font-bold text-white" ref={counter50.ref}>{counter50.count}+</div>
                           <div className="text-xs text-gray-500 mt-1">Projects</div>
                         </div>
                       </ScrollReveal>
                       <ScrollReveal delay={0.6} distance={20}>
                         <div className="text-center">
-                          <div className="text-2xl sm:text-3xl font-bold text-white">{counter300.count}+</div>
+                          <div className="text-2xl sm:text-3xl font-bold text-white" ref={counter150.ref}>{counter150.count}+</div>
                           <div className="text-xs text-gray-500 mt-1">Products</div>
                         </div>
                       </ScrollReveal>
                       <ScrollReveal delay={0.7} distance={20}>
                         <div className="text-center">
-                          <div className="text-2xl sm:text-3xl font-bold text-white">{counter100.count}%</div>
+                          <div className="text-2xl sm:text-3xl font-bold text-white" ref={counter99.ref}>{counter99.count}%</div>
                           <div className="text-xs text-gray-500 mt-1">Quality</div>
                         </div>
                       </ScrollReveal>
