@@ -316,6 +316,7 @@ export default function Home() {
   const [viewMode, setViewMode] = useState<ViewMode>('storefront')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [adminPassword, setAdminPassword] = useState('')
   const [showAdminLogin, setShowAdminLogin] = useState(false)
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false)
@@ -1033,7 +1034,7 @@ export default function Home() {
               <div className="hidden md:flex items-center gap-8">
                 {[
                   { label: 'Home', href: '#home' },
-                  { label: 'Vanities', href: '#products', isPrimary: true },
+                  { label: 'Vanities', href: '#products', isPrimary: true, category: 'Vanities' },
                   { label: 'Products', href: '#products' },
                   { label: 'About', href: '#about' },
                   { label: 'Contact', href: '#contact' },
@@ -1041,6 +1042,11 @@ export default function Home() {
                   <motion.a
                     key={link.label}
                     href={link.href}
+                    onClick={() => {
+                      if ((link as any).category) {
+                        setSelectedCategory(selectedCategory === (link as any).category ? null : (link as any).category)
+                      }
+                    }}
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 + i * 0.05, ...springTransition }}
@@ -1102,7 +1108,7 @@ export default function Home() {
                 <div className="px-4 py-4 space-y-1">
                   {[
                     { label: 'Home', href: '#home' },
-                    { label: 'Vanities', href: '#products', isPrimary: true },
+                    { label: 'Vanities', href: '#products', isPrimary: true, category: 'Vanities' },
                     { label: 'Products', href: '#products' },
                     { label: 'About', href: '#about' },
                     { label: 'Contact', href: '#contact' },
@@ -1110,7 +1116,12 @@ export default function Home() {
                     <motion.a
                       key={link.label}
                       href={link.href}
-                      onClick={() => setMobileMenuOpen(false)}
+                      onClick={() => {
+                        if ((link as any).category) {
+                          setSelectedCategory(selectedCategory === (link as any).category ? null : (link as any).category)
+                        }
+                        setMobileMenuOpen(false)
+                      }}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.05 + i * 0.05, ...springTransition }}
@@ -1268,28 +1279,50 @@ export default function Home() {
                 <ScrollReveal key={i} delay={i * 0.1} direction="up" distance={30}>
                   <motion.div
                     whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => {
+                      setSelectedCategory(selectedCategory === cat.name ? null : cat.name)
+                      document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })
+                    }}
                     className="group cursor-pointer"
                   >
                     <div className={`rounded-xl transition-all duration-300 p-5 text-center card-shine card-glow card-glow-trail ${
-                      cat.isPrimary
-                        ? 'border-2 border-amber-500/50 bg-gradient-to-b from-amber-500/10 to-transparent hover:border-amber-400/70 hover:from-amber-500/15'
-                        : 'border border-white/8 bg-white/3 hover:bg-white/5 hover:border-teal-600/30'
+                      selectedCategory === cat.name
+                        ? cat.isPrimary
+                          ? 'border-2 border-amber-400 bg-gradient-to-b from-amber-500/20 to-amber-500/5 shadow-lg shadow-amber-500/20'
+                          : 'border-2 border-teal-400 bg-gradient-to-b from-teal-500/20 to-teal-500/5 shadow-lg shadow-teal-500/20'
+                        : cat.isPrimary
+                          ? 'border-2 border-amber-500/50 bg-gradient-to-b from-amber-500/10 to-transparent hover:border-amber-400/70 hover:from-amber-500/15'
+                          : 'border border-white/8 bg-white/3 hover:bg-white/5 hover:border-teal-600/30'
                     }`}>
                       <motion.div
                         whileHover={{ scale: 1.2, rotate: 5 }}
                         transition={springBouncy}
                       >
                         <cat.icon className={`w-8 h-8 mx-auto mb-3 group-hover:scale-110 transition-transform ${
-                          cat.isPrimary ? 'text-amber-400' : 'text-teal-400'
+                          selectedCategory === cat.name
+                            ? cat.isPrimary ? 'text-amber-300' : 'text-teal-300'
+                            : cat.isPrimary ? 'text-amber-400' : 'text-teal-400'
                         }`} />
                       </motion.div>
                       <h3 className={`font-semibold text-sm mb-1 ${
-                        cat.isPrimary ? 'text-amber-300' : 'text-white'
+                        selectedCategory === cat.name
+                          ? cat.isPrimary ? 'text-amber-200' : 'text-teal-200'
+                          : cat.isPrimary ? 'text-amber-300' : 'text-white'
                       }`}>{cat.name}</h3>
                       <span className="text-xs text-gray-500">{categoryCounts[cat.name] || 0} Products</span>
                       {cat.isPrimary && (
                         <div className="mt-2 flex items-center justify-center gap-1">
                           <span className="text-[9px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-medium">Manufactured by Us</span>
+                        </div>
+                      )}
+                      {selectedCategory === cat.name && (
+                        <div className="mt-2 flex items-center justify-center">
+                          <span className={`text-[9px] px-2 py-0.5 rounded-full font-medium ${
+                            cat.isPrimary
+                              ? 'bg-amber-500/30 text-amber-200 border border-amber-400/40'
+                              : 'bg-teal-500/30 text-teal-200 border border-teal-400/40'
+                          }`}>Showing</span>
                         </div>
                       )}
                     </div>
@@ -1314,10 +1347,34 @@ export default function Home() {
               <p className="text-gray-400 text-lg max-w-2xl mx-auto">
                 Discover our premium collection of vanities, commodes, basins, shower sets, and art bowls. Factory-direct vanities manufactured by us, plus the finest Zilver products — all available at Home Sense.
               </p>
+              {/* Active Category Filter */}
+              {selectedCategory && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-4 flex items-center justify-center gap-2"
+                >
+                  <span className="text-sm text-gray-400">Showing:</span>
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${
+                    isPrimaryCategory(selectedCategory)
+                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                      : 'bg-teal-500/20 text-teal-300 border border-teal-500/30'
+                  }`}>
+                    {(() => { const Icon = getCategoryIcon(selectedCategory); return <Icon className="w-3.5 h-3.5" /> })()}
+                    {selectedCategory}
+                    <button
+                      onClick={() => setSelectedCategory(null)}
+                      className="ml-1 hover:text-white transition-colors"
+                    >
+                      ×
+                    </button>
+                  </span>
+                </motion.div>
+              )}
             </ScrollReveal>
 
             {/* Vanities Manufacturer Banner */}
-            {products.some(p => isPrimaryCategory(p.category)) && (
+            {products.filter(p => !selectedCategory || p.category.toLowerCase() === selectedCategory.toLowerCase()).some(p => isPrimaryCategory(p.category)) && (
               <ScrollReveal className="mb-10">
                 <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-orange-500/10 p-6 sm:p-8">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-[100px]" />
@@ -1341,7 +1398,7 @@ export default function Home() {
               <ProductSkeleton />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-                {products.map((product, index) => {
+                {products.filter(p => !selectedCategory || p.category.toLowerCase() === selectedCategory.toLowerCase()).map((product, index) => {
                   const productImages = getProductImages(product)
                   const totalImages = productImages.length + (product.video ? 1 : 0)
                   return (
@@ -1436,6 +1493,23 @@ export default function Home() {
                     </ScrollReveal>
                   )
                 })}
+                {products.filter(p => !selectedCategory || p.category.toLowerCase() === selectedCategory.toLowerCase()).length === 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="col-span-full text-center py-16"
+                  >
+                    <Package className="w-16 h-16 mx-auto mb-4 text-gray-600" />
+                    <h3 className="text-xl font-semibold text-gray-400 mb-2">No products found</h3>
+                    <p className="text-gray-500 mb-4">No products in "{selectedCategory}" category yet.</p>
+                    <button
+                      onClick={() => setSelectedCategory(null)}
+                      className="px-4 py-2 rounded-lg bg-teal-600/20 text-teal-300 border border-teal-500/30 hover:bg-teal-600/30 transition-colors text-sm"
+                    >
+                      Show All Products
+                    </button>
+                  </motion.div>
+                )}
               </div>
             )}
           </div>
