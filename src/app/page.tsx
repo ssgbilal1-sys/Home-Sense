@@ -1001,16 +1001,13 @@ export default function Home() {
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center"
                 >
-                  <Droplets className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  <img
+                    src="/logo-homesense.jpg"
+                    alt="Home Sense - Sanitary Fitting & Ware Showroom"
+                    className="h-10 sm:h-12 w-auto object-contain rounded-lg"
+                  />
                 </motion.div>
-                <div className="flex flex-col">
-                  <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-400 via-cyan-300 to-teal-400 bg-clip-text text-transparent tracking-wide text-shimmer leading-tight" style={{ backgroundSize: '200% auto' }}>
-                    HOME SENSE
-                  </span>
-                  <span className="text-[9px] sm:text-[10px] text-gray-500 tracking-widest uppercase">Distributor of Zilver</span>
-                </div>
               </motion.div>
 
               {/* Desktop Nav — with sliding underline indicators */}
@@ -1130,8 +1127,8 @@ export default function Home() {
                   animate="visible"
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-6 glow-pulse"
                 >
-                  <CheckCircle className="w-4 h-4 text-cyan-400" />
-                  <span className="text-sm text-gray-400">Authorized Distributor of Zilver</span>
+                  <img src="/logo-homesense.jpg" alt="Home Sense" className="h-5 w-auto object-contain rounded" />
+                  <span className="text-sm text-gray-400">Sanitary Fitting & Ware Showroom</span>
                 </motion.div>
 
                 {/* Title — Character-by-character text reveal */}
@@ -1667,15 +1664,11 @@ export default function Home() {
                 transition={{ delay: 0.1, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
                 className="flex items-center gap-2"
               >
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
-                  <Droplets className="w-4 h-4 text-white" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent leading-tight">
-                    HOME SENSE
-                  </span>
-                  <span className="text-[9px] text-gray-600">Distributor of Zilver</span>
-                </div>
+                <img
+                  src="/logo-homesense.jpg"
+                  alt="Home Sense"
+                  className="h-10 w-auto object-contain rounded-lg"
+                />
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -1766,9 +1759,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
-                <Settings className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              </div>
+              <img src="/logo-homesense.jpg" alt="Home Sense" className="h-9 sm:h-10 w-auto object-contain rounded-lg" />
               <div>
                 <h1 className="text-lg sm:text-xl font-bold text-white">Home Sense Admin</h1>
                 <p className="text-xs text-gray-500 hidden sm:block">Manage your store & products</p>
