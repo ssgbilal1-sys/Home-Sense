@@ -1214,8 +1214,8 @@ export default function Home() {
                     transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
                     className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-600/25 to-cyan-500/25 blur-3xl"
                   />
-                  <div className="relative rounded-3xl overflow-hidden border border-white/10">
-                    <img src="/logo-zilver.png" alt="Zilver Brand" className="w-full h-full object-cover" />
+                  <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-8">
+                    <img src="/logo-homesense.jpg" alt="Home Sense" className="w-full h-full object-contain rounded-2xl" />
                   </div>
                   {/* Floating badges with spring physics */}
                   <motion.div
