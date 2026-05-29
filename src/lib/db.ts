@@ -56,9 +56,10 @@ export const db = {
 
     create: async (opts: { data: Record<string, any> }) => {
       const supabase = getSupabaseAdmin()
+      const dataWithTimestamp = { ...opts.data, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
       const { data, error } = await supabase
         .from('Product')
-        .insert(opts.data)
+        .insert(dataWithTimestamp)
         .select()
         .single()
       if (error) throw new Error(error.message)
@@ -67,9 +68,10 @@ export const db = {
 
     update: async (opts: { where: { id: string }; data: Record<string, any> }) => {
       const supabase = getSupabaseAdmin()
+      const dataWithTimestamp = { ...opts.data, updatedAt: new Date().toISOString() }
       const { data, error } = await supabase
         .from('Product')
-        .update(opts.data)
+        .update(dataWithTimestamp)
         .eq('id', opts.where.id)
         .select()
         .single()
@@ -115,7 +117,7 @@ export const db = {
 
     upsert: async (opts: { where: { id: string }; update: Record<string, any>; create: Record<string, any> }) => {
       const supabase = getSupabaseAdmin()
-      const mergedData = { ...opts.create, ...opts.update, id: opts.where.id }
+      const mergedData = { ...opts.create, ...opts.update, id: opts.where.id, updatedAt: new Date().toISOString() }
       const { data, error } = await supabase
         .from('SiteSettings')
         .upsert(mergedData, { onConflict: 'id' })
@@ -127,9 +129,10 @@ export const db = {
 
     create: async (opts: { data: Record<string, any> }) => {
       const supabase = getSupabaseAdmin()
+      const dataWithTimestamp = { ...opts.data, updatedAt: new Date().toISOString() }
       const { data, error } = await supabase
         .from('SiteSettings')
-        .insert(opts.data)
+        .insert(dataWithTimestamp)
         .select()
         .single()
       if (error) throw new Error(error.message)

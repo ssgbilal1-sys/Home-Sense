@@ -39,8 +39,8 @@ export async function PUT(request: Request) {
     })
 
     return NextResponse.json(settings)
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating settings:', error)
-    return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to update settings: ' + (error.message || 'Unknown error') }, { status: 500 })
   }
 }
