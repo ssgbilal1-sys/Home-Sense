@@ -1489,9 +1489,9 @@ export default function Home() {
                       whileInView={{ opacity: 1, scale: 1 }}
                       viewport={{ once: false, amount: 0.15 }}
                       transition={{ delay: 0.2, ...springBouncy }}
-                      className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center mb-6"
+                      className="mx-auto mb-6"
                     >
-                      <Droplets className="w-10 h-10 text-white" />
+                      <img src="/logo-homesense.jpg" alt="Home Sense" className="h-20 w-auto object-contain rounded-xl mx-auto" />
                     </motion.div>
                     <motion.h3
                       initial={{ opacity: 0, y: 15 }}
@@ -1501,7 +1501,7 @@ export default function Home() {
                       className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2 text-shimmer"
                       style={{ backgroundSize: '200% auto' }}
                     >
-                      ZILVER
+                      HOME SENSE
                     </motion.h3>
                     <motion.p
                       initial={{ opacity: 0 }}
@@ -1510,7 +1510,7 @@ export default function Home() {
                       transition={{ delay: 0.4 }}
                       className="text-sm text-gray-400 mb-2"
                     >
-                      Concetti Italiano
+                      Sanitary Fitting & Ware
                     </motion.p>
                     <motion.p
                       initial={{ opacity: 0 }}
