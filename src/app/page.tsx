@@ -991,24 +991,40 @@ export default function Home() {
         <nav className="relative z-50 border-b border-white/8 backdrop-blur-xl bg-[#080c14]/85">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16 sm:h-20">
-              {/* Logo — with glow pulse */}
-              <motion.div
+              {/* Logo — Animated HOME SENSE text */}
+              <motion.a
+                href="#home"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={springTransition}
-                className="flex items-center gap-2 sm:gap-3 cursor-pointer logo-glow"
+                className="flex items-center gap-2 sm:gap-3 cursor-pointer"
               >
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  className="flex items-center"
                 >
-                  <img
-                    src="/logo-homesense.jpg"
-                    alt="Home Sense - Sanitary Fitting & Ware Showroom"
-                    className="h-10 sm:h-12 w-auto object-contain rounded-lg"
-                  />
+                  <span className="text-xl sm:text-2xl font-extrabold tracking-wider">
+                    <motion.span
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1, duration: 0.5 }}
+                      className="bg-gradient-to-r from-teal-400 via-teal-300 to-teal-500 bg-clip-text text-transparent"
+                      style={{ backgroundSize: '200% auto' }}
+                    >
+                      HOME
+                    </motion.span>
+                    <motion.span
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3, duration: 0.5 }}
+                      className="text-white"
+                    >
+                      {' '}SENSE
+                    </motion.span>
+                  </span>
                 </motion.div>
-              </motion.div>
+              </motion.a>
 
               {/* Desktop Nav — with sliding underline indicators */}
               <div className="hidden md:flex items-center gap-8">
@@ -1127,12 +1143,12 @@ export default function Home() {
                   animate="visible"
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-6 glow-pulse"
                 >
-                  <img src="/logo-homesense.jpg" alt="Home Sense" className="h-5 w-auto object-contain rounded" />
+                  <span className="text-sm font-bold bg-gradient-to-r from-teal-400 to-teal-300 bg-clip-text text-transparent">HOME SENSE</span>
                   <span className="text-sm text-gray-400">Sanitary Fitting & Ware Showroom</span>
                 </motion.div>
 
                 {/* Title — Character-by-character text reveal */}
-                <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold leading-tight mb-6 overflow-hidden">
+                <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold leading-[1.05] mb-6 overflow-hidden">
                   <motion.span
                     custom={1}
                     variants={heroTextVariants}
