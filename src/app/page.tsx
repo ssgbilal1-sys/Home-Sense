@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useScroll, useTransform, useInView, useMotionValue, useSpring } from 'framer-motion'
 import {
   Droplets, Menu, X, Plus, Trash2, Edit3,
   Upload, Save, ChevronRight, Phone, Mail,
@@ -39,6 +39,167 @@ interface Product {
 
 type ViewMode = 'storefront' | 'admin'
 
+// ───────────────────────────────────────────────────────
+// COUNTER ANIMATION HOOK — Counts up from 0 when visible
+// ───────────────────────────────────────────────────────
+function useCounter(target: number, duration: number = 2000, startOnView: boolean = true) {
+  const [count, setCount] = useState(0)
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true })
+  const hasStarted = useRef(false)
+
+  useEffect(() => {
+    if (startOnView && !isInView) return
+    if (hasStarted.current) return
+    hasStarted.current = true
+
+    let startTime: number | null = null
+    const step = (timestamp: number) => {
+      if (!startTime) startTime = timestamp
+      const progress = Math.min((timestamp - startTime) / duration, 1)
+      // Ease out cubic
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setCount(Math.floor(eased * target))
+      if (progress < 1) requestAnimationFrame(step)
+    }
+    requestAnimationFrame(step)
+  }, [isInView, target, duration, startOnView])
+
+  return { count, ref }
+}
+
+// ───────────────────────────────────────────────────────
+// 3D TILT CARD COMPONENT — Mouse-tracking 3D perspective
+// ───────────────────────────────────────────────────────
+function TiltCard({ children, className }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0)
+  const y = useMotionValue(0)
+  const springX = useSpring(x, { stiffness: 300, damping: 30 })
+  const springY = useSpring(y, { stiffness: 300, damping: 30 })
+  const ref = useRef<HTMLDivElement>(null)
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!ref.current) return
+    const rect = ref.current.getBoundingClientRect()
+    const centerX = rect.left + rect.width / 2
+    const centerY = rect.top + rect.height / 2
+    const rotateY = ((e.clientX - centerX) / (rect.width / 2)) * 8
+    const rotateX = -((e.clientY - centerY) / (rect.height / 2)) * 8
+    x.set(rotateY)
+    y.set(rotateX)
+  }
+
+  const handleMouseLeave = () => {
+    x.set(0)
+    y.set(0)
+  }
+
+  return (
+    <motion.div
+      ref={ref}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        rotateX: springY,
+        rotateY: springX,
+        transformStyle: 'preserve-3d',
+        perspective: 1000,
+      }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
+// ───────────────────────────────────────────────────────
+// RIPPLE BUTTON WRAPPER — Material-style ripple on click
+// ───────────────────────────────────────────────────────
+function RippleButton({ children, className, onClick, ...props }: React.ComponentProps<typeof Button> & { children: React.ReactNode }) {
+  const buttonRef = useRef<HTMLButtonElement>(null)
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const button = buttonRef.current
+    if (button) {
+      const rect = button.getBoundingClientRect()
+      const size = Math.max(rect.width, rect.height)
+      const x = e.clientX - rect.left - size / 2
+      const y = e.clientY - rect.top - size / 2
+      const ripple = document.createElement('span')
+      ripple.className = 'ripple-effect'
+      ripple.style.width = ripple.style.height = `${size}px`
+      ripple.style.left = `${x}px`
+      ripple.style.top = `${y}px`
+      button.appendChild(ripple)
+      setTimeout(() => ripple.remove(), 600)
+    }
+    onClick?.(e)
+  }
+
+  return (
+    <Button ref={buttonRef} className={`ripple-container ${className || ''}`} onClick={handleClick} {...props}>
+      {children}
+    </Button>
+  )
+}
+
+// ───────────────────────────────────────────────────────
+// WAVE SECTION DIVIDER
+// ───────────────────────────────────────────────────────
+function WaveDivider() {
+  return (
+    <div className="wave-divider relative z-10 w-full">
+      <svg
+        viewBox="0 0 1440 60"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className="w-[200%] h-full"
+        preserveAspectRatio="none"
+      >
+        <path
+          d="M0 30C240 10 480 50 720 30C960 10 1200 50 1440 30C1680 10 1920 50 2160 30C2400 10 2640 50 2880 30V60H0V30Z"
+          fill="rgba(59,130,246,0.03)"
+        />
+        <path
+          d="M0 35C240 15 480 55 720 35C960 15 1200 55 1440 35C1680 15 1920 55 2160 35C2400 15 2640 55 2880 35V60H0V35Z"
+          fill="rgba(6,182,212,0.02)"
+        />
+      </svg>
+    </div>
+  )
+}
+
+// ───────────────────────────────────────────────────────
+// SKELETON LOADING COMPONENT
+// ───────────────────────────────────────────────────────
+function ProductSkeleton() {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="rounded-2xl overflow-hidden bg-white/5 border border-white/8">
+          <div className="aspect-square skeleton-shimmer" />
+          <div className="p-5 space-y-3">
+            <div className="h-5 w-3/4 rounded skeleton-shimmer" />
+            <div className="h-4 w-full rounded skeleton-shimmer" />
+            <div className="h-4 w-2/3 rounded skeleton-shimmer" />
+            <div className="flex justify-between items-center pt-2">
+              <div className="h-6 w-20 rounded skeleton-shimmer" />
+              <div className="h-9 w-24 rounded-lg skeleton-shimmer" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ───────────────────────────────────────────────────────
+// SPRING TRANSITION PRESETS
+// ───────────────────────────────────────────────────────
+const springTransition = { type: 'spring' as const, stiffness: 100, damping: 15 }
+const springBouncy = { type: 'spring' as const, stiffness: 200, damping: 12 }
+const springGentle = { type: 'spring' as const, stiffness: 80, damping: 20 }
+
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([])
   const [viewMode, setViewMode] = useState<ViewMode>('storefront')
@@ -71,9 +232,21 @@ export default function Home() {
   // Product detail view
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [detailImageIndex, setDetailImageIndex] = useState(0)
+  const [detailImageKey, setDetailImageKey] = useState(0)
 
   const { toast } = useToast()
   const extraImageInputRef = useRef<HTMLInputElement>(null)
+
+  // Parallax scroll for hero
+  const heroRef = useRef<HTMLElement>(null)
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
+  const heroY = useTransform(scrollYProgress, [0, 1], [0, -100])
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0])
+
+  // Counter animations for stats
+  const counter500 = useCounter(500, 2000)
+  const counter300 = useCounter(300, 2000)
+  const counter100 = useCounter(100, 1500)
 
   // Parse images from product
   const getProductImages = (product: Product): string[] => {
@@ -81,7 +254,6 @@ export default function Home() {
       const parsed = JSON.parse(product.images || '[]')
       if (Array.isArray(parsed) && parsed.length > 0) return parsed
     } catch {}
-    // Fallback: use the main image
     return product.image ? [product.image] : []
   }
 
@@ -160,7 +332,6 @@ export default function Home() {
       toast({ title: 'Upload Failed', description: 'Failed to upload images.', variant: 'destructive' })
     } finally {
       setUploadingExtra(false)
-      // Reset file input
       if (extraImageInputRef.current) extraImageInputRef.current.value = ''
     }
   }
@@ -263,6 +434,7 @@ export default function Home() {
   const openProductDetail = (product: Product) => {
     setSelectedProduct(product)
     setDetailImageIndex(0)
+    setDetailImageKey(prev => prev + 1)
   }
 
   // Category icons mapping
@@ -278,12 +450,28 @@ export default function Home() {
   }
 
   // ───────────────────────────────────────────────────────
-  // PRODUCT DETAIL VIEW (overlay)
+  // HERO TEXT REVEAL VARIANTS — Staggered luxury reveal
+  // ───────────────────────────────────────────────────────
+  const heroTextVariants = {
+    hidden: { opacity: 0, y: 60, skewY: 3 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      skewY: 0,
+      transition: {
+        delay: 0.3 + i * 0.15,
+        duration: 0.8,
+        ease: [0.25, 0.46, 0.45, 0.94],
+      },
+    }),
+  }
+
+  // ───────────────────────────────────────────────────────
+  // PRODUCT DETAIL VIEW (overlay) — Enhanced with animations
   // ───────────────────────────────────────────────────────
   const renderProductDetail = () => {
     if (!selectedProduct) return null
     const allImages = getProductImages(selectedProduct)
-    // Include main image as first if not already in images array
     const displayImages = allImages[0] === selectedProduct.image ? allImages : [selectedProduct.image, ...allImages.filter(img => img !== selectedProduct.image)]
 
     return (
@@ -291,59 +479,90 @@ export default function Home() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+        transition={{ duration: 0.3 }}
+        className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
         onClick={() => setSelectedProduct(null)}
       >
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          initial={{ opacity: 0, scale: 0.9, y: 30 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="bg-[#0d1220] border border-white/10 rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto"
+          exit={{ opacity: 0, scale: 0.9, y: 30 }}
+          transition={springTransition}
+          className="bg-[#0d1220] border border-white/10 rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto relative"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close button */}
-          <button
+          <motion.button
             onClick={() => setSelectedProduct(null)}
+            whileHover={{ scale: 1.1, rotate: 90 }}
+            whileTap={{ scale: 0.9 }}
             className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/80 transition-colors"
           >
             <X className="w-5 h-5" />
-          </button>
+          </motion.button>
 
           <div className="grid lg:grid-cols-2 gap-0">
             {/* Left: Images & Video */}
-            <div className="p-6">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2, ...springGentle }}
+              className="p-6"
+            >
               {/* Main Image / Video */}
               <div className="relative aspect-square rounded-xl overflow-hidden bg-black/30 mb-4">
-                {selectedProduct.video && detailImageIndex === -1 ? (
-                  <video
-                    src={selectedProduct.video}
-                    controls
-                    autoPlay
-                    className="w-full h-full object-contain"
-                    poster={selectedProduct.image}
-                  />
-                ) : (
-                  <img
-                    src={displayImages[detailImageIndex >= 0 ? detailImageIndex : 0] || selectedProduct.image}
-                    alt={selectedProduct.name}
-                    className="w-full h-full object-cover"
-                  />
-                )}
+                <AnimatePresence mode="wait">
+                  {selectedProduct.video && detailImageIndex === -1 ? (
+                    <motion.video
+                      key="video"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      src={selectedProduct.video}
+                      controls
+                      autoPlay
+                      className="w-full h-full object-contain"
+                      poster={selectedProduct.image}
+                    />
+                  ) : (
+                    <motion.img
+                      key={detailImageKey}
+                      initial={{ opacity: 0, scale: 1.02 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.4 }}
+                      src={displayImages[detailImageIndex >= 0 ? detailImageIndex : 0] || selectedProduct.image}
+                      alt={selectedProduct.name}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </AnimatePresence>
                 {/* Navigation arrows */}
                 {displayImages.length > 1 && detailImageIndex >= 0 && (
                   <>
-                    <button
-                      onClick={() => setDetailImageIndex((detailImageIndex - 1 + displayImages.length) % displayImages.length)}
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => {
+                        setDetailImageIndex((detailImageIndex - 1 + displayImages.length) % displayImages.length)
+                        setDetailImageKey(prev => prev + 1)
+                      }}
                       className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/80 transition-colors"
                     >
                       <ChevronLeft className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => setDetailImageIndex((detailImageIndex + 1) % displayImages.length)}
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => {
+                        setDetailImageIndex((detailImageIndex + 1) % displayImages.length)
+                        setDetailImageKey(prev => prev + 1)
+                      }}
                       className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/80 transition-colors rotate-180"
                     >
                       <ChevronLeft className="w-5 h-5" />
-                    </button>
+                    </motion.button>
                   </>
                 )}
                 {/* Image counter */}
@@ -357,19 +576,23 @@ export default function Home() {
               {/* Thumbnail strip */}
               <div className="flex gap-2 overflow-x-auto pb-2">
                 {displayImages.map((img, i) => (
-                  <button
+                  <motion.button
                     key={i}
-                    onClick={() => setDetailImageIndex(i)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => { setDetailImageIndex(i); setDetailImageKey(prev => prev + 1) }}
                     className={`shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
                       detailImageIndex === i ? 'border-cyan-400 ring-1 ring-cyan-400/50' : 'border-white/10 hover:border-white/30'
                     }`}
                   >
                     <img src={img} alt={`${selectedProduct.name} ${i + 1}`} className="w-full h-full object-cover" />
-                  </button>
+                  </motion.button>
                 ))}
                 {/* Video thumbnail */}
                 {selectedProduct.video && (
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => setDetailImageIndex(-1)}
                     className={`shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all relative ${
                       detailImageIndex === -1 ? 'border-red-400 ring-1 ring-red-400/50' : 'border-white/10 hover:border-red-400/50'
@@ -379,32 +602,57 @@ export default function Home() {
                     <div className="absolute inset-0 flex items-center justify-center">
                       <Play className="w-6 h-6 text-white fill-white" />
                     </div>
-                  </button>
+                  </motion.button>
                 )}
               </div>
-            </div>
+            </motion.div>
 
-            {/* Right: Product Info */}
-            <div className="p-6 lg:p-8 flex flex-col justify-center">
+            {/* Right: Product Info — slides in from right */}
+            <motion.div
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.35, ...springGentle }}
+              className="p-6 lg:p-8 flex flex-col justify-center"
+            >
               {/* Category badge */}
-              <div className="mb-4">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="mb-4"
+              >
                 <span className="px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-600/80 to-cyan-500/80 backdrop-blur-sm text-white flex items-center gap-1 w-fit">
                   {(() => { const Icon = getCategoryIcon(selectedProduct.category); return <Icon className="w-3 h-3" /> })()}
                   {selectedProduct.category}
                 </span>
-              </div>
+              </motion.div>
 
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3">
+              <motion.h2
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.55 }}
+                className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3"
+              >
                 {selectedProduct.name}
-              </h2>
+              </motion.h2>
 
-              <p className="text-gray-400 text-base mb-6 leading-relaxed">
+              <motion.p
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="text-gray-400 text-base mb-6 leading-relaxed"
+              >
                 {selectedProduct.description}
-              </p>
+              </motion.p>
 
-              <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-6">
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.65 }}
+                className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-6"
+              >
                 {selectedProduct.price}
-              </div>
+              </motion.div>
 
               {/* Features */}
               <div className="space-y-3 mb-8">
@@ -413,20 +661,31 @@ export default function Home() {
                   { icon: Star, text: 'International Standards Compliant' },
                   { icon: Wrench, text: 'Spare Parts Available' },
                 ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-3">
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.7 + i * 0.1, ...springTransition }}
+                    className="flex items-center gap-3"
+                  >
                     <item.icon className="w-5 h-5 text-cyan-400 shrink-0" />
                     <span className="text-gray-300 text-sm">{item.text}</span>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
 
               {/* Action buttons */}
-              <div className="flex gap-3">
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1 }}
+                className="flex gap-3"
+              >
                 <a href="#contact" onClick={() => setSelectedProduct(null)}>
-                  <Button size="lg" className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white border-0 shadow-lg shadow-blue-500/25">
+                  <RippleButton size="lg" className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white border-0 shadow-lg shadow-blue-500/25 btn-gradient-shift">
                     <Phone className="w-5 h-5 mr-2" />
                     Get Quote
-                  </Button>
+                  </RippleButton>
                 </a>
                 <a href="https://wa.me/923001234567" target="_blank" rel="noopener noreferrer">
                   <Button size="lg" variant="outline" className="border-green-500/50 text-green-400 hover:bg-green-500/10 hover:border-green-400">
@@ -434,8 +693,8 @@ export default function Home() {
                     WhatsApp
                   </Button>
                 </a>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           </div>
         </motion.div>
       </motion.div>
@@ -449,49 +708,73 @@ export default function Home() {
   if (viewMode === 'storefront') {
     return (
       <div className="min-h-screen flex flex-col bg-[#080c14] text-white overflow-x-hidden">
-        {/* Animated background */}
+        {/* Animated background — Floating Orbs with smooth movement */}
         <div className="fixed inset-0 z-0 pointer-events-none">
-          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-600/15 rounded-full blur-[180px] animate-pulse" />
-          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[150px] animate-pulse" style={{ animationDelay: '1s' }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-teal-500/8 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
+          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-600/15 rounded-full blur-[180px] orb-float-1" />
+          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[150px] orb-float-2" />
+          <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-teal-500/8 rounded-full blur-[120px] orb-float-3" />
         </div>
 
-        {/* Navigation */}
+        {/* Navigation — Enhanced with logo glow, active indicators, smooth mobile menu */}
         <nav className="relative z-50 border-b border-white/8 backdrop-blur-xl bg-[#080c14]/85">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16 sm:h-20">
-              {/* Logo */}
+              {/* Logo — with glow pulse */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="flex items-center gap-2 sm:gap-3 cursor-pointer"
+                transition={springTransition}
+                className="flex items-center gap-2 sm:gap-3 cursor-pointer logo-glow"
               >
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center"
+                >
                   <Droplets className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                </div>
-                <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-400 via-cyan-300 to-teal-400 bg-clip-text text-transparent tracking-wide">
+                </motion.div>
+                <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-400 via-cyan-300 to-teal-400 bg-clip-text text-transparent tracking-wide text-shimmer" style={{ backgroundSize: '200% auto' }}>
                   ZILVER
                 </span>
               </motion.div>
 
-              {/* Desktop Nav */}
+              {/* Desktop Nav — with sliding underline indicators */}
               <div className="hidden md:flex items-center gap-8">
-                <a href="#home" className="text-sm text-gray-300 hover:text-white transition-colors">Home</a>
-                <a href="#products" className="text-sm text-gray-300 hover:text-white transition-colors">Products</a>
-                <a href="#about" className="text-sm text-gray-300 hover:text-white transition-colors">About</a>
-                <a href="#contact" className="text-sm text-gray-300 hover:text-white transition-colors">Contact</a>
-                <Button
-                  onClick={() => {
-                    if (isAdminAuthenticated) setViewMode('admin')
-                    else setShowAdminLogin(true)
-                  }}
-                  variant="outline"
-                  size="sm"
-                  className="border-white/15 text-gray-300 hover:text-white hover:border-blue-400 hover:bg-blue-500/10"
+                {[
+                  { label: 'Home', href: '#home' },
+                  { label: 'Products', href: '#products' },
+                  { label: 'About', href: '#about' },
+                  { label: 'Contact', href: '#contact' },
+                ].map((link, i) => (
+                  <motion.a
+                    key={link.label}
+                    href={link.href}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 + i * 0.05, ...springTransition }}
+                    className="text-sm text-gray-300 hover:text-white transition-colors nav-link"
+                  >
+                    {link.label}
+                  </motion.a>
+                ))}
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, ...springTransition }}
                 >
-                  <Shield className="w-4 h-4 mr-1" />
-                  Admin
-                </Button>
+                  <Button
+                    onClick={() => {
+                      if (isAdminAuthenticated) setViewMode('admin')
+                      else setShowAdminLogin(true)
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="border-white/15 text-gray-300 hover:text-white hover:border-blue-400 hover:bg-blue-500/10"
+                  >
+                    <Shield className="w-4 h-4 mr-1" />
+                    Admin
+                  </Button>
+                </motion.div>
               </div>
 
               {/* Mobile buttons */}
@@ -509,91 +792,172 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Mobile menu */}
+          {/* Mobile menu — Enhanced with stagger and backdrop blur */}
           <AnimatePresence>
             {mobileMenuOpen && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="md:hidden border-t border-white/8 bg-[#080c14]/95 backdrop-blur-xl"
+                transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+                className="md:hidden border-t border-white/8 bg-[#080c14]/95 backdrop-blur-xl overflow-hidden"
               >
-                <div className="px-4 py-4 space-y-3">
-                  <a href="#home" onClick={() => setMobileMenuOpen(false)} className="block text-gray-300 hover:text-white py-2">Home</a>
-                  <a href="#products" onClick={() => setMobileMenuOpen(false)} className="block text-gray-300 hover:text-white py-2">Products</a>
-                  <a href="#about" onClick={() => setMobileMenuOpen(false)} className="block text-gray-300 hover:text-white py-2">About</a>
-                  <a href="#contact" onClick={() => setMobileMenuOpen(false)} className="block text-gray-300 hover:text-white py-2">Contact</a>
+                <div className="px-4 py-4 space-y-1">
+                  {[
+                    { label: 'Home', href: '#home' },
+                    { label: 'Products', href: '#products' },
+                    { label: 'About', href: '#about' },
+                    { label: 'Contact', href: '#contact' },
+                  ].map((link, i) => (
+                    <motion.a
+                      key={link.label}
+                      href={link.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.05 + i * 0.05, ...springTransition }}
+                      className="block text-gray-300 hover:text-white py-2 px-3 rounded-lg hover:bg-white/5 transition-colors"
+                    >
+                      {link.label}
+                    </motion.a>
+                  ))}
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
         </nav>
 
-        {/* Hero Section */}
-        <section id="home" className="relative z-10 flex-1 flex items-center">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 lg:py-32 w-full">
+        {/* Hero Section — Parallax, staggered text reveal, shimmer, badge glow */}
+        <section id="home" ref={heroRef} className="relative z-10 flex-1 flex items-center">
+          <motion.div
+            style={{ y: heroY, opacity: heroOpacity }}
+            className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 lg:py-32 w-full"
+          >
             <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-6">
+              <div>
+                {/* Badge — glow pulse */}
+                <motion.div
+                  custom={0}
+                  variants={heroTextVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-6 glow-pulse"
+                >
                   <Droplets className="w-4 h-4 text-cyan-400" />
                   <span className="text-sm text-gray-400">Quality Bathroom & Kitchen Solutions</span>
-                </div>
-                <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold leading-tight mb-6">
-                  Innovative,
-                  <span className="bg-gradient-to-r from-blue-400 via-cyan-300 to-teal-400 bg-clip-text text-transparent"> Efficient</span>
-                  <br />& Elegant
+                </motion.div>
+
+                {/* Title — staggered text reveal, line by line */}
+                <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold leading-tight mb-6 overflow-hidden">
+                  <motion.span
+                    custom={1}
+                    variants={heroTextVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="block"
+                  >
+                    Innovative,
+                  </motion.span>
+                  <motion.span
+                    custom={2}
+                    variants={heroTextVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="block"
+                  >
+                    <span className="bg-gradient-to-r from-blue-400 via-cyan-300 to-teal-400 bg-clip-text text-transparent text-shimmer" style={{ backgroundSize: '200% auto' }}>
+                      Efficient
+                    </span>
+                  </motion.span>
+                  <motion.span
+                    custom={3}
+                    variants={heroTextVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="block"
+                  >
+                    & Elegant
+                  </motion.span>
                 </h1>
-                <p className="text-lg sm:text-xl text-gray-400 mb-8 max-w-lg">
+
+                {/* Description */}
+                <motion.p
+                  custom={4}
+                  variants={heroTextVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="text-lg sm:text-xl text-gray-400 mb-8 max-w-lg"
+                >
                   Concetti Italiano — Sanitary Wares. We have complete range of solutions for day to day living in the bathroom, public and private places.
-                </p>
-                <div className="flex flex-wrap gap-4">
+                </motion.p>
+
+                {/* CTA Buttons — with gradient shift and ripple */}
+                <motion.div
+                  custom={5}
+                  variants={heroTextVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="flex flex-wrap gap-4"
+                >
                   <a href="#products">
-                    <Button size="lg" className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white border-0 shadow-lg shadow-blue-500/25">
+                    <RippleButton size="lg" className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white border-0 shadow-lg shadow-blue-500/25 btn-gradient-shift">
                       <Package className="w-5 h-5 mr-2" />
                       Explore Products
-                    </Button>
+                    </RippleButton>
                   </a>
                   <a href="#contact">
-                    <Button size="lg" variant="outline" className="border-white/20 text-gray-300 hover:text-white hover:border-white/40">
-                      Contact Us
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
+                    <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                      <Button size="lg" variant="outline" className="border-white/20 text-gray-300 hover:text-white hover:border-white/40">
+                        Contact Us
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </motion.div>
                   </a>
-                </div>
-              </motion.div>
+                </motion.div>
+              </div>
 
+              {/* Hero right — Floating elements with enhanced animation */}
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
+                initial={{ opacity: 0, scale: 0.9, rotateY: 10 }}
+                animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+                transition={{ duration: 1, delay: 0.4, ...springTransition }}
                 className="relative hidden lg:block"
               >
                 <div className="relative w-full aspect-square max-w-md mx-auto">
-                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-600/25 to-cyan-500/25 blur-3xl" />
+                  {/* Glow behind image */}
+                  <motion.div
+                    animate={{ scale: [1, 1.05, 1], opacity: [0.25, 0.35, 0.25] }}
+                    transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
+                    className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-600/25 to-cyan-500/25 blur-3xl"
+                  />
                   <div className="relative rounded-3xl overflow-hidden border border-white/10">
                     <img src="/logo-zilver.png" alt="Zilver Brand" className="w-full h-full object-cover" />
                   </div>
+                  {/* Floating badges with spring physics */}
                   <motion.div
-                    animate={{ y: [0, -10, 0] }}
-                    transition={{ repeat: Infinity, duration: 3 }}
-                    className="absolute -top-4 -right-4 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-2xl p-4 shadow-xl"
+                    animate={{ y: [0, -12, 0], rotate: [0, 5, 0] }}
+                    transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut' }}
+                    className="absolute -top-4 -right-4 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-2xl p-4 shadow-xl shadow-blue-500/20"
                   >
                     <Droplets className="w-6 h-6 text-white" />
                   </motion.div>
                   <motion.div
-                    animate={{ y: [0, 10, 0] }}
-                    transition={{ repeat: Infinity, duration: 3, delay: 1 }}
-                    className="absolute -bottom-4 -left-4 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-2xl p-4 shadow-xl"
+                    animate={{ y: [0, 12, 0], rotate: [0, -5, 0] }}
+                    transition={{ repeat: Infinity, duration: 3.5, delay: 1.2, ease: 'easeInOut' }}
+                    className="absolute -bottom-4 -left-4 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-2xl p-4 shadow-xl shadow-cyan-500/20"
                   >
                     <CheckCircle className="w-6 h-6 text-white" />
                   </motion.div>
                 </div>
               </motion.div>
             </div>
-          </div>
+          </motion.div>
         </section>
 
-        {/* Category Quick Links */}
+        {/* Wave Divider */}
+        <WaveDivider />
+
+        {/* Category Quick Links — Icon bounce, card glow */}
         <section className="relative z-10 py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -605,14 +969,20 @@ export default function Home() {
               ].map((cat, i) => (
                 <motion.div
                   key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
                   viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
+                  transition={{ delay: i * 0.1, ...springBouncy }}
+                  whileHover={{ scale: 1.03 }}
                   className="group cursor-pointer"
                 >
-                  <div className="rounded-xl border border-white/8 bg-white/3 hover:bg-white/5 hover:border-blue-500/30 transition-all duration-300 p-5 text-center">
-                    <cat.icon className="w-8 h-8 mx-auto mb-3 text-cyan-400 group-hover:scale-110 transition-transform" />
+                  <div className="rounded-xl border border-white/8 bg-white/3 hover:bg-white/5 hover:border-blue-500/30 transition-all duration-300 p-5 text-center card-shine card-glow">
+                    <motion.div
+                      whileHover={{ scale: 1.2, rotate: 5 }}
+                      transition={springBouncy}
+                    >
+                      <cat.icon className="w-8 h-8 mx-auto mb-3 text-cyan-400 group-hover:scale-110 transition-transform" />
+                    </motion.div>
                     <h3 className="font-semibold text-white text-sm mb-1">{cat.name}</h3>
                     <span className="text-xs text-gray-500">{cat.count} Products</span>
                   </div>
@@ -622,28 +992,41 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Products Section */}
+        {/* Wave Divider */}
+        <WaveDivider />
+
+        {/* Products Section — 3D tilt, shine sweep, stagger, price float */}
         <section id="products" className="relative z-10 py-16 sm:py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
+              transition={springTransition}
               className="text-center mb-12 sm:mb-16"
             >
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+              <motion.h2
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4"
+              >
                 Featured
-                <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent"> Products</span>
-              </h2>
-              <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+                <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent text-shimmer" style={{ backgroundSize: '200% auto' }}> Products</span>
+              </motion.h2>
+              <motion.p
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.15 }}
+                className="text-gray-400 text-lg max-w-2xl mx-auto"
+              >
                 The Zilver Concetti Italiano has multifaceted solutions for the modern bathroom — versatile faucets, head showers, washbasins and more.
-              </p>
+              </motion.p>
             </motion.div>
 
             {loading ? (
-              <div className="flex justify-center py-20">
-                <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
-              </div>
+              <ProductSkeleton />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
                 {products.map((product, index) => {
@@ -652,79 +1035,91 @@ export default function Home() {
                   return (
                     <motion.div
                       key={product.id}
-                      initial={{ opacity: 0, y: 30 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: index * 0.1 }}
-                      whileHover={{ y: -8 }}
-                      className="group"
+                      initial={{ opacity: 0, y: 40, scale: 0.95 }}
+                      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                      viewport={{ once: true, margin: '-50px' }}
+                      transition={{ delay: index * 0.1, ...springTransition }}
                     >
-                      <div
-                        className="relative rounded-2xl overflow-hidden bg-white/5 border border-white/8 hover:border-blue-500/40 transition-all duration-500 cursor-pointer"
-                        onClick={() => openProductDetail(product)}
-                      >
-                        {/* Product Image */}
-                        <div className="relative aspect-square overflow-hidden">
-                          <img
-                            src={product.image}
-                            alt={product.name}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                          {/* Category badge */}
-                          <div className="absolute top-3 left-3">
-                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-600/80 to-cyan-500/80 backdrop-blur-sm text-white flex items-center gap-1">
-                              {(() => { const Icon = getCategoryIcon(product.category); return <Icon className="w-3 h-3" /> })()}
-                              {product.category}
-                            </span>
-                          </div>
-                          {/* Media count badge */}
-                          {totalImages > 1 && (
-                            <div className="absolute top-3 right-3 flex gap-1">
-                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-white/20 backdrop-blur-sm text-white flex items-center gap-1">
-                                <ImageIcon className="w-3 h-3" /> {productImages.length}
+                      <TiltCard className="group">
+                        <motion.div
+                          whileHover={{ y: -8 }}
+                          transition={springTransition}
+                          className="relative rounded-2xl overflow-hidden bg-white/5 border border-white/8 hover:border-blue-500/40 transition-all duration-500 cursor-pointer card-shine"
+                          onClick={() => openProductDetail(product)}
+                        >
+                          {/* Product Image — enhanced zoom with parallax */}
+                          <div className="relative aspect-square overflow-hidden">
+                            <motion.img
+                              src={product.image}
+                              alt={product.name}
+                              className="w-full h-full object-cover group-hover:scale-115 transition-transform duration-700 ease-out"
+                              whileHover={{ scale: 1.15 }}
+                              transition={{ duration: 0.7 }}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                            {/* Category badge */}
+                            <div className="absolute top-3 left-3">
+                              <span className="px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-600/80 to-cyan-500/80 backdrop-blur-sm text-white flex items-center gap-1">
+                                {(() => { const Icon = getCategoryIcon(product.category); return <Icon className="w-3 h-3" /> })()}
+                                {product.category}
                               </span>
-                              {product.video && (
-                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-500/80 backdrop-blur-sm text-white flex items-center gap-1">
-                                  <Play className="w-3 h-3 fill-white" />
+                            </div>
+                            {/* Media count badge */}
+                            {totalImages > 1 && (
+                              <div className="absolute top-3 right-3 flex gap-1">
+                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-white/20 backdrop-blur-sm text-white flex items-center gap-1">
+                                  <ImageIcon className="w-3 h-3" /> {productImages.length}
                                 </span>
-                              )}
+                                {product.video && (
+                                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-500/80 backdrop-blur-sm text-white flex items-center gap-1">
+                                    <Play className="w-3 h-3 fill-white" />
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                            {/* Quick view overlay — smooth reveal */}
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                              <motion.div
+                                initial={{ scale: 0.8 }}
+                                whileHover={{ scale: 1 }}
+                                className="w-14 h-14 rounded-full bg-white/25 backdrop-blur-sm flex items-center justify-center border-2 border-white/40"
+                              >
+                                <Eye className="w-7 h-7 text-white" />
+                              </motion.div>
                             </div>
-                          )}
-                          {/* Quick view overlay */}
-                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <div className="w-14 h-14 rounded-full bg-white/25 backdrop-blur-sm flex items-center justify-center border-2 border-white/40">
-                              <Eye className="w-7 h-7 text-white" />
-                            </div>
-                          </div>
-                          {/* Click hint */}
-                          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <span className="text-xs text-white/80 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full">Click to view details</span>
-                          </div>
-                        </div>
-
-                        {/* Product Info */}
-                        <div className="p-5">
-                          <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-cyan-300 transition-colors">
-                            {product.name}
-                          </h3>
-                          <p className="text-sm text-gray-400 mb-4 line-clamp-2">
-                            {product.description}
-                          </p>
-                          <div className="flex items-center justify-between">
-                            <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                              {product.price}
-                            </span>
-                            <Button
-                              size="sm"
-                              className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white border-0 shadow-md shadow-blue-500/20"
-                              onClick={(e) => { e.stopPropagation(); openProductDetail(product) }}
+                            {/* Click hint */}
+                            <motion.div
+                              initial={{ opacity: 0, y: 10 }}
+                              whileHover={{ opacity: 1, y: 0 }}
+                              className="absolute bottom-3 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300"
                             >
-                              View Details
-                            </Button>
+                              <span className="text-xs text-white/80 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full">Click to view details</span>
+                            </motion.div>
                           </div>
-                        </div>
-                      </div>
+
+                          {/* Product Info */}
+                          <div className="p-5">
+                            <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-cyan-300 transition-colors duration-300">
+                              {product.name}
+                            </h3>
+                            <p className="text-sm text-gray-400 mb-4 line-clamp-2">
+                              {product.description}
+                            </p>
+                            <div className="flex items-center justify-between">
+                              <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent price-float">
+                                {product.price}
+                              </span>
+                              <RippleButton
+                                size="sm"
+                                className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white border-0 shadow-md shadow-blue-500/20 btn-gradient-shift"
+                                onClick={(e) => { e.stopPropagation(); openProductDetail(product) }}
+                              >
+                                View Details
+                              </RippleButton>
+                            </div>
+                          </div>
+                        </motion.div>
+                      </TiltCard>
                     </motion.div>
                   )
                 })}
@@ -733,18 +1128,37 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Why Zilver Section */}
+        {/* Wave Divider */}
+        <WaveDivider />
+
+        {/* Why Zilver Section — Enhanced scroll reveals, counter animation, spring feature items */}
         <section id="about" className="relative z-10 py-16 sm:py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6">
+              <motion.div
+                initial={{ opacity: 0, x: -40 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={springTransition}
+              >
+                <motion.h2
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6"
+                >
                   All-in-One
-                  <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent"> Sanitary Wares</span>
-                </h2>
-                <p className="text-gray-400 text-lg mb-8">
+                  <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent text-shimmer" style={{ backgroundSize: '200% auto' }}> Sanitary Wares</span>
+                </motion.h2>
+                <motion.p
+                  initial={{ opacity: 0, y: 15 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.1 }}
+                  className="text-gray-400 text-lg mb-8"
+                >
                   Excellent details, durable components, compatible hardware result in Zilver quality. High standard, long life combined with Zilver mixers superior performance thanks to the compatibility of all components, spare parts and durability.
-                </p>
+                </motion.p>
                 <div className="space-y-6">
                   {[
                     { icon: CheckCircle, title: 'Quality Standards', desc: 'Carefully engineered, all parts complying with international standards. Premium materials built to last.' },
@@ -753,17 +1167,22 @@ export default function Home() {
                   ].map((item, i) => (
                     <motion.div
                       key={i}
-                      initial={{ opacity: 0, x: -20 }}
+                      initial={{ opacity: 0, x: -30 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true }}
-                      transition={{ delay: i * 0.15 }}
-                      className="flex gap-4"
+                      transition={{ delay: i * 0.15, ...springBouncy }}
+                      whileHover={{ x: 5 }}
+                      className="flex gap-4 group cursor-default"
                     >
-                      <div className="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600/20 to-cyan-500/20 border border-white/8 flex items-center justify-center">
+                      <motion.div
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        transition={springBouncy}
+                        className="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600/20 to-cyan-500/20 border border-white/8 flex items-center justify-center"
+                      >
                         <item.icon className="w-6 h-6 text-cyan-400" />
-                      </div>
+                      </motion.div>
                       <div>
-                        <h3 className="font-semibold text-white mb-1">{item.title}</h3>
+                        <h3 className="font-semibold text-white mb-1 group-hover:text-cyan-300 transition-colors">{item.title}</h3>
                         <p className="text-gray-400 text-sm">{item.desc}</p>
                       </div>
                     </motion.div>
@@ -771,31 +1190,90 @@ export default function Home() {
                 </div>
               </motion.div>
 
-              <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="relative">
-                <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-600/15 to-cyan-500/15 blur-2xl" />
+              <motion.div
+                initial={{ opacity: 0, x: 40 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={springTransition}
+                className="relative"
+              >
+                <motion.div
+                  animate={{ scale: [1, 1.02, 1], opacity: [0.15, 0.2, 0.15] }}
+                  transition={{ repeat: Infinity, duration: 5, ease: 'easeInOut' }}
+                  className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-600/15 to-cyan-500/15 blur-2xl"
+                />
                 <div className="relative rounded-3xl border border-white/8 overflow-hidden bg-white/3 p-8 sm:p-12">
                   <div className="text-center">
-                    <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center mb-6">
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.2, ...springBouncy }}
+                      className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center mb-6"
+                    >
                       <Droplets className="w-10 h-10 text-white" />
-                    </div>
-                    <h3 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2">
+                    </motion.div>
+                    <motion.h3
+                      initial={{ opacity: 0, y: 15 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.3 }}
+                      className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2 text-shimmer"
+                      style={{ backgroundSize: '200% auto' }}
+                    >
                       ZILVER
-                    </h3>
-                    <p className="text-sm text-gray-400 mb-2">Concetti Italiano</p>
-                    <p className="text-gray-500 text-xs mb-8">Quality Bathroom & Kitchen Solutions</p>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="text-center">
-                        <div className="text-2xl sm:text-3xl font-bold text-white">500+</div>
+                    </motion.h3>
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.4 }}
+                      className="text-sm text-gray-400 mb-2"
+                    >
+                      Concetti Italiano
+                    </motion.p>
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.45 }}
+                      className="text-gray-500 text-xs mb-8"
+                    >
+                      Quality Bathroom & Kitchen Solutions
+                    </motion.p>
+
+                    {/* Counter animation stats */}
+                    <div className="grid grid-cols-3 gap-4" ref={counter500.ref}>
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.5, ...springTransition }}
+                        className="text-center"
+                      >
+                        <div className="text-2xl sm:text-3xl font-bold text-white">{counter500.count}+</div>
                         <div className="text-xs text-gray-500 mt-1">Projects</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl sm:text-3xl font-bold text-white">300+</div>
+                      </motion.div>
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.6, ...springTransition }}
+                        className="text-center"
+                      >
+                        <div className="text-2xl sm:text-3xl font-bold text-white">{counter300.count}+</div>
                         <div className="text-xs text-gray-500 mt-1">Products</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl sm:text-3xl font-bold text-white">100%</div>
+                      </motion.div>
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.7, ...springTransition }}
+                        className="text-center"
+                      >
+                        <div className="text-2xl sm:text-3xl font-bold text-white">{counter100.count}%</div>
                         <div className="text-xs text-gray-500 mt-1">Quality</div>
-                      </div>
+                      </motion.div>
                     </div>
                   </div>
                 </div>
@@ -804,18 +1282,22 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Contact Section */}
+        {/* Wave Divider */}
+        <WaveDivider />
+
+        {/* Contact Section — Icon animations, card stagger */}
         <section id="contact" className="relative z-10 py-16 sm:py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
+              transition={springTransition}
               className="text-center mb-12"
             >
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
                 Get in
-                <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent"> Touch</span>
+                <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent text-shimmer" style={{ backgroundSize: '200% auto' }}> Touch</span>
               </h2>
               <p className="text-gray-400 text-lg max-w-2xl mx-auto">
                 Have a question or need a quote? We would love to hear from you.
@@ -823,12 +1305,13 @@ export default function Home() {
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
+              transition={{ delay: 0.15, ...springTransition }}
               className="max-w-2xl mx-auto"
             >
-              <div className="rounded-2xl border border-white/8 bg-white/3 backdrop-blur-sm p-8 sm:p-12">
+              <div className="rounded-2xl border border-white/8 bg-white/3 backdrop-blur-sm p-8 sm:p-12 card-shine">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   {[
                     { icon: Phone, label: 'Call Us', value: '+92 300 1234567', color: 'from-green-500/20 to-green-600/20 border-green-500/20', iconColor: 'text-green-400' },
@@ -836,15 +1319,28 @@ export default function Home() {
                     { icon: Instagram, label: 'Instagram', value: '@zilver.co', color: 'from-pink-500/20 to-purple-600/20 border-pink-500/20', iconColor: 'text-pink-400' },
                     { icon: Mail, label: 'Email', value: 'info@zilver.co', color: 'from-cyan-500/20 to-blue-600/20 border-cyan-500/20', iconColor: 'text-cyan-400' },
                   ].map((contact, i) => (
-                    <a key={i} href="#" className="flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-white/5 transition-colors group">
-                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${contact.color} border flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                    <motion.a
+                      key={i}
+                      href="#"
+                      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.2 + i * 0.1, ...springBouncy }}
+                      whileHover={{ scale: 1.05, y: -3 }}
+                      className="flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-white/5 transition-colors group"
+                    >
+                      <motion.div
+                        whileHover={{ scale: 1.15, rotate: [0, -10, 10, 0] }}
+                        transition={springBouncy}
+                        className={`w-12 h-12 rounded-xl bg-gradient-to-br ${contact.color} border flex items-center justify-center icon-bounce-hover`}
+                      >
                         <contact.icon className={`w-5 h-5 ${contact.iconColor}`} />
-                      </div>
+                      </motion.div>
                       <div className="text-center">
                         <div className="font-semibold text-white text-xs">{contact.label}</div>
                         <div className="text-gray-500 text-[10px] mt-0.5">{contact.value}</div>
                       </div>
-                    </a>
+                    </motion.a>
                   ))}
                 </div>
               </div>
@@ -857,11 +1353,23 @@ export default function Home() {
           {selectedProduct && renderProductDetail()}
         </AnimatePresence>
 
-        {/* Footer */}
-        <footer className="relative z-10 border-t border-white/8 py-8 mt-auto">
+        {/* Footer — Slide up reveal */}
+        <motion.footer
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={springTransition}
+          className="relative z-10 border-t border-white/8 py-8 mt-auto"
+        >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
+              <motion.div
+                initial={{ opacity: 0, x: -15 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+                className="flex items-center gap-2"
+              >
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
                   <Droplets className="w-4 h-4 text-white" />
                 </div>
@@ -869,16 +1377,42 @@ export default function Home() {
                   ZILVER
                 </span>
                 <span className="text-xs text-gray-600 ml-2">Quality Bathroom & Kitchen Solutions</span>
-              </div>
-              <div className="flex items-center gap-4">
-                <a href="#" className="text-gray-500 hover:text-gray-300 transition-colors"><Facebook className="w-4 h-4" /></a>
-                <a href="#" className="text-gray-500 hover:text-gray-300 transition-colors"><Instagram className="w-4 h-4" /></a>
-                <a href="#" className="text-gray-500 hover:text-gray-300 transition-colors"><Youtube className="w-4 h-4" /></a>
-              </div>
-              <p className="text-gray-600 text-xs">&copy; {new Date().getFullYear()} Zilver. All rights reserved.</p>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+                className="flex items-center gap-4"
+              >
+                {[
+                  { Icon: Facebook, href: '#' },
+                  { Icon: Instagram, href: '#' },
+                  { Icon: Youtube, href: '#' },
+                ].map((social, i) => (
+                  <motion.a
+                    key={i}
+                    href={social.href}
+                    whileHover={{ scale: 1.2, y: -2 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="text-gray-500 hover:text-gray-300 transition-colors"
+                  >
+                    <social.Icon className="w-4 h-4" />
+                  </motion.a>
+                ))}
+              </motion.div>
+              <motion.p
+                initial={{ opacity: 0, x: 15 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3 }}
+                className="text-gray-600 text-xs"
+              >
+                &copy; {new Date().getFullYear()} Zilver. All rights reserved.
+              </motion.p>
             </div>
           </div>
-        </footer>
+        </motion.footer>
 
         {/* Admin Login Dialog */}
         <Dialog open={showAdminLogin} onOpenChange={setShowAdminLogin}>
@@ -974,7 +1508,7 @@ export default function Home() {
               key={i}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
+              transition={{ delay: i * 0.1, ...springTransition }}
               className="rounded-xl border border-white/8 bg-white/3 p-4"
             >
               <div className="text-xs text-gray-500 mb-1">{stat.label}</div>
@@ -1021,7 +1555,7 @@ export default function Home() {
                   key={product.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
+                  transition={{ delay: index * 0.05, ...springTransition }}
                 >
                   <div className="rounded-xl border border-white/8 bg-white/3 overflow-hidden hover:border-blue-500/30 transition-colors group">
                     {/* Product Image */}

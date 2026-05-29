@@ -124,26 +124,385 @@
   }
 }
 
-/* Custom scrollbar for dark theme */
+/* ═══════════════════════════════════════════════════════════
+   CUSTOM SCROLLBAR — Premium dark theme matching brand
+   ═══════════════════════════════════════════════════════════ */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0a0a0f;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #333;
-  border-radius: 4px;
+  background: linear-gradient(180deg, #3b82f6, #06b6d4);
+  border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: linear-gradient(180deg, #60a5fa, #22d3ee);
 }
 
-/* Line clamp utility */
+/* ═══════════════════════════════════════════════════════════
+   LINE CLAMP UTILITY
+   ═══════════════════════════════════════════════════════════ */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   GRADIENT TEXT SHIMMER — Sparkle sweep across gradient text
+   ═══════════════════════════════════════════════════════════ */
+@keyframes shimmer-text {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.text-shimmer {
+  background-size: 200% auto;
+  animation: shimmer-text 4s linear infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   GLOW PULSE — Subtle glow pulsing for badges and logos
+   ═══════════════════════════════════════════════════════════ */
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(6, 182, 212, 0.15), 0 0 20px rgba(59, 130, 246, 0.05);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(6, 182, 212, 0.35), 0 0 40px rgba(59, 130, 246, 0.15);
+  }
+}
+
+.glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FLOATING ORB — Smooth floating for background orbs
+   ═══════════════════════════════════════════════════════════ */
+@keyframes float-orb-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -40px) scale(1.05); }
+  50% { transform: translate(-20px, -60px) scale(1.02); }
+  75% { transform: translate(10px, -30px) scale(0.98); }
+}
+
+@keyframes float-orb-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(-40px, 30px) scale(0.98); }
+  50% { transform: translate(20px, 50px) scale(1.04); }
+  75% { transform: translate(-30px, 20px) scale(1.01); }
+}
+
+@keyframes float-orb-3 {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  33% { transform: translate(calc(-50% + 40px), calc(-50% - 30px)) scale(1.03); }
+  66% { transform: translate(calc(-50% - 30px), calc(-50% + 40px)) scale(0.97); }
+}
+
+.orb-float-1 {
+  animation: float-orb-1 20s ease-in-out infinite;
+  will-change: transform;
+}
+
+.orb-float-2 {
+  animation: float-orb-2 25s ease-in-out infinite;
+  will-change: transform;
+}
+
+.orb-float-3 {
+  animation: float-orb-3 18s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CARD SHINE SWEEP — Diagonal light reflection on hover
+   ═══════════════════════════════════════════════════════════ */
+@keyframes shine-sweep {
+  0% {
+    transform: translateX(-100%) rotate(25deg);
+  }
+  100% {
+    transform: translateX(200%) rotate(25deg);
+  }
+}
+
+.card-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-shine::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 60%;
+  height: 200%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.03),
+    rgba(255, 255, 255, 0.06),
+    rgba(255, 255, 255, 0.03),
+    transparent
+  );
+  transform: translateX(-100%) rotate(25deg);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.card-shine:hover::after {
+  animation: shine-sweep 0.8s ease-out forwards;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CARD BORDER GLOW — Glow effect matching theme color
+   ═══════════════════════════════════════════════════════════ */
+@keyframes border-glow {
+  0%, 100% {
+    border-color: rgba(59, 130, 246, 0.2);
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.05);
+  }
+  50% {
+    border-color: rgba(6, 182, 212, 0.5);
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.15), 0 0 40px rgba(59, 130, 246, 0.08);
+  }
+}
+
+.card-glow:hover {
+  animation: border-glow 2s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PRICE FLOAT — Gentle floating animation for price text
+   ═══════════════════════════════════════════════════════════ */
+@keyframes price-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.price-float {
+  animation: price-float 3s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BUTTON GRADIENT SHIFT — Rotating gradient on hover
+   ═══════════════════════════════════════════════════════════ */
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.btn-gradient-shift {
+  background-size: 200% 200%;
+  transition: all 0.4s ease;
+}
+
+.btn-gradient-shift:hover {
+  animation: gradient-shift 2s ease infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RIPPLE EFFECT — Material-style ripple on click
+   ═══════════════════════════════════════════════════════════ */
+@keyframes ripple-expand {
+  0% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+.ripple-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  pointer-events: none;
+  animation: ripple-expand 0.6s ease-out forwards;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   WAVE DIVIDER — Animated section dividers
+   ═══════════════════════════════════════════════════════════ */
+@keyframes wave-flow {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.wave-divider {
+  overflow: hidden;
+  position: relative;
+  height: 60px;
+}
+
+.wave-divider svg {
+  animation: wave-flow 12s linear infinite;
+  will-change: transform;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SKELETON LOADING — Shimmer skeleton animation
+   ═══════════════════════════════════════════════════════════ */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.03) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LOGO GLOW — Subtle glow pulse on the logo
+   ═══════════════════════════════════════════════════════════ */
+@keyframes logo-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px rgba(6, 182, 212, 0.2));
+  }
+  50% {
+    filter: drop-shadow(0 0 12px rgba(6, 182, 212, 0.5)) drop-shadow(0 0 24px rgba(59, 130, 246, 0.2));
+  }
+}
+
+.logo-glow {
+  animation: logo-glow 4s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CONTACT ICON SPIN/PULSE — Unique hover animation for icons
+   ═══════════════════════════════════════════════════════════ */
+@keyframes icon-bounce-in {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.25); }
+  50% { transform: scale(0.95); }
+  70% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.icon-bounce-hover:hover {
+  animation: icon-bounce-in 0.5s ease forwards;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   GRADIENT BORDER ANIMATION — Moving gradient border
+   ═══════════════════════════════════════════════════════════ */
+@keyframes border-rotate {
+  0% { --angle: 0deg; }
+  100% { --angle: 360deg; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PRODUCT CARD 3D TILT — Perspective transforms for tilt
+   ═══════════════════════════════════════════════════════════ */
+.tilt-card {
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.tilt-card-inner {
+  transform: translateZ(40px);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FOOTER SLIDE UP — Smooth slide up when in view
+   ═══════════════════════════════════════════════════════════ */
+@keyframes slide-up-fade {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CROSSFADE — For product detail image transitions
+   ═══════════════════════════════════════════════════════════ */
+@keyframes crossfade-in {
+  0% { opacity: 0; transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.crossfade-enter {
+  animation: crossfade-in 0.4s ease-out forwards;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NAV LINK INDICATOR — Smooth sliding underline
+   ═══════════════════════════════════════════════════════════ */
+.nav-link {
+  position: relative;
+  padding-bottom: 4px;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #3b82f6, #06b6d4);
+  border-radius: 2px;
+  transition: width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   REDUCE MOTION — Accessibility: disable animations for users who prefer reduced motion
+   ═══════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MOBILE ANIMATION REDUCTION — Less intense on small screens
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .orb-float-1,
+  .orb-float-2,
+  .orb-float-3 {
+    animation-duration: 30s;
+  }
 }
