@@ -294,18 +294,8 @@ function TextReveal({ text, className }: { text: string; className?: string }) {
   const isInView = useInView(ref, { once: true, amount: 0.5 })
 
   return (
-    <motion.span ref={ref} className={className}>
-      {text.split('').map((char, i) => (
-        <motion.span
-          key={i}
-          initial={{ opacity: 0, y: 20, filter: 'blur(8px)' }}
-          animate={isInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : { opacity: 0, y: 20, filter: 'blur(8px)' }}
-          transition={{ delay: i * 0.03, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="inline-block whitespace-pre"
-        >
-          {char === ' ' ? '\u00A0' : char}
-        </motion.span>
-      ))}
+    <motion.span ref={ref} className={className} style={{ display: 'inline' }}>
+      {isInView ? text : ''}
     </motion.span>
   )
 }
@@ -1208,7 +1198,7 @@ export default function Home() {
                 </motion.div>
 
                 {/* Title — with text shadow for mobile readability */}
-                <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold leading-tight sm:leading-none mb-4 sm:mb-6 [text-shadow:0_2px_10px_rgba(0,0,0,0.8)]">
+                <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold leading-snug sm:leading-tight lg:leading-none mb-4 sm:mb-6 [text-shadow:0_2px_10px_rgba(0,0,0,0.8)]">
                   <motion.span
                     custom={1}
                     variants={heroTextVariants}
