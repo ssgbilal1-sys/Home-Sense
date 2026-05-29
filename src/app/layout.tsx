@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ZILVER - Premium Silver Jewelry",
-  description: "Discover our handcrafted silver jewelry collection. Each piece tells a story of artistry, precision, and timeless beauty.",
-  keywords: ["Zilver", "Silver Jewelry", "Premium", "Handcrafted", "Luxury"],
+  title: "ZILVER - Quality Bathroom & Kitchen Solutions",
+  description: "Concetti Italiano - Sanitary Wares. We have complete range of solutions for day to day living the bathroom in public and private places.",
+  keywords: ["Zilver", "Sanitary Ware", "Bathroom Solutions", "Kitchen Solutions", "Faucets", "Showers", "Wash Basins"],
   icons: {
     icon: "/logo-zilver.png",
   },
