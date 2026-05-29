@@ -167,11 +167,11 @@ function WaveDivider() {
       >
         <path
           d="M0 30C240 10 480 50 720 30C960 10 1200 50 1440 30C1680 10 1920 50 2160 30C2400 10 2640 50 2880 30V60H0V30Z"
-          fill="rgba(13,148,136,0.03)"
+          fill="rgba(2,132,199,0.03)"
         />
         <path
           d="M0 35C240 15 480 55 720 35C960 15 1200 55 1440 35C1680 15 1920 55 2160 35C2400 15 2640 55 2880 35V60H0V35Z"
-          fill="rgba(20,184,166,0.02)"
+          fill="rgba(56,189,248,0.02)"
         />
       </svg>
     </div>
@@ -346,7 +346,7 @@ function HeroSlideshow() {
             key={i}
             onClick={() => setCurrent(i)}
             className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full transition-all duration-500 ${
-              i === current ? 'bg-teal-400 w-6 sm:w-8' : 'bg-white/40 hover:bg-white/60'
+              i === current ? 'bg-sky-400 w-6 sm:w-8' : 'bg-white/40 hover:bg-white/60'
             }`}
           />
         ))}
@@ -879,7 +879,7 @@ export default function Home() {
                     whileTap={{ scale: 0.95 }}
                     onClick={() => { setDetailImageIndex(i); setDetailImageKey(prev => prev + 1) }}
                     className={`shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
-                      detailImageIndex === i ? 'border-teal-400 ring-1 ring-teal-400/50' : 'border-white/10 hover:border-white/30'
+                      detailImageIndex === i ? 'border-sky-400 ring-1 ring-sky-400/50' : 'border-white/10 hover:border-white/30'
                     }`}
                   >
                     <img src={img} alt={`${selectedProduct.name} ${i + 1}`} className="w-full h-full object-cover" />
@@ -921,7 +921,7 @@ export default function Home() {
                 <span className={`px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm text-white flex items-center gap-1.5 w-fit ${
                   isPrimaryCategory(selectedProduct.category)
                     ? 'bg-gradient-to-r from-amber-500/90 to-orange-500/90 shadow-lg shadow-amber-500/30'
-                    : 'bg-gradient-to-r from-teal-700/80 to-teal-500/80'
+                    : 'bg-gradient-to-r from-sky-700/80 to-sky-500/80'
                 }`}>
                   {(() => { const Icon = getCategoryIcon(selectedProduct.category); return <Icon className="w-3.5 h-3.5" /> })()}
                   {selectedProduct.category}
@@ -956,7 +956,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.65 }}
-                className="text-3xl font-bold bg-gradient-to-r from-teal-500 to-teal-400 bg-clip-text text-transparent mb-6"
+                className="text-3xl font-bold bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent mb-6"
               >
                 {selectedProduct.price}
               </motion.div>
@@ -975,7 +975,7 @@ export default function Home() {
                     transition={{ delay: 0.7 + i * 0.1, ...springTransition }}
                     className="flex items-center gap-3"
                   >
-                    <item.icon className="w-5 h-5 text-teal-400 shrink-0" />
+                    <item.icon className="w-5 h-5 text-sky-400 shrink-0" />
                     <span className="text-gray-300 text-sm">{item.text}</span>
                   </motion.div>
                 ))}
@@ -989,7 +989,7 @@ export default function Home() {
                 className="flex gap-3"
               >
                 <a href="#contact" onClick={() => setSelectedProduct(null)}>
-                  <RippleButton size="lg" className="bg-gradient-to-r from-teal-700 to-teal-500 hover:from-teal-600 hover:to-teal-400 text-white border-0 shadow-lg shadow-teal-600/25 btn-gradient-shift">
+                  <RippleButton size="lg" className="bg-gradient-to-r from-sky-700 to-sky-500 hover:from-sky-600 hover:to-sky-400 text-white border-0 shadow-lg shadow-sky-600/25 btn-gradient-shift">
                     <Phone className="w-5 h-5 mr-2" />
                     Get Quote
                   </RippleButton>
@@ -1017,9 +1017,9 @@ export default function Home() {
       <div className="min-h-screen flex flex-col bg-[#080c14] text-white overflow-x-hidden">
         {/* Animated background — Floating Orbs (CSS-only animation) */}
         <div className="fixed inset-0 z-0 pointer-events-none">
-          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-teal-700/15 rounded-full blur-[180px] orb-float-1" />
-          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-teal-500/10 rounded-full blur-[150px] orb-float-2" />
-          <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-teal-500/8 rounded-full blur-[120px] orb-float-3" />
+          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-sky-700/15 rounded-full blur-[180px] orb-float-1" />
+          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-sky-500/10 rounded-full blur-[150px] orb-float-2" />
+          <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-sky-500/8 rounded-full blur-[120px] orb-float-3" />
         </div>
 
         {/* Navigation — Enhanced with logo glow, active indicators, smooth mobile menu */}
@@ -1049,7 +1049,7 @@ export default function Home() {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1, duration: 0.5 }}
-                    className="bg-gradient-to-r from-teal-400 via-teal-300 to-teal-500 bg-clip-text text-transparent text-shimmer"
+                    className="bg-gradient-to-r from-sky-400 via-sky-300 to-sky-500 bg-clip-text text-transparent text-shimmer"
                     style={{ backgroundSize: '200% auto' }}
                   >
                     HOME
@@ -1107,7 +1107,7 @@ export default function Home() {
                     }}
                     variant="outline"
                     size="sm"
-                    className="border-white/15 text-gray-300 hover:text-white hover:border-teal-500 hover:bg-teal-600/10"
+                    className="border-white/15 text-gray-300 hover:text-white hover:border-sky-500 hover:bg-sky-600/10"
                   >
                     <Shield className="w-4 h-4 mr-1" />
                     Admin
@@ -1193,7 +1193,7 @@ export default function Home() {
                   animate="visible"
                   className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/5 border border-white/10 mb-4 sm:mb-6 glow-pulse"
                 >
-                  <span className="text-[10px] sm:text-sm font-bold bg-gradient-to-r from-teal-400 to-teal-300 bg-clip-text text-transparent">HOME SENSE</span>
+                  <span className="text-[10px] sm:text-sm font-bold bg-gradient-to-r from-sky-400 to-sky-300 bg-clip-text text-transparent">HOME SENSE</span>
                   <span className="text-[10px] sm:text-sm text-gray-400 hidden xs:inline">Sanitary Fitting & Ware Showroom</span>
                 </motion.div>
 
@@ -1215,7 +1215,7 @@ export default function Home() {
                     animate="visible"
                     className="block"
                   >
-                    <span className="bg-gradient-to-r from-teal-500 via-teal-300 to-teal-400 bg-clip-text text-transparent text-shimmer" style={{ backgroundSize: '200% auto' }}>
+                    <span className="bg-gradient-to-r from-sky-500 via-sky-300 to-sky-400 bg-clip-text text-transparent text-shimmer" style={{ backgroundSize: '200% auto' }}>
                       <TextReveal text="Efficient" />
                     </span>
                   </motion.span>
@@ -1250,7 +1250,7 @@ export default function Home() {
                   className="flex flex-wrap gap-3 sm:gap-4"
                 >
                   <a href="#products">
-                    <RippleButton size="default" className="sm:h-12 sm:px-6 bg-gradient-to-r from-teal-700 to-teal-500 hover:from-teal-600 hover:to-teal-400 text-white border-0 shadow-lg shadow-teal-600/25 btn-gradient-shift text-sm sm:text-base">
+                    <RippleButton size="default" className="sm:h-12 sm:px-6 bg-gradient-to-r from-sky-700 to-sky-500 hover:from-sky-600 hover:to-sky-400 text-white border-0 shadow-lg shadow-sky-600/25 btn-gradient-shift text-sm sm:text-base">
                       <Package className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
                       Explore Products
                     </RippleButton>
@@ -1282,13 +1282,13 @@ export default function Home() {
                   <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl p-6 shadow-2xl shadow-black/20">
                     <img src="/logo-homesense.jpg" alt="Home Sense" className="h-16 w-auto object-contain rounded-lg mx-auto mb-3" />
                     <p className="text-center text-white/80 text-sm font-medium">Authorized Distributor</p>
-                    <p className="text-center text-teal-300 text-xs mt-1">Zilver Concetti Italiano</p>
+                    <p className="text-center text-sky-300 text-xs mt-1">Zilver Concetti Italiano</p>
                   </div>
                   {/* Floating icon badges */}
                   <motion.div
                     animate={{ y: [0, -8, 0], rotate: [0, 5, 0] }}
                     transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut' }}
-                    className="absolute -top-3 -right-3 bg-gradient-to-r from-teal-700 to-teal-500 rounded-xl p-3 shadow-lg shadow-teal-600/30"
+                    className="absolute -top-3 -right-3 bg-gradient-to-r from-sky-700 to-sky-500 rounded-xl p-3 shadow-lg shadow-sky-600/30"
                   >
                     <Droplets className="w-5 h-5 text-white" />
                   </motion.div>
@@ -1327,10 +1327,10 @@ export default function Home() {
                       selectedCategory === cat.name
                         ? cat.isPrimary
                           ? 'border-2 border-amber-400 bg-gradient-to-b from-amber-500/20 to-amber-500/5 shadow-lg shadow-amber-500/20'
-                          : 'border-2 border-teal-400 bg-gradient-to-b from-teal-500/20 to-teal-500/5 shadow-lg shadow-teal-500/20'
+                          : 'border-2 border-sky-400 bg-gradient-to-b from-sky-500/20 to-sky-500/5 shadow-lg shadow-sky-500/20'
                         : cat.isPrimary
                           ? 'border-2 border-amber-500/50 bg-gradient-to-b from-amber-500/10 to-transparent hover:border-amber-400/70 hover:from-amber-500/15'
-                          : 'border border-white/8 bg-white/3 hover:bg-white/5 hover:border-teal-600/30'
+                          : 'border border-white/8 bg-white/3 hover:bg-white/5 hover:border-sky-600/30'
                     }`}>
                       <motion.div
                         whileHover={{ scale: 1.2, rotate: 5 }}
@@ -1338,13 +1338,13 @@ export default function Home() {
                       >
                         <cat.icon className={`w-8 h-8 mx-auto mb-3 group-hover:scale-110 transition-transform ${
                           selectedCategory === cat.name
-                            ? cat.isPrimary ? 'text-amber-300' : 'text-teal-300'
-                            : cat.isPrimary ? 'text-amber-400' : 'text-teal-400'
+                            ? cat.isPrimary ? 'text-amber-300' : 'text-sky-300'
+                            : cat.isPrimary ? 'text-amber-400' : 'text-sky-400'
                         }`} />
                       </motion.div>
                       <h3 className={`font-semibold text-sm mb-1 ${
                         selectedCategory === cat.name
-                          ? cat.isPrimary ? 'text-amber-200' : 'text-teal-200'
+                          ? cat.isPrimary ? 'text-amber-200' : 'text-sky-200'
                           : cat.isPrimary ? 'text-amber-300' : 'text-white'
                       }`}>{cat.name}</h3>
                       <span className="text-xs text-gray-500">{categoryCounts[cat.name] || 0} Products</span>
@@ -1358,7 +1358,7 @@ export default function Home() {
                           <span className={`text-[9px] px-2 py-0.5 rounded-full font-medium ${
                             cat.isPrimary
                               ? 'bg-amber-500/30 text-amber-200 border border-amber-400/40'
-                              : 'bg-teal-500/30 text-teal-200 border border-teal-400/40'
+                              : 'bg-sky-500/30 text-sky-200 border border-sky-400/40'
                           }`}>Showing</span>
                         </div>
                       )}
@@ -1379,7 +1379,7 @@ export default function Home() {
             <ScrollReveal className="text-center mb-12 sm:mb-16">
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
                 Featured
-                <span className="bg-gradient-to-r from-teal-500 to-teal-400 bg-clip-text text-transparent text-shimmer" style={{ backgroundSize: '200% auto' }}> Products</span>
+                <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent text-shimmer" style={{ backgroundSize: '200% auto' }}> Products</span>
               </h2>
               <p className="text-gray-400 text-lg max-w-2xl mx-auto">
                 Discover our premium collection of vanities, commodes, basins, shower sets, and art bowls. Factory-direct vanities manufactured by us, plus the finest Zilver products — all available at Home Sense.
@@ -1395,7 +1395,7 @@ export default function Home() {
                   <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${
                     isPrimaryCategory(selectedCategory)
                       ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                      : 'bg-teal-500/20 text-teal-300 border border-teal-500/30'
+                      : 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
                   }`}>
                     {(() => { const Icon = getCategoryIcon(selectedCategory); return <Icon className="w-3.5 h-3.5" /> })()}
                     {selectedCategory}
@@ -1443,7 +1443,7 @@ export default function Home() {
                       <motion.div
                           whileHover={{ y: -6 }}
                           transition={springTransition}
-                          className="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/8 hover:border-teal-600/40 transition-all duration-500 cursor-pointer card-shine"
+                          className="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/8 hover:border-sky-600/40 transition-all duration-500 cursor-pointer card-shine"
                           onClick={() => openProductDetail(product)}
                         >
                           {/* Product Image — enhanced zoom with parallax */}
@@ -1459,7 +1459,7 @@ export default function Home() {
                               <span className={`px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm text-white flex items-center gap-1 ${
                                 isPrimaryCategory(product.category)
                                   ? 'bg-gradient-to-r from-amber-500/90 to-orange-500/90 shadow-lg shadow-amber-500/30'
-                                  : 'bg-gradient-to-r from-teal-700/80 to-teal-500/80'
+                                  : 'bg-gradient-to-r from-sky-700/80 to-sky-500/80'
                               }`}>
                                 {(() => { const Icon = getCategoryIcon(product.category); return <Icon className="w-3 h-3" /> })()}
                                 {product.category}
@@ -1501,19 +1501,19 @@ export default function Home() {
 
                           {/* Product Info */}
                           <div className="p-5">
-                            <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-teal-300 transition-colors duration-300">
+                            <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-sky-300 transition-colors duration-300">
                               {product.name}
                             </h3>
                             <p className="text-sm text-gray-400 mb-4 line-clamp-2">
                               {product.description}
                             </p>
                             <div className="flex items-center justify-between">
-                              <span className="text-lg font-bold bg-gradient-to-r from-teal-500 to-teal-400 bg-clip-text text-transparent price-float">
+                              <span className="text-lg font-bold bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent price-float">
                                 {product.price}
                               </span>
                               <RippleButton
                                 size="sm"
-                                className="bg-gradient-to-r from-teal-700 to-teal-500 hover:from-teal-600 hover:to-teal-400 text-white border-0 shadow-md shadow-teal-600/20 btn-gradient-shift"
+                                className="bg-gradient-to-r from-sky-700 to-sky-500 hover:from-sky-600 hover:to-sky-400 text-white border-0 shadow-md shadow-sky-600/20 btn-gradient-shift"
                                 onClick={(e) => { e.stopPropagation(); openProductDetail(product) }}
                               >
                                 View Details
@@ -1535,7 +1535,7 @@ export default function Home() {
                     <p className="text-gray-500 mb-4">No products in "{selectedCategory}" category yet.</p>
                     <button
                       onClick={() => setSelectedCategory(null)}
-                      className="px-4 py-2 rounded-lg bg-teal-600/20 text-teal-300 border border-teal-500/30 hover:bg-teal-600/30 transition-colors text-sm"
+                      className="px-4 py-2 rounded-lg bg-sky-600/20 text-sky-300 border border-sky-500/30 hover:bg-sky-600/30 transition-colors text-sm"
                     >
                       Show All Products
                     </button>
@@ -1561,7 +1561,7 @@ export default function Home() {
                   className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6"
                 >
                   All-in-One
-                  <span className="bg-gradient-to-r from-teal-500 to-teal-400 bg-clip-text text-transparent text-shimmer" style={{ backgroundSize: '200% auto' }}> Sanitary Wares</span>
+                  <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent text-shimmer" style={{ backgroundSize: '200% auto' }}> Sanitary Wares</span>
                 </motion.h2>
                 <motion.p
                   initial={{ opacity: 0, y: 15 }}
@@ -1586,12 +1586,12 @@ export default function Home() {
                         <motion.div
                           whileHover={{ scale: 1.1, rotate: 5 }}
                           transition={springBouncy}
-                          className="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-teal-700/20 to-teal-500/20 border border-white/8 flex items-center justify-center"
+                          className="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-sky-700/20 to-sky-500/20 border border-white/8 flex items-center justify-center"
                         >
-                          <item.icon className="w-6 h-6 text-teal-400" />
+                          <item.icon className="w-6 h-6 text-sky-400" />
                         </motion.div>
                         <div>
-                          <h3 className="font-semibold text-white mb-1 group-hover:text-teal-300 transition-colors">{item.title}</h3>
+                          <h3 className="font-semibold text-white mb-1 group-hover:text-sky-300 transition-colors">{item.title}</h3>
                           <p className="text-gray-400 text-sm">{item.desc}</p>
                         </div>
                       </motion.div>
@@ -1604,7 +1604,7 @@ export default function Home() {
                 <motion.div
                   animate={{ scale: [1, 1.02, 1], opacity: [0.15, 0.2, 0.15] }}
                   transition={{ repeat: Infinity, duration: 5, ease: 'easeInOut' }}
-                  className="absolute inset-0 rounded-3xl bg-gradient-to-br from-teal-700/15 to-teal-500/15 blur-2xl"
+                  className="absolute inset-0 rounded-3xl bg-gradient-to-br from-sky-700/15 to-sky-500/15 blur-2xl"
                 />
                 <div className="relative rounded-3xl border border-white/8 overflow-hidden bg-white/3 p-8 sm:p-12">
                   <div className="text-center">
@@ -1622,7 +1622,7 @@ export default function Home() {
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true, amount: 0.15 }}
                       transition={{ delay: 0.3 }}
-                      className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-teal-500 to-teal-400 bg-clip-text text-transparent mb-2 text-shimmer"
+                      className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent mb-2 text-shimmer"
                       style={{ backgroundSize: '200% auto' }}
                     >
                       HOME SENSE
@@ -1653,7 +1653,7 @@ export default function Home() {
                       className="mb-6"
                     >
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/8 text-[10px] text-gray-400">
-                        <CheckCircle className="w-3 h-3 text-teal-400" />
+                        <CheckCircle className="w-3 h-3 text-sky-400" />
                         Distributed by Home Sense
                       </span>
                     </motion.div>
@@ -1695,7 +1695,7 @@ export default function Home() {
             <ScrollReveal className="text-center mb-12">
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
                 Get in
-                <span className="bg-gradient-to-r from-teal-500 to-teal-400 bg-clip-text text-transparent text-shimmer" style={{ backgroundSize: '200% auto' }}> Touch</span>
+                <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent text-shimmer" style={{ backgroundSize: '200% auto' }}> Touch</span>
               </h2>
               <p className="text-gray-400 text-lg max-w-2xl mx-auto">
                 Have a question or need a quote? We would love to hear from you.
@@ -1709,9 +1709,9 @@ export default function Home() {
                   {[
                     { icon: Phone, label: 'Call Us', value: settings.phone, href: `tel:${settings.phone}`, color: 'from-green-500/20 to-green-600/20 border-green-500/20', iconColor: 'text-green-400' },
                     { icon: MessageCircle, label: 'WhatsApp', value: settings.whatsapp, href: `https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}`, color: 'from-green-500/20 to-green-600/20 border-green-500/20', iconColor: 'text-green-400' },
-                    { icon: Mail, label: 'Email', value: settings.email, href: `mailto:${settings.email}`, color: 'from-teal-500/20 to-teal-700/20 border-teal-500/20 border-teal-500/20', iconColor: 'text-teal-400' },
+                    { icon: Mail, label: 'Email', value: settings.email, href: `mailto:${settings.email}`, color: 'from-sky-500/20 to-sky-700/20 border-sky-500/20 border-sky-500/20', iconColor: 'text-sky-400' },
                     { icon: Instagram, label: 'Instagram', value: settings.instagram, href: `https://instagram.com/${settings.instagram.replace('@', '')}`, color: 'from-pink-500/20 to-purple-600/20 border-pink-500/20', iconColor: 'text-pink-400' },
-                    ...(settings.facebook ? [{ icon: Facebook, label: 'Facebook', value: settings.facebook.replace(/https?:\/\/(www\.)?facebook\.com\/?/i, '').replace(/\/$/, '') || 'Facebook Page', href: settings.facebook, color: 'from-teal-600/20 to-teal-800/20 border-teal-600/20', iconColor: 'text-teal-500' }] : []),
+                    ...(settings.facebook ? [{ icon: Facebook, label: 'Facebook', value: settings.facebook.replace(/https?:\/\/(www\.)?facebook\.com\/?/i, '').replace(/\/$/, '') || 'Facebook Page', href: settings.facebook, color: 'from-sky-600/20 to-sky-800/20 border-sky-600/20', iconColor: 'text-sky-500' }] : []),
                     ...(settings.youtube ? [{ icon: Youtube, label: 'YouTube', value: settings.youtube.replace(/https?:\/\/(www\.)?youtube\.com\/(c\/|@)?/i, '').replace(/\/$/, '') || 'YouTube Channel', href: settings.youtube, color: 'from-red-500/20 to-red-700/20 border-red-500/20', iconColor: 'text-red-400' }] : []),
                   ].map((contact, i) => (
                     <ScrollReveal key={i} delay={0.2 + i * 0.08} distance={20}>
@@ -1837,7 +1837,7 @@ export default function Home() {
           <DialogContent className="bg-[#0d1220] border-white/10 text-white sm:max-w-md">
             <DialogHeader>
               <DialogTitle className="text-white flex items-center gap-2">
-                <Shield className="w-5 h-5 text-teal-500" />
+                <Shield className="w-5 h-5 text-sky-500" />
                 Admin Access
               </DialogTitle>
               <DialogDescription className="text-gray-400">
@@ -1853,7 +1853,7 @@ export default function Home() {
                   onChange={(e) => setAdminPassword(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleAdminLogin()}
                   placeholder="Enter admin password"
-                  className="mt-2 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-teal-600 focus:ring-teal-600/20"
+                  className="mt-2 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-600 focus:ring-sky-600/20"
                 />
               </div>
               <p className="text-xs text-gray-500">
@@ -1861,7 +1861,7 @@ export default function Home() {
               </p>
             </div>
             <DialogFooter>
-              <Button onClick={handleAdminLogin} disabled={loginLoading} className="bg-gradient-to-r from-teal-700 to-teal-500 hover:from-teal-600 hover:to-teal-400 text-white border-0">
+              <Button onClick={handleAdminLogin} disabled={loginLoading} className="bg-gradient-to-r from-sky-700 to-sky-500 hover:from-sky-600 hover:to-sky-400 text-white border-0">
                 {loginLoading ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <ChevronRight className="w-4 h-4 mr-1" />}
                 {loginLoading ? 'Verifying...' : 'Login'}
               </Button>
@@ -1893,7 +1893,7 @@ export default function Home() {
               <Button
                 onClick={() => setViewMode('storefront')}
                 variant="outline" size="sm"
-                className="border-white/15 text-gray-300 hover:text-white hover:border-teal-500 hover:bg-teal-600/10"
+                className="border-white/15 text-gray-300 hover:text-white hover:border-sky-500 hover:bg-sky-600/10"
               >
                 <Eye className="w-4 h-4 mr-1" />
                 View Store
@@ -1915,9 +1915,9 @@ export default function Home() {
         {/* Stats Bar */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
           {[
-            { label: 'Total Products', value: products.length, color: 'from-teal-600 to-teal-700' },
-            { label: 'Featured', value: products.filter(p => p.featured).length, color: 'from-teal-500 to-teal-600' },
-            { label: 'Categories', value: [...new Set(products.map(p => p.category))].length, color: 'from-teal-500 to-teal-600' },
+            { label: 'Total Products', value: products.length, color: 'from-sky-600 to-sky-700' },
+            { label: 'Featured', value: products.filter(p => p.featured).length, color: 'from-sky-500 to-sky-600' },
+            { label: 'Categories', value: [...new Set(products.map(p => p.category))].length, color: 'from-sky-500 to-sky-600' },
             { label: 'Store Status', value: 'Live', color: 'from-green-500 to-green-600' },
           ].map((stat, i) => (
             <motion.div
@@ -1941,7 +1941,7 @@ export default function Home() {
             onClick={() => setAdminTab('products')}
             className={`px-5 py-3 text-sm font-medium transition-all border-b-2 -mb-px ${
               adminTab === 'products'
-                ? 'text-teal-400 border-teal-400'
+                ? 'text-sky-400 border-sky-400'
                 : 'text-gray-400 border-transparent hover:text-white hover:border-white/20'
             }`}
           >
@@ -1952,7 +1952,7 @@ export default function Home() {
             onClick={() => setAdminTab('settings')}
             className={`px-5 py-3 text-sm font-medium transition-all border-b-2 -mb-px ${
               adminTab === 'settings'
-                ? 'text-teal-400 border-teal-400'
+                ? 'text-sky-400 border-sky-400'
                 : 'text-gray-400 border-transparent hover:text-white hover:border-white/20'
             }`}
           >
@@ -1970,8 +1970,8 @@ export default function Home() {
           >
             <div className="rounded-2xl border border-white/8 bg-white/3 backdrop-blur-sm p-6 sm:p-8 max-w-3xl">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-700/20 to-teal-500/20 border border-white/8 flex items-center justify-center">
-                  <Phone className="w-5 h-5 text-teal-400" />
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-700/20 to-sky-500/20 border border-white/8 flex items-center justify-center">
+                  <Phone className="w-5 h-5 text-sky-400" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-white">Contact Details</h3>
@@ -1988,7 +1988,7 @@ export default function Home() {
                     value={settingsForm.phone}
                     onChange={(e) => setSettingsForm(prev => ({ ...prev, phone: e.target.value }))}
                     placeholder="+92 300 1234567"
-                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-teal-500"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-500"
                   />
                 </div>
 
@@ -2000,19 +2000,19 @@ export default function Home() {
                     value={settingsForm.whatsapp}
                     onChange={(e) => setSettingsForm(prev => ({ ...prev, whatsapp: e.target.value }))}
                     placeholder="+92 300 1234567"
-                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-teal-500"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-500"
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label className="text-gray-300 text-sm flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-teal-400" /> Email Address
+                    <Mail className="w-4 h-4 text-sky-400" /> Email Address
                   </Label>
                   <Input
                     value={settingsForm.email}
                     onChange={(e) => setSettingsForm(prev => ({ ...prev, email: e.target.value }))}
                     placeholder="info@zilver.co"
-                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-teal-500"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-500"
                   />
                 </div>
 
@@ -2024,19 +2024,19 @@ export default function Home() {
                     value={settingsForm.instagram}
                     onChange={(e) => setSettingsForm(prev => ({ ...prev, instagram: e.target.value }))}
                     placeholder="@zilver.co"
-                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-teal-500"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-500"
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label className="text-gray-300 text-sm flex items-center gap-2">
-                    <Facebook className="w-4 h-4 text-teal-500" /> Facebook Page URL
+                    <Facebook className="w-4 h-4 text-sky-500" /> Facebook Page URL
                   </Label>
                   <Input
                     value={settingsForm.facebook}
                     onChange={(e) => setSettingsForm(prev => ({ ...prev, facebook: e.target.value }))}
                     placeholder="https://facebook.com/zilver"
-                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-teal-500"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-500"
                   />
                 </div>
 
@@ -2048,7 +2048,7 @@ export default function Home() {
                     value={settingsForm.youtube}
                     onChange={(e) => setSettingsForm(prev => ({ ...prev, youtube: e.target.value }))}
                     placeholder="https://youtube.com/@zilver"
-                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-teal-500"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-500"
                   />
                 </div>
 
@@ -2060,7 +2060,7 @@ export default function Home() {
                     value={settingsForm.address}
                     onChange={(e) => setSettingsForm(prev => ({ ...prev, address: e.target.value }))}
                     placeholder="Your business address"
-                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-teal-500 min-h-[80px]"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-500 min-h-[80px]"
                   />
                 </div>
               </div>
@@ -2069,7 +2069,7 @@ export default function Home() {
                 <Button
                   onClick={handleSaveSettings}
                   disabled={savingSettings}
-                  className="bg-gradient-to-r from-teal-700 to-teal-500 hover:from-teal-600 hover:to-teal-400 text-white border-0 min-w-[160px]"
+                  className="bg-gradient-to-r from-sky-700 to-sky-500 hover:from-sky-600 hover:to-sky-400 text-white border-0 min-w-[160px]"
                 >
                   {savingSettings ? (
                     <>
@@ -2096,7 +2096,7 @@ export default function Home() {
           <h2 className="text-xl sm:text-2xl font-bold">Products</h2>
           <Button
             onClick={() => openProductDialog()}
-            className="bg-gradient-to-r from-teal-700 to-teal-500 hover:from-teal-600 hover:to-teal-400 text-white border-0"
+            className="bg-gradient-to-r from-sky-700 to-sky-500 hover:from-sky-600 hover:to-sky-400 text-white border-0"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Product
@@ -2106,14 +2106,14 @@ export default function Home() {
         {/* Products Grid */}
         {loading ? (
           <div className="flex justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-teal-400" />
+            <Loader2 className="w-8 h-8 animate-spin text-sky-400" />
           </div>
         ) : products.length === 0 ? (
           <div className="text-center py-20 rounded-2xl border border-dashed border-white/10">
             <Package className="w-12 h-12 text-gray-600 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-400 mb-2">No Products Yet</h3>
             <p className="text-gray-600 mb-6">Add your first product to get started.</p>
-            <Button onClick={() => openProductDialog()} className="bg-gradient-to-r from-teal-700 to-teal-500 text-white border-0">
+            <Button onClick={() => openProductDialog()} className="bg-gradient-to-r from-sky-700 to-sky-500 text-white border-0">
               <Plus className="w-4 h-4 mr-2" />
               Add Product
             </Button>
@@ -2129,7 +2129,7 @@ export default function Home() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05, ...springTransition }}
                 >
-                  <div className="rounded-xl border border-white/8 bg-white/3 overflow-hidden hover:border-teal-600/30 transition-colors group">
+                  <div className="rounded-xl border border-white/8 bg-white/3 overflow-hidden hover:border-sky-600/30 transition-colors group">
                     {/* Product Image */}
                     <div className="relative aspect-video overflow-hidden bg-black/30">
                       <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -2157,19 +2157,19 @@ export default function Home() {
                       <div className="flex items-start justify-between mb-2">
                         <div>
                           <h3 className="font-semibold text-white">{product.name}</h3>
-                          <span className={`text-xs ${isPrimaryCategory(product.category) ? 'text-amber-400 font-medium' : 'text-teal-400'}`}>
+                          <span className={`text-xs ${isPrimaryCategory(product.category) ? 'text-amber-400 font-medium' : 'text-sky-400'}`}>
                             {product.category}
                             {isPrimaryCategory(product.category) && ' ⭐'}
                           </span>
                         </div>
-                        <span className="text-sm font-bold bg-gradient-to-r from-teal-500 to-teal-400 bg-clip-text text-transparent">
+                        <span className="text-sm font-bold bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent">
                           {product.price}
                         </span>
                       </div>
                       <p className="text-sm text-gray-500 line-clamp-2 mb-4">{product.description}</p>
                       <div className="flex gap-2">
                         <Button onClick={() => openProductDialog(product)} variant="outline" size="sm"
-                          className="flex-1 border-white/10 text-gray-300 hover:text-white hover:border-teal-500 hover:bg-teal-600/10">
+                          className="flex-1 border-white/10 text-gray-300 hover:text-white hover:border-sky-500 hover:bg-sky-600/10">
                           <Edit3 className="w-3 h-3 mr-1" /> Edit
                         </Button>
                         <Button onClick={() => setDeleteConfirm(product.id)} variant="outline" size="sm"
@@ -2194,9 +2194,9 @@ export default function Home() {
           <DialogHeader>
             <DialogTitle className="text-white flex items-center gap-2">
               {editingProduct ? (
-                <><Edit3 className="w-5 h-5 text-teal-500" /> Edit Product</>
+                <><Edit3 className="w-5 h-5 text-sky-500" /> Edit Product</>
               ) : (
-                <><Plus className="w-5 h-5 text-teal-500" /> Add New Product</>
+                <><Plus className="w-5 h-5 text-sky-500" /> Add New Product</>
               )}
             </DialogTitle>
             <DialogDescription className="text-gray-400">
@@ -2217,9 +2217,9 @@ export default function Home() {
                     </Button>
                   </div>
                 ) : (
-                  <label className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-white/10 hover:border-teal-600/50 transition-colors cursor-pointer py-8 bg-white/3">
+                  <label className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-white/10 hover:border-sky-600/50 transition-colors cursor-pointer py-8 bg-white/3">
                     {uploading ? (
-                      <Loader2 className="w-8 h-8 text-teal-500 animate-spin mb-2" />
+                      <Loader2 className="w-8 h-8 text-sky-500 animate-spin mb-2" />
                     ) : (
                       <Upload className="w-8 h-8 text-gray-500 mb-2" />
                     )}
@@ -2233,7 +2233,7 @@ export default function Home() {
             {/* Extra Images Upload (Multiple) */}
             <div>
               <Label className="text-gray-300 flex items-center gap-2">
-                <ImageIcon className="w-4 h-4 text-teal-500" />
+                <ImageIcon className="w-4 h-4 text-sky-500" />
                 Additional Images ({formData.images.length} uploaded)
               </Label>
               <div className="mt-2">
@@ -2254,9 +2254,9 @@ export default function Home() {
                   </div>
                 )}
                 {/* Upload more images */}
-                <label className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-white/10 hover:border-teal-600/50 transition-colors cursor-pointer py-6 bg-white/3">
+                <label className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-white/10 hover:border-sky-600/50 transition-colors cursor-pointer py-6 bg-white/3">
                   {uploadingExtra ? (
-                    <Loader2 className="w-6 h-6 text-teal-500 animate-spin mb-2" />
+                    <Loader2 className="w-6 h-6 text-sky-500 animate-spin mb-2" />
                   ) : (
                     <Plus className="w-6 h-6 text-gray-500 mb-2" />
                   )}
@@ -2280,13 +2280,13 @@ export default function Home() {
               <Label className="text-gray-300">Product Name *</Label>
               <Input value={formData.name} onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 placeholder="e.g. Luxury Vanity Unit"
-                className="mt-2 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-teal-600 focus:ring-teal-600/20" />
+                className="mt-2 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-600 focus:ring-sky-600/20" />
             </div>
 
             {/* Video Upload */}
             <div>
               <Label className="text-gray-300 flex items-center gap-2">
-                <Film className="w-4 h-4 text-teal-400" />
+                <Film className="w-4 h-4 text-sky-400" />
                 Product Video (Optional)
               </Label>
               <div className="mt-2">
@@ -2300,9 +2300,9 @@ export default function Home() {
                     </div>
                   </div>
                 ) : (
-                  <label className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-white/10 hover:border-teal-500/50 transition-colors cursor-pointer py-6 bg-white/3">
+                  <label className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-white/10 hover:border-sky-500/50 transition-colors cursor-pointer py-6 bg-white/3">
                     {uploadingVideo ? (
-                      <Loader2 className="w-8 h-8 text-teal-400 animate-spin mb-2" />
+                      <Loader2 className="w-8 h-8 text-sky-400 animate-spin mb-2" />
                     ) : (
                       <Video className="w-8 h-8 text-gray-500 mb-2" />
                     )}
@@ -2319,7 +2319,7 @@ export default function Home() {
               <Label className="text-gray-300">Description *</Label>
               <Textarea value={formData.description} onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 placeholder="Describe your product..." rows={3}
-                className="mt-2 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-teal-600 focus:ring-teal-600/20" />
+                className="mt-2 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-600 focus:ring-sky-600/20" />
             </div>
 
             {/* Price & Category Row */}
@@ -2328,7 +2328,7 @@ export default function Home() {
                 <Label className="text-gray-300">Price *</Label>
                 <Input value={formData.price} onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
                   placeholder="e.g. Rs. 18,500"
-                  className="mt-2 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-teal-600 focus:ring-teal-600/20" />
+                  className="mt-2 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-600 focus:ring-sky-600/20" />
               </div>
               <div>
                 <Label className="text-gray-300">Category</Label>
@@ -2336,7 +2336,7 @@ export default function Home() {
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                    className="flex-1 rounded-md border border-white/10 bg-white/5 text-white px-3 py-2 text-sm focus:border-teal-600 focus:ring-teal-600/20 focus:outline-none"
+                    className="flex-1 rounded-md border border-white/10 bg-white/5 text-white px-3 py-2 text-sm focus:border-sky-600 focus:ring-sky-600/20 focus:outline-none"
                   >
                     {CATEGORIES.map(cat => (
                       <option key={cat.name} value={cat.name} className="bg-[#0d1220] text-white">
@@ -2349,7 +2349,7 @@ export default function Home() {
                     variant="outline"
                     size="sm"
                     onClick={() => setShowCustomCategory(true)}
-                    className="shrink-0 border-teal-500/30 text-teal-400 hover:bg-teal-500/10 hover:border-teal-400"
+                    className="shrink-0 border-sky-500/30 text-sky-400 hover:bg-sky-500/10 hover:border-sky-400"
                   >
                     <Plus className="w-4 h-4" />
                   </Button>
@@ -2360,7 +2360,7 @@ export default function Home() {
                       value={customCategoryInput}
                       onChange={(e) => setCustomCategoryInput(e.target.value)}
                       placeholder="Type new category name..."
-                      className="flex-1 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-teal-500 focus:ring-teal-500/20"
+                      className="flex-1 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-500 focus:ring-sky-500/20"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault()
@@ -2384,7 +2384,7 @@ export default function Home() {
                           toast({ title: 'Category Added', description: `"${customCategoryInput.trim()}" will appear when you save this product.` })
                         }
                       }}
-                      className="shrink-0 bg-gradient-to-r from-teal-500 to-teal-600 text-white border-0"
+                      className="shrink-0 bg-gradient-to-r from-sky-500 to-sky-600 text-white border-0"
                     >
                       Add
                     </Button>
@@ -2411,7 +2411,7 @@ export default function Home() {
               <div>
                 <Label className="text-gray-300">Display Order</Label>
                 <Input type="number" value={formData.order} onChange={(e) => setFormData(prev => ({ ...prev, order: parseInt(e.target.value) || 0 }))}
-                  className="mt-2 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-teal-600 focus:ring-teal-600/20" />
+                  className="mt-2 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-600 focus:ring-sky-600/20" />
               </div>
             </div>
           </div>
@@ -2421,7 +2421,7 @@ export default function Home() {
               Cancel
             </Button>
             <Button onClick={handleSaveProduct} disabled={saving}
-              className="bg-gradient-to-r from-teal-700 to-teal-500 hover:from-teal-600 hover:to-teal-400 text-white border-0">
+              className="bg-gradient-to-r from-sky-700 to-sky-500 hover:from-sky-600 hover:to-sky-400 text-white border-0">
               {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
               {editingProduct ? 'Update' : 'Save'} Product
             </Button>
