@@ -335,24 +335,28 @@ function HeroSlideshow() {
           key={src}
           src={src}
           alt="Luxury Bathroom Interior"
-          className="absolute inset-0 w-full h-full object-cover object-center"
+          className="absolute inset-0 w-full h-full object-cover object-center sm:object-center"
           initial={false}
           animate={{ opacity: i === current ? 1 : 0 }}
           transition={{ duration: 1.5, ease: 'easeInOut' }}
         />
       ))}
-      {/* Dark gradient overlay for text readability — responsive */}
-      <div className="absolute inset-0 bg-gradient-to-r from-[#080c14]/95 via-[#080c14]/80 to-[#080c14]/50 sm:from-[#080c14]/90 sm:via-[#080c14]/70 sm:to-[#080c14]/40 lg:from-[#080c14]/85 lg:via-[#080c14]/60 lg:to-[#080c14]/25" />
+      {/* Mobile: bottom-heavy overlay so image shows on top, text readable on bottom */}
+      <div className="absolute inset-0 sm:hidden bg-gradient-to-t from-[#080c14] via-[#080c14]/70 to-[#080c14]/20" />
+      {/* Tablet: left-heavy overlay */}
+      <div className="absolute inset-0 hidden sm:block lg:hidden bg-gradient-to-r from-[#080c14]/90 via-[#080c14]/65 to-[#080c14]/30" />
+      {/* Desktop: left-heavy overlay, image clearly visible on right */}
+      <div className="absolute inset-0 hidden lg:block bg-gradient-to-r from-[#080c14]/85 via-[#080c14]/55 to-[#080c14]/15" />
       {/* Bottom fade into next section */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#080c14] to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-24 sm:h-32 bg-gradient-to-t from-[#080c14] to-transparent" />
       {/* Slide indicators */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+      <div className="absolute bottom-8 sm:bottom-10 left-1/2 -translate-x-1/2 flex gap-2 z-10">
         {HERO_IMAGES.map((_, i) => (
           <button
             key={i}
             onClick={() => setCurrent(i)}
-            className={`w-2.5 h-2.5 rounded-full transition-all duration-500 ${
-              i === current ? 'bg-teal-400 w-8' : 'bg-white/30 hover:bg-white/50'
+            className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full transition-all duration-500 ${
+              i === current ? 'bg-teal-400 w-6 sm:w-8' : 'bg-white/40 hover:bg-white/60'
             }`}
           />
         ))}
@@ -1187,9 +1191,9 @@ export default function Home() {
           <HeroSlideshow />
 
           <div
-            className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 lg:py-32 w-full"
+            className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-20 sm:py-24 lg:py-32 w-full"
           >
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-end lg:items-center">
               <div>
                 {/* Badge — glow pulse */}
                 <motion.div
@@ -1197,14 +1201,14 @@ export default function Home() {
                   variants={heroTextVariants}
                   initial="hidden"
                   animate="visible"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-6 glow-pulse"
+                  className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/5 border border-white/10 mb-4 sm:mb-6 glow-pulse"
                 >
-                  <span className="text-sm font-bold bg-gradient-to-r from-teal-400 to-teal-300 bg-clip-text text-transparent">HOME SENSE</span>
-                  <span className="text-sm text-gray-400">Sanitary Fitting & Ware Showroom</span>
+                  <span className="text-[10px] sm:text-sm font-bold bg-gradient-to-r from-teal-400 to-teal-300 bg-clip-text text-transparent">HOME SENSE</span>
+                  <span className="text-[10px] sm:text-sm text-gray-400 hidden xs:inline">Sanitary Fitting & Ware Showroom</span>
                 </motion.div>
 
-                {/* Title — Character-by-character text reveal */}
-                <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold leading-none mb-6">
+                {/* Title — with text shadow for mobile readability */}
+                <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold leading-tight sm:leading-none mb-4 sm:mb-6 [text-shadow:0_2px_10px_rgba(0,0,0,0.8)]">
                   <motion.span
                     custom={1}
                     variants={heroTextVariants}
@@ -1242,30 +1246,30 @@ export default function Home() {
                   variants={heroTextVariants}
                   initial="hidden"
                   animate="visible"
-                  className="text-lg sm:text-xl text-gray-400 mb-8 max-w-lg"
+                  className="text-sm sm:text-lg lg:text-xl text-gray-300 sm:text-gray-400 mb-5 sm:mb-8 max-w-lg [text-shadow:0_1px_6px_rgba(0,0,0,0.7)]"
                 >
-                  Home Sense brings you premium sanitary wares — vanities manufactured by us, plus the complete Zilver range of commodes, basins, shower sets, and art bowls for every space.
+                  Home Sense brings you premium sanitary wares — vanities manufactured by us, plus the complete Zilver range of commodes, basins, shower sets, and art bowls.
                 </motion.p>
 
-                {/* CTA Buttons — with gradient shift and ripple */}
+                {/* CTA Buttons */}
                 <motion.div
                   custom={5}
                   variants={heroTextVariants}
                   initial="hidden"
                   animate="visible"
-                  className="flex flex-wrap gap-4"
+                  className="flex flex-wrap gap-3 sm:gap-4"
                 >
                   <a href="#products">
-                    <RippleButton size="lg" className="bg-gradient-to-r from-teal-700 to-teal-500 hover:from-teal-600 hover:to-teal-400 text-white border-0 shadow-lg shadow-teal-600/25 btn-gradient-shift">
-                      <Package className="w-5 h-5 mr-2" />
+                    <RippleButton size="default" className="sm:h-12 sm:px-6 bg-gradient-to-r from-teal-700 to-teal-500 hover:from-teal-600 hover:to-teal-400 text-white border-0 shadow-lg shadow-teal-600/25 btn-gradient-shift text-sm sm:text-base">
+                      <Package className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
                       Explore Products
                     </RippleButton>
                   </a>
                   <a href="#contact">
                     <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                      <Button size="lg" variant="outline" className="border-white/20 text-gray-300 hover:text-white hover:border-white/40">
+                      <Button size="default" className="sm:h-12 sm:px-6 border-white/20 text-gray-300 hover:text-white hover:border-white/40 text-sm sm:text-base">
                         Contact Us
-                        <ArrowRight className="w-4 h-4 ml-2" />
+                        <ArrowRight className="w-4 h-4 ml-1.5 sm:ml-2" />
                       </Button>
                     </motion.div>
                   </a>
