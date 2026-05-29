@@ -1,7 +1,8 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
+import { verifyAdmin } from '@/lib/auth'
 
-// GET single product
+// GET single product (PUBLIC)
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -19,12 +20,16 @@ export async function GET(
   }
 }
 
-// PUT update product
+// PUT update product (ADMIN ONLY)
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Verify admin authentication
+    const auth = await verifyAdmin()
+    if (!auth.authenticated) return auth.response!
+
     const { id } = await params
     const body = await request.json()
     const { name, description, price, image, images, video, category, featured, order } = body
@@ -51,12 +56,16 @@ export async function PUT(
   }
 }
 
-// DELETE product
+// DELETE product (ADMIN ONLY)
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Verify admin authentication
+    const auth = await verifyAdmin()
+    if (!auth.authenticated) return auth.response!
+
     const { id } = await params
     await db.product.delete({ where: { id } })
     return NextResponse.json({ success: true })

@@ -1,7 +1,8 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
+import { verifyAdmin } from '@/lib/auth'
 
-// GET all products
+// GET all products (PUBLIC - anyone can view)
 export async function GET() {
   try {
     const products = await db.product.findMany({
@@ -14,9 +15,13 @@ export async function GET() {
   }
 }
 
-// POST create a new product
+// POST create a new product (ADMIN ONLY - requires authentication)
 export async function POST(request: Request) {
   try {
+    // Verify admin authentication
+    const auth = await verifyAdmin()
+    if (!auth.authenticated) return auth.response!
+
     const body = await request.json()
     const { name, description, price, image, images, video, category, featured, order } = body
 

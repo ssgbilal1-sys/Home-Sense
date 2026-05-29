@@ -208,6 +208,7 @@ export default function Home() {
   const [adminPassword, setAdminPassword] = useState('')
   const [showAdminLogin, setShowAdminLogin] = useState(false)
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false)
+  const [loginLoading, setLoginLoading] = useState(false)
 
   // Product form state
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
@@ -274,17 +275,67 @@ export default function Home() {
     fetchProducts()
   }, [fetchProducts])
 
-  // Admin login handler
-  const handleAdminLogin = () => {
-    if (adminPassword === 'zilver2024') {
-      setIsAdminAuthenticated(true)
-      setShowAdminLogin(false)
-      setViewMode('admin')
-      setAdminPassword('')
-      toast({ title: 'Welcome Admin!', description: 'You can now manage your products.' })
-    } else {
-      toast({ title: 'Wrong Password', description: 'Please enter the correct admin password.', variant: 'destructive' })
+  // Check if already authenticated on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/auth/verify')
+        if (res.ok) {
+          const data = await res.json()
+          if (data.authenticated) {
+            setIsAdminAuthenticated(true)
+          }
+        }
+      } catch {}
     }
+    checkAuth()
+  }, [])
+
+  // Admin login handler (server-side authentication)
+  const handleAdminLogin = async () => {
+    if (!adminPassword.trim()) {
+      toast({ title: 'Empty Password', description: 'Please enter the admin password.', variant: 'destructive' })
+      return
+    }
+    setLoginLoading(true)
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword }),
+      })
+      const data = await res.json()
+
+      if (res.ok && data.success) {
+        setIsAdminAuthenticated(true)
+        setShowAdminLogin(false)
+        setViewMode('admin')
+        setAdminPassword('')
+        toast({ title: 'Welcome Admin!', description: 'You are now securely logged in. Session expires in 24 hours.' })
+      } else {
+        if (data.locked) {
+          toast({ title: 'Account Locked', description: data.error, variant: 'destructive' })
+        } else {
+          const remaining = data.attemptsLeft !== undefined ? ` ${data.attemptsLeft} attempt(s) remaining.` : ''
+          toast({ title: 'Invalid Credentials', description: `Wrong password.${remaining}`, variant: 'destructive' })
+        }
+      }
+    } catch (error) {
+      console.error('Login error:', error)
+      toast({ title: 'Connection Error', description: 'Could not connect to server. Please try again.', variant: 'destructive' })
+    } finally {
+      setLoginLoading(false)
+    }
+  }
+
+  // Admin logout handler
+  const handleAdminLogout = async () => {
+    try {
+      await fetch('/api/auth/login', { method: 'DELETE' })
+    } catch {}
+    setIsAdminAuthenticated(false)
+    setViewMode('storefront')
+    toast({ title: 'Logged Out', description: 'You have been securely logged out.' })
   }
 
   // Image upload handler (main image)
@@ -1439,13 +1490,13 @@ export default function Home() {
                 />
               </div>
               <p className="text-xs text-gray-500">
-                Demo password: <span className="text-blue-400 font-mono">zilver2024</span>
+                <span className="text-gray-500">Session expires in 24 hours</span>
               </p>
             </div>
             <DialogFooter>
-              <Button onClick={handleAdminLogin} className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white border-0">
-                <ChevronRight className="w-4 h-4 mr-1" />
-                Login
+              <Button onClick={handleAdminLogin} disabled={loginLoading} className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white border-0">
+                {loginLoading ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <ChevronRight className="w-4 h-4 mr-1" />}
+                {loginLoading ? 'Verifying...' : 'Login'}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1483,7 +1534,7 @@ export default function Home() {
                 View Store
               </Button>
               <Button
-                onClick={() => { setIsAdminAuthenticated(false); setViewMode('storefront') }}
+                onClick={handleAdminLogout}
                 variant="ghost" size="sm"
                 className="text-gray-400 hover:text-red-400"
               >
