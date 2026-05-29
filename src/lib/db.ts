@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { v4 as uuidv4 } from 'uuid'
 
 // Supabase client for server-side API routes (bypasses RLS)
 function getSupabaseAdmin() {
@@ -6,6 +7,13 @@ function getSupabaseAdmin() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
+}
+
+// Generate a CUID-like ID (compatible with Prisma's @default(cuid()))
+function generateId(): string {
+  const timestamp = Date.now().toString(36)
+  const random = uuidv4().replace(/-/g, '').slice(0, 16)
+  return `c${timestamp}${random}`.slice(0, 25)
 }
 
 // Prisma-compatible database interface using Supabase REST API
@@ -56,10 +64,15 @@ export const db = {
 
     create: async (opts: { data: Record<string, any> }) => {
       const supabase = getSupabaseAdmin()
-      const dataWithTimestamp = { ...opts.data, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+      const dataWithIdAndTimestamp = {
+        ...opts.data,
+        id: opts.data.id || generateId(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
       const { data, error } = await supabase
         .from('Product')
-        .insert(dataWithTimestamp)
+        .insert(dataWithIdAndTimestamp)
         .select()
         .single()
       if (error) throw new Error(error.message)
@@ -129,10 +142,14 @@ export const db = {
 
     create: async (opts: { data: Record<string, any> }) => {
       const supabase = getSupabaseAdmin()
-      const dataWithTimestamp = { ...opts.data, updatedAt: new Date().toISOString() }
+      const dataWithIdAndTimestamp = {
+        ...opts.data,
+        id: opts.data.id || 'main',
+        updatedAt: new Date().toISOString()
+      }
       const { data, error } = await supabase
         .from('SiteSettings')
-        .insert(dataWithTimestamp)
+        .insert(dataWithIdAndTimestamp)
         .select()
         .single()
       if (error) throw new Error(error.message)
