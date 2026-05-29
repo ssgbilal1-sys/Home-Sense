@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ZILVER - Quality Bathroom & Kitchen Solutions",
-  description: "Concetti Italiano - Sanitary Wares. We have complete range of solutions for day to day living the bathroom in public and private places.",
-  keywords: ["Zilver", "Sanitary Ware", "Bathroom Solutions", "Kitchen Solutions", "Faucets", "Showers", "Wash Basins"],
+  title: "HOME SENSE - Authorized Distributor of Zilver Sanitary Ware",
+  description: "Home Sense is the authorized distributor of Zilver Concetti Italiano Sanitary Wares. Complete range of bathroom & kitchen solutions — faucets, showers, wash basins, and more.",
+  keywords: ["Home Sense", "Zilver", "Sanitary Ware", "Bathroom Solutions", "Kitchen Solutions", "Faucets", "Showers", "Wash Basins", "Authorized Distributor"],
   icons: {
     icon: "/logo-zilver.png",
   },

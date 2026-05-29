@@ -971,9 +971,12 @@ export default function Home() {
                 >
                   <Droplets className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </motion.div>
-                <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-400 via-cyan-300 to-teal-400 bg-clip-text text-transparent tracking-wide text-shimmer" style={{ backgroundSize: '200% auto' }}>
-                  ZILVER
-                </span>
+                <div className="flex flex-col">
+                  <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-400 via-cyan-300 to-teal-400 bg-clip-text text-transparent tracking-wide text-shimmer leading-tight" style={{ backgroundSize: '200% auto' }}>
+                    HOME SENSE
+                  </span>
+                  <span className="text-[9px] sm:text-[10px] text-gray-500 tracking-widest uppercase">Distributor of Zilver</span>
+                </div>
               </motion.div>
 
               {/* Desktop Nav — with sliding underline indicators */}
@@ -1081,8 +1084,8 @@ export default function Home() {
                   animate="visible"
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-6 glow-pulse"
                 >
-                  <Droplets className="w-4 h-4 text-cyan-400" />
-                  <span className="text-sm text-gray-400">Quality Bathroom & Kitchen Solutions</span>
+                  <CheckCircle className="w-4 h-4 text-cyan-400" />
+                  <span className="text-sm text-gray-400">Authorized Distributor of Zilver</span>
                 </motion.div>
 
                 {/* Title — Character-by-character text reveal */}
@@ -1126,7 +1129,7 @@ export default function Home() {
                   animate="visible"
                   className="text-lg sm:text-xl text-gray-400 mb-8 max-w-lg"
                 >
-                  Concetti Italiano — Sanitary Wares. We have complete range of solutions for day to day living in the bathroom, public and private places.
+                  Home Sense brings you Zilver Concetti Italiano — premium sanitary wares. We have the complete range of solutions for day to day living in the bathroom, public and private places.
                 </motion.p>
 
                 {/* CTA Buttons — with gradient shift and ripple */}
@@ -1240,7 +1243,7 @@ export default function Home() {
                 <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent text-shimmer" style={{ backgroundSize: '200% auto' }}> Products</span>
               </h2>
               <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-                The Zilver Concetti Italiano has multifaceted solutions for the modern bathroom — versatile faucets, head showers, washbasins and more.
+                Zilver Concetti Italiano has multifaceted solutions for the modern bathroom — versatile faucets, head showers, washbasins and more. Available at Home Sense.
               </p>
             </ScrollReveal>
 
@@ -1367,7 +1370,7 @@ export default function Home() {
                   transition={{ delay: 0.1 }}
                   className="text-gray-400 text-lg mb-8"
                 >
-                  Excellent details, durable components, compatible hardware result in Zilver quality. High standard, long life combined with Zilver mixers superior performance thanks to the compatibility of all components, spare parts and durability.
+                  Excellent details, durable components, compatible hardware result in Zilver quality. High standard, long life combined with Zilver mixers superior performance thanks to the compatibility of all components, spare parts and durability. Available exclusively at Home Sense.
                 </motion.p>
                 <div className="space-y-6">
                   {[
@@ -1442,6 +1445,18 @@ export default function Home() {
                     >
                       Quality Bathroom & Kitchen Solutions
                     </motion.p>
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: false, amount: 0.15 }}
+                      transition={{ delay: 0.48 }}
+                      className="mb-6"
+                    >
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/8 text-[10px] text-gray-400">
+                        <CheckCircle className="w-3 h-3 text-cyan-400" />
+                        Distributed by Home Sense
+                      </span>
+                    </motion.div>
 
                     {/* Counter animation stats */}
                     <div className="grid grid-cols-3 gap-4" ref={counter500.ref}>
@@ -1576,10 +1591,12 @@ export default function Home() {
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
                   <Droplets className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                  ZILVER
-                </span>
-                <span className="text-xs text-gray-600 ml-2">Quality Bathroom & Kitchen Solutions</span>
+                <div className="flex flex-col">
+                  <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent leading-tight">
+                    HOME SENSE
+                  </span>
+                  <span className="text-[9px] text-gray-600">Distributor of Zilver</span>
+                </div>
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -1613,7 +1630,7 @@ export default function Home() {
                 transition={{ delay: 0.3, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
                 className="text-gray-600 text-xs"
               >
-                &copy; {new Date().getFullYear()} Zilver. All rights reserved.
+                &copy; {new Date().getFullYear()} Home Sense. All rights reserved.
               </motion.p>
             </div>
           </div>
@@ -1628,7 +1645,7 @@ export default function Home() {
                 Admin Access
               </DialogTitle>
               <DialogDescription className="text-gray-400">
-                Enter the admin password to manage your products.
+                Enter the admin password to manage your Home Sense store.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
@@ -1674,8 +1691,8 @@ export default function Home() {
                 <Settings className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-lg sm:text-xl font-bold text-white">Zilver Admin</h1>
-                <p className="text-xs text-gray-500 hidden sm:block">Manage your products</p>
+                <h1 className="text-lg sm:text-xl font-bold text-white">Home Sense Admin</h1>
+                <p className="text-xs text-gray-500 hidden sm:block">Manage your store & products</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
