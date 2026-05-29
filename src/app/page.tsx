@@ -991,39 +991,43 @@ export default function Home() {
         <nav className="relative z-50 border-b border-white/8 backdrop-blur-xl bg-[#080c14]/85">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16 sm:h-20">
-              {/* Logo — Animated HOME SENSE text */}
+              {/* Logo Image + Animated HOME SENSE text */}
               <motion.a
                 href="#home"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={springTransition}
-                className="flex items-center gap-2 sm:gap-3 cursor-pointer"
+                className="flex items-center gap-2 sm:gap-3 cursor-pointer logo-glow"
               >
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="flex items-center"
                 >
-                  <span className="text-xl sm:text-2xl font-extrabold tracking-wider">
-                    <motion.span
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1, duration: 0.5 }}
-                      className="bg-gradient-to-r from-teal-400 via-teal-300 to-teal-500 bg-clip-text text-transparent"
-                      style={{ backgroundSize: '200% auto' }}
-                    >
-                      HOME
-                    </motion.span>
-                    <motion.span
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3, duration: 0.5 }}
-                      className="text-white"
-                    >
-                      {' '}SENSE
-                    </motion.span>
-                  </span>
+                  <img
+                    src="/logo-homesense.jpg"
+                    alt="Home Sense"
+                    className="h-10 sm:h-12 w-auto object-contain rounded-lg"
+                  />
                 </motion.div>
+                <span className="text-xl sm:text-2xl font-extrabold tracking-wider">
+                  <motion.span
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1, duration: 0.5 }}
+                    className="bg-gradient-to-r from-teal-400 via-teal-300 to-teal-500 bg-clip-text text-transparent text-shimmer"
+                    style={{ backgroundSize: '200% auto' }}
+                  >
+                    HOME
+                  </motion.span>
+                  <motion.span
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3, duration: 0.5 }}
+                    className="text-white"
+                  >
+                    {' '}SENSE
+                  </motion.span>
+                </span>
               </motion.a>
 
               {/* Desktop Nav — with sliding underline indicators */}
