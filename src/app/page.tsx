@@ -355,6 +355,12 @@ export default function Home() {
   const counter300 = useCounter(300, 2000)
   const counter100 = useCounter(100, 1500)
 
+  // Calculate category counts from products
+  const categoryCounts = products.reduce((acc, p) => {
+    acc[p.category] = (acc[p.category] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
+
   // Parse images from product
   const getProductImages = (product: Product): string[] => {
     try {
@@ -1117,13 +1123,14 @@ export default function Home() {
         {/* Category Quick Links — Icon bounce, card glow */}
         <section className="relative z-10 py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
               {[
-                { name: 'Tap & Mixers', icon: Wrench, count: '134' },
-                { name: 'Wash Basins', icon: Bath, count: '45' },
-                { name: 'Showers', icon: Droplets, count: '36' },
-                { name: 'Kitchen', icon: CookingPot, count: '9' },
-              ].map((cat, i) => (
+                { name: 'Tap & Mixers', icon: Wrench },
+                { name: 'Wash Basins', icon: Bath },
+                { name: 'Showers', icon: Droplets },
+                { name: 'Commode', icon: Package },
+                { name: 'Kitchen', icon: CookingPot },
+              ].filter(cat => (categoryCounts[cat.name] || 0) > 0).map((cat, i) => (
                 <ScrollReveal key={i} delay={i * 0.1} direction="up" distance={30}>
                   <motion.div
                     whileHover={{ scale: 1.03 }}
@@ -1137,7 +1144,7 @@ export default function Home() {
                         <cat.icon className="w-8 h-8 mx-auto mb-3 text-cyan-400 group-hover:scale-110 transition-transform" />
                       </motion.div>
                       <h3 className="font-semibold text-white text-sm mb-1">{cat.name}</h3>
-                      <span className="text-xs text-gray-500">{cat.count} Products</span>
+                      <span className="text-xs text-gray-500">{categoryCounts[cat.name] || 0} Products</span>
                     </div>
                   </motion.div>
                 </ScrollReveal>
