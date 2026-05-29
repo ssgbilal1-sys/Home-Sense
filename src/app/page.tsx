@@ -1,15 +1,15 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Droplets, Menu, X, Plus, Trash2, Edit3,
   Upload, Save, ChevronRight, Phone, Mail,
   ArrowRight, Eye, Settings, Shield,
   Facebook, Instagram, Youtube, MessageCircle,
-  Wrench, Bath, ShowerHead, CookingPot,
+  Wrench, Bath, CookingPot,
   Star, CheckCircle, Loader2, Package, Video,
-  Play, Film
+  Play, Film, ChevronLeft, ImageIcon, XCircle
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -28,6 +28,7 @@ interface Product {
   description: string
   price: string
   image: string
+  images: string
   video: string | null
   category: string
   featured: boolean
@@ -55,6 +56,7 @@ export default function Home() {
     description: '',
     price: '',
     image: '',
+    images: [] as string[],
     video: '',
     category: 'Bathroom',
     featured: true,
@@ -62,11 +64,26 @@ export default function Home() {
   })
   const [uploadingVideo, setUploadingVideo] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [uploadingExtra, setUploadingExtra] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
-  const [videoModal, setVideoModal] = useState<Product | null>(null)
+
+  // Product detail view
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [detailImageIndex, setDetailImageIndex] = useState(0)
 
   const { toast } = useToast()
+  const extraImageInputRef = useRef<HTMLInputElement>(null)
+
+  // Parse images from product
+  const getProductImages = (product: Product): string[] => {
+    try {
+      const parsed = JSON.parse(product.images || '[]')
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed
+    } catch {}
+    // Fallback: use the main image
+    return product.image ? [product.image] : []
+  }
 
   // Fetch products
   const fetchProducts = useCallback(async () => {
@@ -98,7 +115,7 @@ export default function Home() {
     }
   }
 
-  // Image upload handler
+  // Image upload handler (main image)
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -110,7 +127,7 @@ export default function Home() {
       const data = await res.json()
       if (data.url) {
         setFormData(prev => ({ ...prev, image: data.url }))
-        toast({ title: 'Image Uploaded', description: 'Product image uploaded successfully.' })
+        toast({ title: 'Image Uploaded', description: 'Main product image uploaded successfully.' })
       }
     } catch (error) {
       console.error('Error uploading image:', error)
@@ -118,6 +135,39 @@ export default function Home() {
     } finally {
       setUploading(false)
     }
+  }
+
+  // Extra images upload handler (multiple)
+  const handleExtraImagesUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+    setUploadingExtra(true)
+    try {
+      const newUrls: string[] = []
+      for (let i = 0; i < files.length; i++) {
+        const formDataUpload = new FormData()
+        formDataUpload.append('file', files[i])
+        const res = await fetch('/api/upload', { method: 'POST', body: formDataUpload })
+        const data = await res.json()
+        if (data.url) newUrls.push(data.url)
+      }
+      if (newUrls.length > 0) {
+        setFormData(prev => ({ ...prev, images: [...prev.images, ...newUrls] }))
+        toast({ title: 'Images Uploaded', description: `${newUrls.length} image(s) uploaded successfully.` })
+      }
+    } catch (error) {
+      console.error('Error uploading images:', error)
+      toast({ title: 'Upload Failed', description: 'Failed to upload images.', variant: 'destructive' })
+    } finally {
+      setUploadingExtra(false)
+      // Reset file input
+      if (extraImageInputRef.current) extraImageInputRef.current.value = ''
+    }
+  }
+
+  // Remove extra image
+  const removeExtraImage = (index: number) => {
+    setFormData(prev => ({ ...prev, images: prev.images.filter((_, i) => i !== index) }))
   }
 
   // Video upload handler
@@ -146,15 +196,18 @@ export default function Home() {
   const openProductDialog = (product?: Product) => {
     if (product) {
       setEditingProduct(product)
+      let parsedImages: string[] = []
+      try { parsedImages = JSON.parse(product.images || '[]') } catch {}
       setFormData({
         name: product.name, description: product.description, price: product.price,
-        image: product.image, video: product.video || '', category: product.category, featured: product.featured, order: product.order,
+        image: product.image, images: parsedImages, video: product.video || '',
+        category: product.category, featured: product.featured, order: product.order,
       })
     } else {
       setEditingProduct(null)
       setFormData({
-        name: '', description: '', price: '', image: '', video: '',
-        category: 'Bathroom', featured: true, order: products.length + 1,
+        name: '', description: '', price: '', image: '', images: [],
+        video: '', category: 'Bathroom', featured: true, order: products.length + 1,
       })
     }
     setShowProductDialog(true)
@@ -163,19 +216,23 @@ export default function Home() {
   // Save product
   const handleSaveProduct = async () => {
     if (!formData.name || !formData.description || !formData.price || !formData.image) {
-      toast({ title: 'Missing Fields', description: 'Please fill in all required fields.', variant: 'destructive' })
+      toast({ title: 'Missing Fields', description: 'Please fill in all required fields including main image.', variant: 'destructive' })
       return
     }
     setSaving(true)
     try {
+      const payload = {
+        ...formData,
+        images: JSON.stringify(formData.images),
+      }
       if (editingProduct) {
         await fetch(`/api/products/${editingProduct.id}`, {
-          method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData),
+          method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
         })
         toast({ title: 'Product Updated', description: `${formData.name} has been updated.` })
       } else {
         await fetch('/api/products', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData),
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
         })
         toast({ title: 'Product Added', description: `${formData.name} has been added to your store.` })
       }
@@ -202,16 +259,187 @@ export default function Home() {
     setDeleteConfirm(null)
   }
 
+  // Open product detail
+  const openProductDetail = (product: Product) => {
+    setSelectedProduct(product)
+    setDetailImageIndex(0)
+  }
+
   // Category icons mapping
   const getCategoryIcon = (category: string) => {
     switch (category.toLowerCase()) {
       case 'wash basins': return Bath
       case 'tap & mixers': return Wrench
-      case 'showers': return ShowerHead
+      case 'showers': return Droplets
       case 'commode': return Package
       case 'kitchen': return CookingPot
       default: return Droplets
     }
+  }
+
+  // ───────────────────────────────────────────────────────
+  // PRODUCT DETAIL VIEW (overlay)
+  // ───────────────────────────────────────────────────────
+  const renderProductDetail = () => {
+    if (!selectedProduct) return null
+    const allImages = getProductImages(selectedProduct)
+    // Include main image as first if not already in images array
+    const displayImages = allImages[0] === selectedProduct.image ? allImages : [selectedProduct.image, ...allImages.filter(img => img !== selectedProduct.image)]
+
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+        onClick={() => setSelectedProduct(null)}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          className="bg-[#0d1220] border border-white/10 rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Close button */}
+          <button
+            onClick={() => setSelectedProduct(null)}
+            className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/80 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          <div className="grid lg:grid-cols-2 gap-0">
+            {/* Left: Images & Video */}
+            <div className="p-6">
+              {/* Main Image / Video */}
+              <div className="relative aspect-square rounded-xl overflow-hidden bg-black/30 mb-4">
+                {selectedProduct.video && detailImageIndex === -1 ? (
+                  <video
+                    src={selectedProduct.video}
+                    controls
+                    autoPlay
+                    className="w-full h-full object-contain"
+                    poster={selectedProduct.image}
+                  />
+                ) : (
+                  <img
+                    src={displayImages[detailImageIndex >= 0 ? detailImageIndex : 0] || selectedProduct.image}
+                    alt={selectedProduct.name}
+                    className="w-full h-full object-cover"
+                  />
+                )}
+                {/* Navigation arrows */}
+                {displayImages.length > 1 && detailImageIndex >= 0 && (
+                  <>
+                    <button
+                      onClick={() => setDetailImageIndex((detailImageIndex - 1 + displayImages.length) % displayImages.length)}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/80 transition-colors"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => setDetailImageIndex((detailImageIndex + 1) % displayImages.length)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/80 transition-colors rotate-180"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                  </>
+                )}
+                {/* Image counter */}
+                {displayImages.length > 1 && detailImageIndex >= 0 && (
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/60 backdrop-blur-sm text-white text-sm">
+                    {detailImageIndex + 1} / {displayImages.length}
+                  </div>
+                )}
+              </div>
+
+              {/* Thumbnail strip */}
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {displayImages.map((img, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setDetailImageIndex(i)}
+                    className={`shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                      detailImageIndex === i ? 'border-cyan-400 ring-1 ring-cyan-400/50' : 'border-white/10 hover:border-white/30'
+                    }`}
+                  >
+                    <img src={img} alt={`${selectedProduct.name} ${i + 1}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+                {/* Video thumbnail */}
+                {selectedProduct.video && (
+                  <button
+                    onClick={() => setDetailImageIndex(-1)}
+                    className={`shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all relative ${
+                      detailImageIndex === -1 ? 'border-red-400 ring-1 ring-red-400/50' : 'border-white/10 hover:border-red-400/50'
+                    }`}
+                  >
+                    <img src={selectedProduct.image} alt="Video" className="w-full h-full object-cover opacity-60" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Play className="w-6 h-6 text-white fill-white" />
+                    </div>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Right: Product Info */}
+            <div className="p-6 lg:p-8 flex flex-col justify-center">
+              {/* Category badge */}
+              <div className="mb-4">
+                <span className="px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-600/80 to-cyan-500/80 backdrop-blur-sm text-white flex items-center gap-1 w-fit">
+                  {(() => { const Icon = getCategoryIcon(selectedProduct.category); return <Icon className="w-3 h-3" /> })()}
+                  {selectedProduct.category}
+                </span>
+              </div>
+
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3">
+                {selectedProduct.name}
+              </h2>
+
+              <p className="text-gray-400 text-base mb-6 leading-relaxed">
+                {selectedProduct.description}
+              </p>
+
+              <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-6">
+                {selectedProduct.price}
+              </div>
+
+              {/* Features */}
+              <div className="space-y-3 mb-8">
+                {[
+                  { icon: CheckCircle, text: 'Premium Quality Materials' },
+                  { icon: Star, text: 'International Standards Compliant' },
+                  { icon: Wrench, text: 'Spare Parts Available' },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <item.icon className="w-5 h-5 text-cyan-400 shrink-0" />
+                    <span className="text-gray-300 text-sm">{item.text}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex gap-3">
+                <a href="#contact" onClick={() => setSelectedProduct(null)}>
+                  <Button size="lg" className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white border-0 shadow-lg shadow-blue-500/25">
+                    <Phone className="w-5 h-5 mr-2" />
+                    Get Quote
+                  </Button>
+                </a>
+                <a href="https://wa.me/923001234567" target="_blank" rel="noopener noreferrer">
+                  <Button size="lg" variant="outline" className="border-green-500/50 text-green-400 hover:bg-green-500/10 hover:border-green-400">
+                    <MessageCircle className="w-5 h-5 mr-2" />
+                    WhatsApp
+                  </Button>
+                </a>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    )
   }
 
   // ───────────────────────────────────────────────────────
@@ -372,7 +600,7 @@ export default function Home() {
               {[
                 { name: 'Tap & Mixers', icon: Wrench, count: '134' },
                 { name: 'Wash Basins', icon: Bath, count: '45' },
-                { name: 'Showers', icon: ShowerHead, count: '36' },
+                { name: 'Showers', icon: Droplets, count: '36' },
                 { name: 'Kitchen', icon: CookingPot, count: '9' },
               ].map((cat, i) => (
                 <motion.div
@@ -418,80 +646,88 @@ export default function Home() {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-                {products.map((product, index) => (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.1 }}
-                    whileHover={{ y: -8 }}
-                    className="group"
-                  >
-                    <div
-                      className="relative rounded-2xl overflow-hidden bg-white/5 border border-white/8 hover:border-blue-500/40 transition-all duration-500 cursor-pointer"
-                      onClick={() => { if (product.video) setVideoModal(product) }}
+                {products.map((product, index) => {
+                  const productImages = getProductImages(product)
+                  const totalImages = productImages.length + (product.video ? 1 : 0)
+                  return (
+                    <motion.div
+                      key={product.id}
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: index * 0.1 }}
+                      whileHover={{ y: -8 }}
+                      className="group"
                     >
-                      {/* Product Image */}
-                      <div className="relative aspect-square overflow-hidden">
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                        {/* Category badge */}
-                        <div className="absolute top-3 left-3">
-                          <span className="px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-600/80 to-cyan-500/80 backdrop-blur-sm text-white flex items-center gap-1">
-                            {(() => { const Icon = getCategoryIcon(product.category); return <Icon className="w-3 h-3" /> })()}
-                            {product.category}
-                          </span>
-                        </div>
-                        {/* Video badge */}
-                        {product.video && (
-                          <div className="absolute top-3 right-3">
-                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-500/80 backdrop-blur-sm text-white flex items-center gap-1">
-                              <Play className="w-3 h-3 fill-white" /> Video
+                      <div
+                        className="relative rounded-2xl overflow-hidden bg-white/5 border border-white/8 hover:border-blue-500/40 transition-all duration-500 cursor-pointer"
+                        onClick={() => openProductDetail(product)}
+                      >
+                        {/* Product Image */}
+                        <div className="relative aspect-square overflow-hidden">
+                          <img
+                            src={product.image}
+                            alt={product.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                          {/* Category badge */}
+                          <div className="absolute top-3 left-3">
+                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-600/80 to-cyan-500/80 backdrop-blur-sm text-white flex items-center gap-1">
+                              {(() => { const Icon = getCategoryIcon(product.category); return <Icon className="w-3 h-3" /> })()}
+                              {product.category}
                             </span>
                           </div>
-                        )}
-                        {/* Quick view overlay */}
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          {product.video ? (
-                            <div className="w-14 h-14 rounded-full bg-white/25 backdrop-blur-sm flex items-center justify-center border-2 border-white/40">
-                              <Play className="w-7 h-7 text-white fill-white ml-1" />
-                            </div>
-                          ) : (
-                            <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                              <Eye className="w-6 h-6 text-white" />
+                          {/* Media count badge */}
+                          {totalImages > 1 && (
+                            <div className="absolute top-3 right-3 flex gap-1">
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-white/20 backdrop-blur-sm text-white flex items-center gap-1">
+                                <ImageIcon className="w-3 h-3" /> {productImages.length}
+                              </span>
+                              {product.video && (
+                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-500/80 backdrop-blur-sm text-white flex items-center gap-1">
+                                  <Play className="w-3 h-3 fill-white" />
+                                </span>
+                              )}
                             </div>
                           )}
+                          {/* Quick view overlay */}
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <div className="w-14 h-14 rounded-full bg-white/25 backdrop-blur-sm flex items-center justify-center border-2 border-white/40">
+                              <Eye className="w-7 h-7 text-white" />
+                            </div>
+                          </div>
+                          {/* Click hint */}
+                          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <span className="text-xs text-white/80 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full">Click to view details</span>
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Product Info */}
-                      <div className="p-5">
-                        <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-cyan-300 transition-colors">
-                          {product.name}
-                        </h3>
-                        <p className="text-sm text-gray-400 mb-4 line-clamp-2">
-                          {product.description}
-                        </p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                            {product.price}
-                          </span>
-                          <Button
-                            size="sm"
-                            className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white border-0 shadow-md shadow-blue-500/20"
-                          >
-                            Get Quote
-                          </Button>
+                        {/* Product Info */}
+                        <div className="p-5">
+                          <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-cyan-300 transition-colors">
+                            {product.name}
+                          </h3>
+                          <p className="text-sm text-gray-400 mb-4 line-clamp-2">
+                            {product.description}
+                          </p>
+                          <div className="flex items-center justify-between">
+                            <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                              {product.price}
+                            </span>
+                            <Button
+                              size="sm"
+                              className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white border-0 shadow-md shadow-blue-500/20"
+                              onClick={(e) => { e.stopPropagation(); openProductDetail(product) }}
+                            >
+                              View Details
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  )
+                })}
               </div>
             )}
           </div>
@@ -616,36 +852,10 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Video Modal */}
-        <Dialog open={!!videoModal} onOpenChange={() => setVideoModal(null)}>
-          <DialogContent className="bg-[#0d1220] border-white/10 text-white sm:max-w-2xl p-0 overflow-hidden">
-            {videoModal && (
-              <>
-                <div className="relative bg-black">
-                  <video
-                    src={videoModal.video}
-                    controls
-                    autoPlay
-                    className="w-full aspect-video object-contain"
-                    poster={videoModal.image}
-                  >
-                    Your browser does not support the video tag.
-                  </video>
-                </div>
-                <div className="p-5">
-                  <h3 className="text-lg font-semibold text-white mb-1">{videoModal.name}</h3>
-                  <p className="text-sm text-gray-400 line-clamp-2">{videoModal.description}</p>
-                  <div className="flex items-center justify-between mt-3">
-                    <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                      {videoModal.price}
-                    </span>
-                    <span className="text-xs text-cyan-400">{videoModal.category}</span>
-                  </div>
-                </div>
-              </>
-            )}
-          </DialogContent>
-        </Dialog>
+        {/* Product Detail Overlay */}
+        <AnimatePresence>
+          {selectedProduct && renderProductDetail()}
+        </AnimatePresence>
 
         {/* Footer */}
         <footer className="relative z-10 border-t border-white/8 py-8 mt-auto">
@@ -804,57 +1014,65 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((product, index) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <div className="rounded-xl border border-white/8 bg-white/3 overflow-hidden hover:border-blue-500/30 transition-colors group">
-                  {/* Product Image */}
-                  <div className="relative aspect-video overflow-hidden bg-black/30">
-                    <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    <div className="absolute top-2 right-2 flex gap-1">
-                      {product.video && (
-                        <span className="px-2 py-1 rounded-full text-xs bg-red-500/80 text-white flex items-center gap-1">
-                          <Play className="w-3 h-3 fill-white" /> Video
-                        </span>
-                      )}
-                      {product.featured && (
-                        <span className="px-2 py-1 rounded-full text-xs bg-yellow-500/80 text-white flex items-center gap-1">
-                          <Star className="w-3 h-3 fill-white" /> Featured
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Product Info */}
-                  <div className="p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h3 className="font-semibold text-white">{product.name}</h3>
-                        <span className="text-xs text-cyan-400">{product.category}</span>
+            {products.map((product, index) => {
+              const productImages = getProductImages(product)
+              return (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <div className="rounded-xl border border-white/8 bg-white/3 overflow-hidden hover:border-blue-500/30 transition-colors group">
+                    {/* Product Image */}
+                    <div className="relative aspect-video overflow-hidden bg-black/30">
+                      <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <div className="absolute top-2 right-2 flex gap-1">
+                        {productImages.length > 1 && (
+                          <span className="px-2 py-1 rounded-full text-xs bg-white/20 text-white flex items-center gap-1">
+                            <ImageIcon className="w-3 h-3" /> {productImages.length}
+                          </span>
+                        )}
+                        {product.video && (
+                          <span className="px-2 py-1 rounded-full text-xs bg-red-500/80 text-white flex items-center gap-1">
+                            <Play className="w-3 h-3 fill-white" /> Video
+                          </span>
+                        )}
+                        {product.featured && (
+                          <span className="px-2 py-1 rounded-full text-xs bg-yellow-500/80 text-white flex items-center gap-1">
+                            <Star className="w-3 h-3 fill-white" /> Featured
+                          </span>
+                        )}
                       </div>
-                      <span className="text-sm font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                        {product.price}
-                      </span>
                     </div>
-                    <p className="text-sm text-gray-500 line-clamp-2 mb-4">{product.description}</p>
-                    <div className="flex gap-2">
-                      <Button onClick={() => openProductDialog(product)} variant="outline" size="sm"
-                        className="flex-1 border-white/10 text-gray-300 hover:text-white hover:border-blue-400 hover:bg-blue-500/10">
-                        <Edit3 className="w-3 h-3 mr-1" /> Edit
-                      </Button>
-                      <Button onClick={() => setDeleteConfirm(product.id)} variant="outline" size="sm"
-                        className="border-white/10 text-gray-300 hover:text-red-400 hover:border-red-400 hover:bg-red-500/10">
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
+
+                    {/* Product Info */}
+                    <div className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <h3 className="font-semibold text-white">{product.name}</h3>
+                          <span className="text-xs text-cyan-400">{product.category}</span>
+                        </div>
+                        <span className="text-sm font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                          {product.price}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-500 line-clamp-2 mb-4">{product.description}</p>
+                      <div className="flex gap-2">
+                        <Button onClick={() => openProductDialog(product)} variant="outline" size="sm"
+                          className="flex-1 border-white/10 text-gray-300 hover:text-white hover:border-blue-400 hover:bg-blue-500/10">
+                          <Edit3 className="w-3 h-3 mr-1" /> Edit
+                        </Button>
+                        <Button onClick={() => setDeleteConfirm(product.id)} variant="outline" size="sm"
+                          className="border-white/10 text-gray-300 hover:text-red-400 hover:border-red-400 hover:bg-red-500/10">
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              )
+            })}
           </div>
         )}
       </main>
@@ -876,9 +1094,9 @@ export default function Home() {
           </DialogHeader>
 
           <div className="space-y-4">
-            {/* Image Upload */}
+            {/* Main Image Upload */}
             <div>
-              <Label className="text-gray-300">Product Image *</Label>
+              <Label className="text-gray-300">Main Product Image *</Label>
               <div className="mt-2">
                 {formData.image ? (
                   <div className="relative rounded-xl overflow-hidden border border-white/10">
@@ -894,10 +1112,55 @@ export default function Home() {
                     ) : (
                       <Upload className="w-8 h-8 text-gray-500 mb-2" />
                     )}
-                    <span className="text-sm text-gray-400">{uploading ? 'Uploading...' : 'Click to upload image'}</span>
+                    <span className="text-sm text-gray-400">{uploading ? 'Uploading...' : 'Click to upload main image'}</span>
                     <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" disabled={uploading} />
                   </label>
                 )}
+              </div>
+            </div>
+
+            {/* Extra Images Upload (Multiple) */}
+            <div>
+              <Label className="text-gray-300 flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-blue-400" />
+                Additional Images ({formData.images.length} uploaded)
+              </Label>
+              <div className="mt-2">
+                {/* Show uploaded extra images */}
+                {formData.images.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                    {formData.images.map((img, i) => (
+                      <div key={i} className="relative rounded-lg overflow-hidden border border-white/10 group/img">
+                        <img src={img} alt={`Extra ${i + 1}`} className="w-full aspect-square object-cover" />
+                        <button
+                          onClick={() => removeExtraImage(i)}
+                          className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500/80 flex items-center justify-center text-white opacity-0 group-hover/img:opacity-100 transition-opacity"
+                        >
+                          <XCircle className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {/* Upload more images */}
+                <label className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-white/10 hover:border-blue-500/50 transition-colors cursor-pointer py-6 bg-white/3">
+                  {uploadingExtra ? (
+                    <Loader2 className="w-6 h-6 text-blue-400 animate-spin mb-2" />
+                  ) : (
+                    <Plus className="w-6 h-6 text-gray-500 mb-2" />
+                  )}
+                  <span className="text-sm text-gray-400">{uploadingExtra ? 'Uploading...' : 'Click to add more images'}</span>
+                  <span className="text-xs text-gray-600 mt-1">Select multiple images at once</span>
+                  <input
+                    ref={extraImageInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleExtraImagesUpload}
+                    className="hidden"
+                    disabled={uploadingExtra}
+                  />
+                </label>
               </div>
             </div>
 
