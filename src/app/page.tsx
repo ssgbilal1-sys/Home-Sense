@@ -310,6 +310,57 @@ function TextReveal({ text, className }: { text: string; className?: string }) {
   )
 }
 
+// ───────────────────────────────────────────────────────
+// HERO BACKGROUND SLIDESHOW — Auto-rotating bathroom images
+// ───────────────────────────────────────────────────────
+const HERO_IMAGES = [
+  '/bathroom-1.jpg',
+  '/bathroom-2.jpg',
+]
+
+function HeroSlideshow() {
+  const [current, setCurrent] = useState(0)
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrent(prev => (prev + 1) % HERO_IMAGES.length)
+    }, 5000)
+    return () => clearInterval(timer)
+  }, [])
+
+  return (
+    <div className="absolute inset-0 z-0">
+      {HERO_IMAGES.map((src, i) => (
+        <motion.img
+          key={src}
+          src={src}
+          alt="Luxury Bathroom Interior"
+          className="absolute inset-0 w-full h-full object-cover object-center"
+          initial={false}
+          animate={{ opacity: i === current ? 1 : 0 }}
+          transition={{ duration: 1.5, ease: 'easeInOut' }}
+        />
+      ))}
+      {/* Dark gradient overlay for text readability — responsive */}
+      <div className="absolute inset-0 bg-gradient-to-r from-[#080c14]/95 via-[#080c14]/80 to-[#080c14]/50 sm:from-[#080c14]/90 sm:via-[#080c14]/70 sm:to-[#080c14]/40 lg:from-[#080c14]/85 lg:via-[#080c14]/60 lg:to-[#080c14]/25" />
+      {/* Bottom fade into next section */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#080c14] to-transparent" />
+      {/* Slide indicators */}
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+        {HERO_IMAGES.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setCurrent(i)}
+            className={`w-2.5 h-2.5 rounded-full transition-all duration-500 ${
+              i === current ? 'bg-teal-400 w-8' : 'bg-white/30 hover:bg-white/50'
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([])
   const [viewMode, setViewMode] = useState<ViewMode>('storefront')
@@ -1131,20 +1182,9 @@ export default function Home() {
           </AnimatePresence>
         </nav>
 
-        {/* Hero Section — Bathroom background with overlay */}
+        {/* Hero Section — Bathroom background slideshow */}
         <section id="home" ref={heroRef} className="relative z-10 flex-1 flex items-center overflow-hidden">
-          {/* Bathroom Background Image */}
-          <div className="absolute inset-0 z-0">
-            <img
-              src="/bathroom-hero.jpg"
-              alt="Luxury Bathroom Interior"
-              className="w-full h-full object-cover object-center"
-            />
-            {/* Dark gradient overlay for text readability */}
-            <div className="absolute inset-0 bg-gradient-to-r from-[#080c14]/95 via-[#080c14]/80 to-[#080c14]/50 sm:from-[#080c14]/90 sm:via-[#080c14]/70 sm:to-[#080c14]/40 lg:from-[#080c14]/85 lg:via-[#080c14]/65 lg:to-[#080c14]/30" />
-            {/* Bottom fade into next section */}
-            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#080c14] to-transparent" />
-          </div>
+          <HeroSlideshow />
 
           <div
             className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 lg:py-32 w-full"
