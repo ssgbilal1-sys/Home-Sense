@@ -1041,7 +1041,7 @@ export default function Home() {
                   <img
                     src="/logo-homesense.jpg"
                     alt="Home Sense"
-                    className="h-18 sm:h-20 w-auto object-contain rounded-lg"
+                    className="h-10 sm:h-12 w-auto object-contain rounded-lg"
                   />
                 </motion.div>
                 <span className="text-xl sm:text-2xl font-extrabold tracking-wider">
