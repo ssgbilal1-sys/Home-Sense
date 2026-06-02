@@ -1792,7 +1792,7 @@ export default function Home() {
                             <Clock className="w-4 h-4 text-sky-400" />
                           </div>
                           <div className="flex-1">
-                            <div className="font-semibold text-white text-sm mb-2">Business Hours</div>
+                            <div className="font-semibold text-gray-300 text-sm mb-2">Business Hours</div>
                             <div className="space-y-1.5">
                               {(settings.businessHours || 'Mon-Sat: 10:00 AM - 8:00 PM|Sunday: Closed').split('|').map((line, i) => {
                                 const [label, time] = line.includes(':') ? [line.split(':').slice(0, -1).join(':').trim(), line.split(':').pop()?.trim() || ''] : [line.trim(), '']
@@ -1800,7 +1800,7 @@ export default function Home() {
                                 return (
                                   <div key={i} className="flex items-center gap-2 text-sm">
                                     <span className="text-gray-400">{label}{time ? ':' : ''}</span>
-                                    <span className={isClosed ? 'text-red-400 font-medium' : 'text-sky-300'}>{time}</span>
+                                    <span className={isClosed ? 'text-red-400/80' : 'text-gray-300'}>{time}</span>
                                   </div>
                                 )
                               })}
@@ -1863,7 +1863,7 @@ export default function Home() {
                               return (
                                 <div className={`mt-3 flex items-center gap-2 px-3 py-2 rounded-lg ${isOpen ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
                                   <div className={`w-2 h-2 rounded-full ${isOpen ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
-                                  <span className={`text-sm font-medium ${isOpen ? 'text-green-400' : 'text-red-400'}`}>
+                                  <span className={`text-sm ${isOpen ? 'text-green-400/80' : 'text-red-400/80'}`}>
                                     {isOpen ? 'Currently Open' : 'Currently Closed'}
                                   </span>
                                 </div>
