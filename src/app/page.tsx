@@ -9,7 +9,8 @@ import {
   Facebook, Instagram, Youtube, MessageCircle,
   Wrench, Bath, CookingPot, MapPin,
   Star, CheckCircle, Loader2, Package, Video,
-  Play, Film, ChevronLeft, ImageIcon, XCircle
+  Play, Film, ChevronLeft, ImageIcon, XCircle,
+  Clock, Navigation, ExternalLink
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -48,6 +49,8 @@ interface SiteSettings {
   facebook: string
   youtube: string
   address: string
+  businessHours: string
+  mapUrl: string
 }
 
 // ───────────────────────────────────────────────────────
@@ -400,6 +403,8 @@ export default function Home() {
     facebook: '',
     youtube: '',
     address: '',
+    businessHours: 'Mon-Sat: 10:00 AM - 8:00 PM|Sunday: Closed',
+    mapUrl: '',
   })
   const [settingsForm, setSettingsForm] = useState<SiteSettings>({
     phone: '',
@@ -409,6 +414,8 @@ export default function Home() {
     facebook: '',
     youtube: '',
     address: '',
+    businessHours: 'Mon-Sat: 10:00 AM - 8:00 PM|Sunday: Closed',
+    mapUrl: '',
   })
   const [savingSettings, setSavingSettings] = useState(false)
   const [adminTab, setAdminTab] = useState<'products' | 'settings'>('products')
@@ -1685,7 +1692,7 @@ export default function Home() {
         {/* Wave Divider */}
         <WaveDivider />
 
-        {/* Contact Section — Icon animations, card stagger */}
+        {/* Contact Section — Redesigned with Business Hours, Map, Showroom CTA */}
         <section id="contact" className="relative z-10 py-16 sm:py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <ScrollReveal className="text-center mb-12">
@@ -1698,10 +1705,10 @@ export default function Home() {
               </p>
             </ScrollReveal>
 
-            <ScrollReveal delay={0.15} className="max-w-4xl mx-auto">
-              <div className="rounded-2xl border border-white/8 bg-white/3 backdrop-blur-sm p-8 sm:p-12 card-shine">
-                {/* Contact Cards Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+            {/* Contact Cards Grid — Quick Reach */}
+            <ScrollReveal delay={0.1} className="max-w-4xl mx-auto mb-8">
+              <div className="rounded-2xl border border-white/8 bg-white/3 backdrop-blur-sm p-6 sm:p-8 card-shine">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                   {[
                     { icon: Phone, label: 'Call Us', value: settings.phone, href: `tel:${settings.phone}`, color: 'from-green-500/20 to-green-600/20 border-green-500/20', iconColor: 'text-green-400' },
                     { icon: MessageCircle, label: 'WhatsApp', value: settings.whatsapp, href: `https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Hi Home Sense! 👋\n\nI\'m interested in your sanitary ware products. Please share more details. Thank you!')}`, color: 'from-green-500/20 to-green-600/20 border-green-500/20', iconColor: 'text-green-400' },
@@ -1710,7 +1717,7 @@ export default function Home() {
                     ...(settings.facebook ? [{ icon: Facebook, label: 'Facebook', value: settings.facebook.replace(/https?:\/\/(www\.)?facebook\.com\/?/i, '').replace(/\/$/, '') || 'Facebook Page', href: settings.facebook, color: 'from-sky-600/20 to-sky-800/20 border-sky-600/20', iconColor: 'text-sky-500' }] : []),
                     ...(settings.youtube ? [{ icon: Youtube, label: 'YouTube', value: settings.youtube.replace(/https?:\/\/(www\.)?youtube\.com\/(c\/|@)?/i, '').replace(/\/$/, '') || 'YouTube Channel', href: settings.youtube, color: 'from-red-500/20 to-red-700/20 border-red-500/20', iconColor: 'text-red-400' }] : []),
                   ].map((contact, i) => (
-                    <ScrollReveal key={i} delay={0.2 + i * 0.08} distance={20}>
+                    <ScrollReveal key={i} delay={0.15 + i * 0.06} distance={20}>
                       <motion.a
                         href={contact.href}
                         target={contact.href.startsWith('http') ? '_blank' : undefined}
@@ -1733,30 +1740,191 @@ export default function Home() {
                     </ScrollReveal>
                   ))}
                 </div>
+              </div>
+            </ScrollReveal>
 
-                {/* Address Section - Full width below */}
-                {settings.address && (
-                  <ScrollReveal delay={0.6} distance={20}>
-                    <div className="border-t border-white/8 pt-5 mt-2">
-                      <motion.div
-                        whileHover={{ scale: 1.01, x: 4 }}
-                        className="flex items-start gap-3 p-4 rounded-xl hover:bg-white/5 transition-colors"
-                      >
-                        <motion.div
-                          whileHover={{ scale: 1.15, rotate: [0, -10, 10, 0] }}
-                          transition={springBouncy}
-                          className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-600/20 border border-amber-500/20 flex items-center justify-center shrink-0"
-                        >
-                          <MapPin className="w-5 h-5 text-amber-400" />
-                        </motion.div>
-                        <div>
-                          <div className="font-semibold text-white text-sm mb-1">Our Address</div>
-                          <div className="text-gray-400 text-sm leading-relaxed">{settings.address}</div>
-                        </div>
-                      </motion.div>
+            {/* Visit Our Showroom Section — Address + Business Hours + Map */}
+            <ScrollReveal delay={0.2} className="max-w-6xl mx-auto">
+              <div className="rounded-2xl border border-white/8 bg-white/3 backdrop-blur-sm overflow-hidden card-shine">
+                {/* Showroom Header Banner */}
+                <div className="relative bg-gradient-to-r from-sky-900/60 via-sky-800/40 to-sky-900/60 px-6 sm:px-10 py-6 border-b border-white/8">
+                  <div className="flex items-center gap-4">
+                    <motion.div
+                      whileHover={{ scale: 1.1, rotate: [0, -5, 5, 0] }}
+                      transition={springBouncy}
+                      className="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-500/30 to-sky-700/30 border border-sky-500/30 flex items-center justify-center shrink-0"
+                    >
+                      <MapPin className="w-7 h-7 text-sky-400" />
+                    </motion.div>
+                    <div>
+                      <h3 className="text-xl sm:text-2xl font-bold text-white">
+                        Visit Our
+                        <span className="bg-gradient-to-r from-sky-400 to-sky-300 bg-clip-text text-transparent"> Showroom</span>
+                      </h3>
+                      <p className="text-gray-400 text-sm mt-0.5">Experience our premium collection in person</p>
                     </div>
-                  </ScrollReveal>
-                )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2">
+                  {/* Left: Address + Business Hours */}
+                  <div className="p-6 sm:p-8 space-y-6">
+                    {/* Address */}
+                    {settings.address && (
+                      <div>
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-600/20 border border-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                            <MapPin className="w-4 h-4 text-amber-400" />
+                          </div>
+                          <div>
+                            <div className="font-semibold text-white text-sm mb-1">Our Address</div>
+                            <div className="text-gray-400 text-sm leading-relaxed">{settings.address}</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Business Hours */}
+                    {(settings.businessHours || 'Mon-Sat: 10:00 AM - 8:00 PM|Sunday: Closed') && (
+                      <div>
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500/20 to-sky-700/20 border border-sky-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                            <Clock className="w-4 h-4 text-sky-400" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-semibold text-white text-sm mb-2">Business Hours</div>
+                            <div className="space-y-1.5">
+                              {(settings.businessHours || 'Mon-Sat: 10:00 AM - 8:00 PM|Sunday: Closed').split('|').map((line, i) => {
+                                const [label, time] = line.includes(':') ? [line.split(':').slice(0, -1).join(':').trim(), line.split(':').pop()?.trim() || ''] : [line.trim(), '']
+                                const isClosed = time.toLowerCase() === 'closed'
+                                return (
+                                  <div key={i} className="flex items-center justify-between text-sm">
+                                    <span className="text-gray-400">{label}{time ? ':' : ''}</span>
+                                    <span className={isClosed ? 'text-red-400 font-medium' : 'text-white font-medium'}>{time}</span>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                            {/* Open/Closed Status */}
+                            {(() => {
+                              const now = new Date()
+                              const day = now.getDay() // 0=Sun, 6=Sat
+                              const hours = now.getHours()
+                              const minutes = now.getMinutes()
+                              const currentTime = hours * 60 + minutes
+                              const hoursStr = settings.businessHours || 'Mon-Sat: 10:00 AM - 8:00 PM|Sunday: Closed'
+                              const lines = hoursStr.split('|')
+
+                              let isOpen = false
+                              let currentDayLabel = ''
+
+                              for (const line of lines) {
+                                const parts = line.split(':')
+                                if (parts.length < 2) continue
+                                const dayLabel = parts.slice(0, -1).join(':').trim().toLowerCase()
+                                const timeStr = parts[parts.length - 1].trim()
+
+                                // Check if today matches this schedule
+                                const isToday = (
+                                  (dayLabel.includes('mon-sat') && day >= 1 && day <= 6) ||
+                                  (dayLabel.includes('mon-fri') && day >= 1 && day <= 5) ||
+                                  (dayLabel.includes('sunday') && day === 0) ||
+                                  (dayLabel.includes('sat') && !dayLabel.includes('mon') && day === 6) ||
+                                  (dayLabel.includes('every') || dayLabel.includes('daily'))
+                                )
+
+                                if (isToday) {
+                                  currentDayLabel = dayLabel
+                                  if (timeStr.toLowerCase() === 'closed') {
+                                    isOpen = false
+                                  } else {
+                                    // Parse time range like "10:00 AM - 8:00 PM"
+                                    const timeParts = timeStr.split('-').map(t => t.trim())
+                                    if (timeParts.length === 2) {
+                                      const parseTime = (t: string) => {
+                                        const match = t.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i)
+                                        if (!match) return 0
+                                        let h = parseInt(match[1])
+                                        const m = parseInt(match[2])
+                                        const ampm = match[3].toUpperCase()
+                                        if (ampm === 'PM' && h !== 12) h += 12
+                                        if (ampm === 'AM' && h === 12) h = 0
+                                        return h * 60 + m
+                                      }
+                                      const openTime = parseTime(timeParts[0])
+                                      const closeTime = parseTime(timeParts[1])
+                                      isOpen = currentTime >= openTime && currentTime <= closeTime
+                                    }
+                                  }
+                                  break
+                                }
+                              }
+
+                              return (
+                                <div className={`mt-3 flex items-center gap-2 px-3 py-2 rounded-lg ${isOpen ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
+                                  <div className={`w-2 h-2 rounded-full ${isOpen ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
+                                  <span className={`text-sm font-medium ${isOpen ? 'text-green-400' : 'text-red-400'}`}>
+                                    {isOpen ? 'Currently Open' : 'Currently Closed'}
+                                  </span>
+                                </div>
+                              )
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Get Directions Button */}
+                    {settings.address && (
+                      <motion.a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="flex items-center justify-center gap-2 w-full px-5 py-3 rounded-xl bg-gradient-to-r from-sky-700 to-sky-500 hover:from-sky-600 hover:to-sky-400 text-white font-medium text-sm transition-all"
+                      >
+                        <Navigation className="w-4 h-4" />
+                        Get Directions on Google Maps
+                        <ExternalLink className="w-3 h-3 opacity-60" />
+                      </motion.a>
+                    )}
+                  </div>
+
+                  {/* Right: Google Maps Embed */}
+                  <div className="relative min-h-[300px] lg:min-h-[400px] bg-gray-900/50">
+                    {settings.mapUrl ? (
+                      <iframe
+                        src={settings.mapUrl}
+                        width="100%"
+                        height="100%"
+                        style={{ border: 0, minHeight: '300px' }}
+                        allowFullScreen
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        title="Home Sense Showroom Location"
+                        className="absolute inset-0 w-full h-full"
+                      />
+                    ) : settings.address ? (
+                      <iframe
+                        src={`https://www.google.com/maps?q=${encodeURIComponent(settings.address)}&output=embed`}
+                        width="100%"
+                        height="100%"
+                        style={{ border: 0, minHeight: '300px' }}
+                        allowFullScreen
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        title="Home Sense Showroom Location"
+                        className="absolute inset-0 w-full h-full"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 gap-3 p-6">
+                        <MapPin className="w-12 h-12 opacity-30" />
+                        <p className="text-sm text-center">Map will appear here once address is added in admin settings</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </ScrollReveal>
           </div>
@@ -1776,20 +1944,76 @@ export default function Home() {
           className="relative z-10 border-t border-white/8 py-8 mt-auto"
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            {/* Top row: Logo + Quick Info */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+              {/* Logo & Tagline */}
               <motion.div
                 initial={{ opacity: 0, x: -15 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, amount: 0.15 }}
                 transition={{ delay: 0.1, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-                className="flex items-center gap-2"
+                className="flex flex-col items-start gap-2"
               >
                 <img
                   src="/logo-homesense.jpg"
                   alt="Home Sense"
-                  className="h-16 w-auto object-contain rounded-lg"
+                  className="h-12 w-auto object-contain rounded-lg"
                 />
+                <p className="text-gray-500 text-xs">Authorized & Trusted Dealer of Zilver Sanitary Ware</p>
               </motion.div>
+
+              {/* Quick Contact */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.15 }}
+                transition={{ delay: 0.2, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+                className="space-y-1.5"
+              >
+                {settings.phone && (
+                  <a href={`tel:${settings.phone}`} className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-xs">
+                    <Phone className="w-3 h-3 text-green-400" /> {settings.phone}
+                  </a>
+                )}
+                {settings.email && (
+                  <a href={`mailto:${settings.email}`} className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-xs">
+                    <Mail className="w-3 h-3 text-sky-400" /> {settings.email}
+                  </a>
+                )}
+                {settings.address && (
+                  <div className="flex items-start gap-2 text-gray-400 text-xs">
+                    <MapPin className="w-3 h-3 text-amber-400 mt-0.5 shrink-0" />
+                    <span className="line-clamp-2">{settings.address}</span>
+                  </div>
+                )}
+              </motion.div>
+
+              {/* Business Hours */}
+              <motion.div
+                initial={{ opacity: 0, x: 15 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, amount: 0.15 }}
+                transition={{ delay: 0.3, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+                className="space-y-1.5"
+              >
+                <div className="flex items-center gap-1.5 text-gray-300 text-xs font-semibold mb-1">
+                  <Clock className="w-3 h-3 text-sky-400" /> Business Hours
+                </div>
+                {(settings.businessHours || 'Mon-Sat: 10:00 AM - 8:00 PM|Sunday: Closed').split('|').map((line, i) => {
+                  const [label, time] = line.includes(':') ? [line.split(':').slice(0, -1).join(':').trim(), line.split(':').pop()?.trim() || ''] : [line.trim(), '']
+                  const isClosed = time.toLowerCase() === 'closed'
+                  return (
+                    <div key={i} className="flex items-center justify-between text-[11px]">
+                      <span className="text-gray-500">{label}{time ? ':' : ''}</span>
+                      <span className={isClosed ? 'text-red-400/70' : 'text-gray-400'}>{time}</span>
+                    </div>
+                  )
+                })}
+              </motion.div>
+            </div>
+
+            {/* Bottom row: Socials + Copyright */}
+            <div className="border-t border-white/5 pt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -2057,6 +2281,32 @@ export default function Home() {
                     onChange={(e) => setSettingsForm(prev => ({ ...prev, address: e.target.value }))}
                     placeholder="Your business address"
                     className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-500 min-h-[80px]"
+                  />
+                </div>
+
+                <div className="space-y-2 sm:col-span-2">
+                  <Label className="text-gray-300 text-sm flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-sky-400" /> Business Hours
+                  </Label>
+                  <p className="text-[11px] text-gray-500 mb-1">Use | to separate lines. Example: Mon-Sat: 10:00 AM - 8:00 PM|Sunday: Closed</p>
+                  <Textarea
+                    value={settingsForm.businessHours}
+                    onChange={(e) => setSettingsForm(prev => ({ ...prev, businessHours: e.target.value }))}
+                    placeholder="Mon-Sat: 10:00 AM - 8:00 PM|Sunday: Closed"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-500 min-h-[60px]"
+                  />
+                </div>
+
+                <div className="space-y-2 sm:col-span-2">
+                  <Label className="text-gray-300 text-sm flex items-center gap-2">
+                    <Navigation className="w-4 h-4 text-green-400" /> Google Maps Embed URL
+                  </Label>
+                  <p className="text-[11px] text-gray-500 mb-1">Go to Google Maps → Share → Embed a map → Copy ONLY the src URL from the iframe code</p>
+                  <Input
+                    value={settingsForm.mapUrl}
+                    onChange={(e) => setSettingsForm(prev => ({ ...prev, mapUrl: e.target.value }))}
+                    placeholder="https://www.google.com/maps/embed?pb=..."
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-500"
                   />
                 </div>
               </div>

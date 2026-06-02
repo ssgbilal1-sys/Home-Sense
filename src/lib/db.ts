@@ -125,18 +125,45 @@ export const db = {
         .eq('id', opts.where.id)
         .single()
       if (error && error.code !== 'PGRST116') throw new Error(error.message)
-      return data
+      // Provide defaults for new columns that may not exist yet in the database
+      return {
+        businessHours: 'Mon-Sat: 10:00 AM - 8:00 PM|Sunday: Closed',
+        mapUrl: '',
+        ...data,
+      }
     },
 
     upsert: async (opts: { where: { id: string }; update: Record<string, any>; create: Record<string, any> }) => {
       const supabase = getSupabaseAdmin()
       const mergedData = { ...opts.create, ...opts.update, id: opts.where.id, updatedAt: new Date().toISOString() }
+
+      // Try with new columns first; if they don't exist in DB yet, retry without them
       const { data, error } = await supabase
         .from('SiteSettings')
         .upsert(mergedData, { onConflict: 'id' })
         .select()
         .single()
-      if (error) throw new Error(error.message)
+
+      if (error) {
+        // If column doesn't exist, try without the new columns
+        if (error.message?.includes('column') || error.code === '42703') {
+          const fallbackData = { ...mergedData }
+          delete fallbackData.businessHours
+          delete fallbackData.mapUrl
+          const { data: fallbackResult, error: fallbackError } = await supabase
+            .from('SiteSettings')
+            .upsert(fallbackData, { onConflict: 'id' })
+            .select()
+            .single()
+          if (fallbackError) throw new Error(fallbackError.message)
+          return {
+            businessHours: 'Mon-Sat: 10:00 AM - 8:00 PM|Sunday: Closed',
+            mapUrl: '',
+            ...fallbackResult,
+          }
+        }
+        throw new Error(error.message)
+      }
       return data
     },
 

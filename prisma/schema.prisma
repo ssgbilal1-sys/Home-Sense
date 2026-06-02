@@ -24,13 +24,15 @@ model Product {
 }
 
 model SiteSettings {
-  id          String   @id @default("main")
-  phone       String   @default("+92 300 1234567")
-  whatsapp    String   @default("+92 300 1234567")
-  email       String   @default("info@zilver.co")
-  instagram   String   @default("@zilver.co")
-  facebook    String   @default("")
-  youtube     String   @default("")
-  address     String   @default("")
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default("main")
+  phone         String   @default("+92 300 1234567")
+  whatsapp      String   @default("+92 300 1234567")
+  email         String   @default("info@zilver.co")
+  instagram     String   @default("@zilver.co")
+  facebook      String   @default("")
+  youtube       String   @default("")
+  address       String   @default("")
+  businessHours String   @default("Mon-Sat: 10:00 AM - 8:00 PM|Sunday: Closed")
+  mapUrl        String   @default("")
+  updatedAt     DateTime @updatedAt
 }
