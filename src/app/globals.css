@@ -211,16 +211,19 @@
 .orb-float-1 {
   animation: float-orb-1 25s ease-in-out infinite;
   will-change: transform;
+  contain: layout style paint;
 }
 
 .orb-float-2 {
   animation: float-orb-2 30s ease-in-out infinite;
   will-change: transform;
+  contain: layout style paint;
 }
 
 .orb-float-3 {
   animation: float-orb-3 22s ease-in-out infinite;
   will-change: transform;
+  contain: layout style paint;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -583,4 +586,61 @@
 .sparkle-shimmer {
   background-size: 200% auto;
   animation: sparkle-shimmer 4s linear infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HERO CARD FLOAT — Smooth CSS float replacing Framer Motion infinite
+   ═══════════════════════════════════════════════════════════ */
+@keyframes hero-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.hero-card-float {
+  animation: hero-float 5s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes hero-icon-float-1 {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-6px) rotate(5deg); }
+}
+
+@keyframes hero-icon-float-2 {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(6px) rotate(-5deg); }
+}
+
+.hero-icon-float-1 {
+  animation: hero-icon-float-1 3.5s ease-in-out infinite;
+  will-change: transform;
+}
+
+.hero-icon-float-2 {
+  animation: hero-icon-float-2 3.5s ease-in-out 1.2s infinite;
+  will-change: transform;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CONTACT GLOW PULSE — CSS pulse replacing Framer Motion infinite
+   ═══════════════════════════════════════════════════════════ */
+@keyframes glow-pulse-subtle {
+  0%, 100% { opacity: 0.15; transform: scale(1); }
+  50% { opacity: 0.2; transform: scale(1.02); }
+}
+
+.contact-glow-pulse {
+  animation: glow-pulse-subtle 5s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   GPU ACCELERATION — Force hardware acceleration for animated elements
+   ═══════════════════════════════════════════════════════════ */
+.orb-float-1,
+.orb-float-2,
+.orb-float-3 {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  contain: layout style paint;
 }

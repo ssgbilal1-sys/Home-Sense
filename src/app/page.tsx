@@ -232,9 +232,9 @@ function ScrollReveal({ children, className, delay = 0, direction = 'up', distan
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, ...directionMap[direction], scale: 0.95, filter: 'blur(6px)' }}
+      initial={{ opacity: 0, ...directionMap[direction] }}
       animate={isInView
-        ? { opacity: 1, x: 0, y: 0, scale: 1, filter: 'blur(0px)' }
+        ? { opacity: 1, x: 0, y: 0 }
         : undefined
       }
       transition={{
@@ -1015,11 +1015,11 @@ export default function Home() {
   if (viewMode === 'storefront') {
     return (
       <div className="min-h-screen flex flex-col bg-[#080c14] text-white overflow-x-hidden">
-        {/* Animated background — Floating Orbs (CSS-only animation) */}
+        {/* Animated background — Floating Orbs (CSS-only animation, reduced blur for performance) */}
         <div className="fixed inset-0 z-0 pointer-events-none">
-          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-sky-700/15 rounded-full blur-[180px] orb-float-1" />
-          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-sky-500/10 rounded-full blur-[150px] orb-float-2" />
-          <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-sky-500/8 rounded-full blur-[120px] orb-float-3" />
+          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-sky-700/15 rounded-full blur-[80px] orb-float-1" />
+          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-sky-500/10 rounded-full blur-[60px] orb-float-2" />
+          <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-sky-500/8 rounded-full blur-[50px] orb-float-3" />
         </div>
 
         {/* Navigation — Enhanced with logo glow, active indicators, smooth mobile menu */}
@@ -1273,32 +1273,24 @@ export default function Home() {
                 transition={{ duration: 0.8, delay: 0.4 }}
                 className="relative hidden lg:flex items-center justify-center"
               >
-                <motion.div
-                  animate={{ y: [0, -8, 0] }}
-                  transition={{ repeat: Infinity, duration: 5, ease: 'easeInOut' }}
-                  className="relative"
-                >
+                <div className="relative hero-card-float">
                   {/* Glass card */}
                   <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl p-6 shadow-2xl shadow-black/20">
                     <img src="/logo-homesense.jpg" alt="Home Sense" className="h-24 w-auto object-contain rounded-lg mx-auto mb-3" />
                     <p className="text-center text-white/90 text-sm font-semibold tracking-wide">Authorized & Trusted Dealer</p>
                   </div>
-                  {/* Floating icon badges */}
-                  <motion.div
-                    animate={{ y: [0, -8, 0], rotate: [0, 5, 0] }}
-                    transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut' }}
-                    className="absolute -top-3 -right-3 bg-gradient-to-r from-sky-700 to-sky-500 rounded-xl p-3 shadow-lg shadow-sky-600/30"
+                  {/* Floating icon badges — CSS animation instead of Framer Motion */}
+                  <div
+                    className="absolute -top-3 -right-3 bg-gradient-to-r from-sky-700 to-sky-500 rounded-xl p-3 shadow-lg shadow-sky-600/30 hero-icon-float-1"
                   >
                     <Droplets className="w-5 h-5 text-white" />
-                  </motion.div>
-                  <motion.div
-                    animate={{ y: [0, 8, 0], rotate: [0, -5, 0] }}
-                    transition={{ repeat: Infinity, duration: 3.5, delay: 1.2, ease: 'easeInOut' }}
-                    className="absolute -bottom-3 -left-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-3 shadow-lg shadow-amber-500/30"
+                  </div>
+                  <div
+                    className="absolute -bottom-3 -left-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-3 shadow-lg shadow-amber-500/30 hero-icon-float-2"
                   >
                     <Star className="w-5 h-5 text-white fill-white" />
-                  </motion.div>
-                </motion.div>
+                  </div>
+                </div>
               </motion.div>
             </div>
           </div>
@@ -1450,6 +1442,7 @@ export default function Home() {
                             <motion.img
                               src={product.image}
                               alt={product.name}
+                              loading="lazy"
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
@@ -1600,10 +1593,8 @@ export default function Home() {
               </ScrollReveal>
 
               <ScrollReveal direction="right" distance={60}>
-                <motion.div
-                  animate={{ scale: [1, 1.02, 1], opacity: [0.15, 0.2, 0.15] }}
-                  transition={{ repeat: Infinity, duration: 5, ease: 'easeInOut' }}
-                  className="absolute inset-0 rounded-3xl bg-gradient-to-br from-sky-700/15 to-sky-500/15 blur-2xl"
+                <div
+                  className="absolute inset-0 rounded-3xl bg-gradient-to-br from-sky-700/15 to-sky-500/15 blur-2xl contact-glow-pulse"
                 />
                 <div className="relative rounded-3xl border border-white/8 overflow-hidden bg-white/3 p-8 sm:p-12">
                   <div className="text-center">
@@ -1772,8 +1763,8 @@ export default function Home() {
 
         {/* Footer — Scroll reveal */}
         <motion.footer
-          initial={{ opacity: 0, y: 30, filter: 'blur(8px)' }}
-          whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.15 }}
           transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="relative z-10 border-t border-white/8 py-8 mt-auto"
@@ -2131,7 +2122,7 @@ export default function Home() {
                   <div className="rounded-xl border border-white/8 bg-white/3 overflow-hidden hover:border-sky-600/30 transition-colors group">
                     {/* Product Image */}
                     <div className="relative aspect-video overflow-hidden bg-black/30">
-                      <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <img src={product.image} alt={product.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       <div className="absolute top-2 right-2 flex gap-1">
                         {productImages.length > 1 && (
                           <span className="px-2 py-1 rounded-full text-xs bg-white/20 text-white flex items-center gap-1">
