@@ -1798,7 +1798,7 @@ export default function Home() {
                                 const [label, time] = line.includes(':') ? [line.split(':').slice(0, -1).join(':').trim(), line.split(':').pop()?.trim() || ''] : [line.trim(), '']
                                 const isClosed = time.toLowerCase() === 'closed'
                                 return (
-                                  <div key={i} className="flex items-center justify-between text-sm">
+                                  <div key={i} className="flex items-center gap-2 text-sm">
                                     <span className="text-gray-400">{label}{time ? ':' : ''}</span>
                                     <span className={isClosed ? 'text-red-400 font-medium' : 'text-white font-medium'}>{time}</span>
                                   </div>
