@@ -418,9 +418,12 @@ export default function Home() {
     mapUrl: '',
   })
   const [savingSettings, setSavingSettings] = useState(false)
-  const [adminTab, setAdminTab] = useState<'products' | 'settings'>('products')
+  const [adminTab, setAdminTab] = useState<'products' | 'categories' | 'settings'>('products')
   const [showCustomCategory, setShowCustomCategory] = useState(false)
   const [customCategoryInput, setCustomCategoryInput] = useState('')
+  const [editingCategory, setEditingCategory] = useState<string | null>(null)
+  const [editCategoryName, setEditCategoryName] = useState('')
+  const [savingCategory, setSavingCategory] = useState(false)
 
   const { toast } = useToast()
   const extraImageInputRef = useRef<HTMLInputElement>(null)
@@ -2100,6 +2103,17 @@ export default function Home() {
             Products
           </button>
           <button
+            onClick={() => setAdminTab('categories')}
+            className={`px-5 py-3 text-sm font-medium transition-all border-b-2 -mb-px ${
+              adminTab === 'categories'
+                ? 'text-sky-400 border-sky-400'
+                : 'text-gray-400 border-transparent hover:text-white hover:border-white/20'
+            }`}
+          >
+            <Bath className="w-4 h-4 inline mr-2" />
+            Categories
+          </button>
+          <button
             onClick={() => setAdminTab('settings')}
             className={`px-5 py-3 text-sm font-medium transition-all border-b-2 -mb-px ${
               adminTab === 'settings'
@@ -2111,6 +2125,187 @@ export default function Home() {
             Contact Details
           </button>
         </div>
+
+        {/* Categories Tab Content */}
+        {adminTab === 'categories' && (
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={springTransition}
+          >
+            <div className="rounded-2xl border border-white/8 bg-white/3 backdrop-blur-sm p-6 sm:p-8 max-w-3xl">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-700/20 to-sky-500/20 border border-white/8 flex items-center justify-center">
+                  <Bath className="w-5 h-5 text-sky-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Manage Categories</h3>
+                  <p className="text-xs text-gray-500">Rename or delete product categories</p>
+                </div>
+              </div>
+
+              {/* Categories List */}
+              <div className="space-y-3">
+                {CATEGORIES.map((cat, i) => {
+                  const count = categoryCounts[cat.name] || 0
+                  const isEditing = editingCategory === cat.name
+                  return (
+                    <div key={cat.name} className="rounded-xl border border-white/8 bg-white/3 p-4">
+                      {isEditing ? (
+                        /* Edit Mode */
+                        <div className="flex items-center gap-3">
+                          <Input
+                            value={editCategoryName}
+                            onChange={(e) => setEditCategoryName(e.target.value)}
+                            className="flex-1 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-500"
+                            placeholder="Category name..."
+                            onKeyDown={async (e) => {
+                              if (e.key === 'Enter' && editCategoryName.trim() && editCategoryName.trim() !== cat.name) {
+                                setSavingCategory(true)
+                                try {
+                                  const res = await fetch('/api/categories', {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ oldName: cat.name, newName: editCategoryName.trim() }),
+                                  })
+                                  const data = await res.json()
+                                  if (res.ok) {
+                                    toast({ title: 'Category Renamed', description: data.message })
+                                    setEditingCategory(null)
+                                    setEditCategoryName('')
+                                    fetchProducts()
+                                  } else {
+                                    toast({ title: 'Error', description: data.error, variant: 'destructive' })
+                                  }
+                                } catch {
+                                  toast({ title: 'Error', description: 'Failed to rename category', variant: 'destructive' })
+                                }
+                                setSavingCategory(false)
+                              } else if (e.key === 'Escape') {
+                                setEditingCategory(null)
+                                setEditCategoryName('')
+                              }
+                            }}
+                          />
+                          <Button
+                            size="sm"
+                            onClick={async () => {
+                              if (!editCategoryName.trim() || editCategoryName.trim() === cat.name) return
+                              setSavingCategory(true)
+                              try {
+                                const res = await fetch('/api/categories', {
+                                  method: 'PUT',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ oldName: cat.name, newName: editCategoryName.trim() }),
+                                })
+                                const data = await res.json()
+                                if (res.ok) {
+                                  toast({ title: 'Category Renamed', description: data.message })
+                                  setEditingCategory(null)
+                                  setEditCategoryName('')
+                                  fetchProducts()
+                                } else {
+                                  toast({ title: 'Error', description: data.error, variant: 'destructive' })
+                                }
+                              } catch {
+                                toast({ title: 'Error', description: 'Failed to rename category', variant: 'destructive' })
+                              }
+                              setSavingCategory(false)
+                            }}
+                            disabled={savingCategory || !editCategoryName.trim() || editCategoryName.trim() === cat.name}
+                            className="bg-gradient-to-r from-sky-700 to-sky-500 hover:from-sky-600 hover:to-sky-400 text-white border-0"
+                          >
+                            {savingCategory ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => { setEditingCategory(null); setEditCategoryName('') }}
+                            className="border-white/10 text-gray-400 hover:text-white"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        /* View Mode */
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                              cat.isPrimary ? 'bg-amber-500/20' : 'bg-sky-500/20'
+                            }`}>
+                              <cat.icon className={`w-4 h-4 ${cat.isPrimary ? 'text-amber-400' : 'text-sky-400'}`} />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-white text-sm font-medium">{cat.name}</span>
+                                {cat.isPrimary && (
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-medium">Primary</span>
+                                )}
+                              </div>
+                              <span className="text-gray-500 text-xs">{count} product{count !== 1 ? 's' : ''}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => { setEditingCategory(cat.name); setEditCategoryName(cat.name) }}
+                              className="border-white/10 text-sky-400 hover:bg-sky-500/10 hover:border-sky-400"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={async () => {
+                                const confirmMsg = count > 0
+                                  ? `Delete "${cat.name}"?\n\nThis category has ${count} product${count !== 1 ? 's' : ''}.\n\nChoose:\n- OK = Delete all ${count} products too\n- Cancel = Keep products (reassign first)`
+                                  : `Delete empty category "${cat.name}"?`
+
+                                if (!confirm(confirmMsg)) return
+
+                                setSavingCategory(true)
+                                try {
+                                  const res = await fetch('/api/categories', {
+                                    method: 'DELETE',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                      categoryName: cat.name,
+                                      action: 'delete',
+                                    }),
+                                  })
+                                  const data = await res.json()
+                                  if (res.ok) {
+                                    toast({ title: 'Category Deleted', description: data.message })
+                                    fetchProducts()
+                                  } else {
+                                    toast({ title: 'Error', description: data.error, variant: 'destructive' })
+                                  }
+                                } catch {
+                                  toast({ title: 'Error', description: 'Failed to delete category', variant: 'destructive' })
+                                }
+                                setSavingCategory(false)
+                              }}
+                              disabled={savingCategory}
+                              className="border-white/10 text-red-400 hover:bg-red-500/10 hover:border-red-400"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Add New Category */}
+              <div className="mt-6 border-t border-white/8 pt-5">
+                <p className="text-gray-400 text-xs mb-3">To add a new category, create a product and type a new category name in the category field.</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Settings Tab Content */}
         {adminTab === 'settings' && (
