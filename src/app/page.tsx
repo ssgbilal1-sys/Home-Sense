@@ -1800,7 +1800,7 @@ export default function Home() {
                                 return (
                                   <div key={i} className="flex items-center gap-2 text-sm">
                                     <span className="text-gray-400">{label}{time ? ':' : ''}</span>
-                                    <span className={isClosed ? 'text-red-400 font-medium' : 'text-white font-medium'}>{time}</span>
+                                    <span className={isClosed ? 'text-red-400 font-medium' : 'text-sky-300'}>{time}</span>
                                   </div>
                                 )
                               })}
