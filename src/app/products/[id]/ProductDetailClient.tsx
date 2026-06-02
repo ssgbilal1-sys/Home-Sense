@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import {
   Droplets, Phone, Mail, MessageCircle, Star, CheckCircle,
   Wrench, ChevronLeft, Play, Menu, X, Bath, Package,
-  ArrowRight, Shield, Facebook, Instagram, Youtube, Settings
+  ArrowRight, Shield, Facebook, Instagram, Youtube, Settings, Tag
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -14,6 +14,8 @@ interface Product {
   name: string
   description: string
   price: string
+  discountPrice: string
+  onSale: boolean
   image: string
   images: string
   video: string | null
@@ -69,7 +71,16 @@ export default function ProductDetailClient({ productId }: { productId: string }
     if (!product) return []
     try {
       const parsed = JSON.parse(product.images || '[]')
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        // Put profile image first, then other images (avoid duplicates)
+        const profileImage = product.image
+        const otherImages = parsed.filter((img: string) => {
+          const imgBase = img.split('?')[0]
+          const profileBase = profileImage?.split('?')[0]
+          return imgBase !== profileBase
+        })
+        return profileImage ? [profileImage, ...otherImages] : otherImages
+      }
     } catch {}
     return product.image ? [product.image] : []
   }
@@ -194,6 +205,15 @@ export default function ProductDetailClient({ productId }: { productId: string }
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
+              {/* SALE badge on image */}
+              {product.onSale && product.discountPrice && (
+                <div className="absolute top-4 left-4">
+                  <span className="px-3 py-1.5 rounded-full text-sm font-bold bg-red-500 text-white shadow-lg shadow-red-500/40 flex items-center gap-1.5 animate-pulse">
+                    <Tag className="w-4 h-4" />
+                    SALE
+                  </span>
+                </div>
+              )}
               {displayImages.length > 1 && (
                 <>
                   <button
@@ -253,8 +273,24 @@ export default function ProductDetailClient({ productId }: { productId: string }
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">{product.name}</h1>
             <p className="text-gray-400 text-base mb-6 leading-relaxed">{product.description}</p>
 
-            <div className="text-4xl font-bold bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent mb-8">
-              {product.price}
+            <div className="text-4xl font-bold mb-8">
+              {product.onSale && product.discountPrice ? (
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="bg-gradient-to-r from-red-500 to-orange-400 bg-clip-text text-transparent">
+                    {product.discountPrice}
+                  </span>
+                  <span className="text-lg text-gray-500 line-through">
+                    {product.price}
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-red-500/20 text-red-400 border border-red-500/30">
+                    SALE
+                  </span>
+                </div>
+              ) : (
+                <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent">
+                  {product.price}
+                </span>
+              )}
             </div>
 
             {/* Features */}
@@ -279,7 +315,7 @@ export default function ProductDetailClient({ productId }: { productId: string }
                   Get Quote
                 </Button>
               </a>
-              <a href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi Home Sense! 👋\n\nI'm interested in:\n\n📦 *${product.name}*\n💰 Price: ${product.price}\n📂 Category: ${product.category}\n\nPlease share more details. Thank you!`)}`} target="_blank" rel="noopener noreferrer">
+              <a href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi Home Sense! 👋\n\nI'm interested in:\n\n📦 *${product.name}*\n💰 Price: ${product.onSale && product.discountPrice ? `${product.discountPrice} (Sale! Was ${product.price})` : product.price}\n📂 Category: ${product.category}\n\nPlease share more details. Thank you!`)}`} target="_blank" rel="noopener noreferrer">
                 <Button size="lg" variant="outline" className="border-green-500/50 text-green-400 hover:bg-green-500/10 hover:border-green-400 w-full sm:w-auto">
                   <MessageCircle className="w-5 h-5 mr-2" />
                   WhatsApp

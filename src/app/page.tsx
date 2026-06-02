@@ -10,7 +10,7 @@ import {
   Wrench, Bath, CookingPot, MapPin,
   Star, CheckCircle, Loader2, Package, Video,
   Play, Film, ChevronLeft, ImageIcon, XCircle,
-  Clock, Navigation, ExternalLink
+  Clock, Navigation, ExternalLink, Tag, Percent
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -28,6 +28,8 @@ interface Product {
   name: string
   description: string
   price: string
+  discountPrice: string
+  onSale: boolean
   image: string
   images: string
   video: string | null
@@ -376,6 +378,8 @@ export default function Home() {
     name: '',
     description: '',
     price: '',
+    discountPrice: '',
+    onSale: false,
     image: '',
     images: [] as string[],
     video: '',
@@ -657,14 +661,15 @@ export default function Home() {
       try { parsedImages = JSON.parse(product.images || '[]') } catch {}
       setFormData({
         name: product.name, description: product.description, price: product.price,
+        discountPrice: product.discountPrice || '', onSale: product.onSale || false,
         image: product.image, images: parsedImages, video: product.video || '',
         category: product.category, featured: product.featured, order: product.order,
       })
     } else {
       setEditingProduct(null)
       setFormData({
-        name: '', description: '', price: '', image: '', images: [],
-        video: '', category: 'Vanities', featured: true, order: products.length + 1,
+        name: '', description: '', price: '', discountPrice: '', onSale: false,
+        image: '', images: [], video: '', category: 'Vanities', featured: true, order: products.length + 1,
       })
     }
     setShowProductDialog(true)
@@ -978,9 +983,25 @@ export default function Home() {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.65 }}
-                className="text-3xl font-bold bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent mb-6"
+                className="mb-6"
               >
-                {selectedProduct.price}
+                {selectedProduct.onSale && selectedProduct.discountPrice ? (
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="text-3xl font-bold bg-gradient-to-r from-red-500 to-orange-400 bg-clip-text text-transparent">
+                      {selectedProduct.discountPrice}
+                    </span>
+                    <span className="text-lg text-gray-500 line-through">
+                      {selectedProduct.price}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-red-500/20 text-red-400 border border-red-500/30">
+                      SALE
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-3xl font-bold bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent">
+                    {selectedProduct.price}
+                  </span>
+                )}
               </motion.div>
 
               {/* Features */}
@@ -1016,7 +1037,7 @@ export default function Home() {
                     Get Quote
                   </RippleButton>
                 </a>
-                <a href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi Home Sense! 👋\n\nI'm interested in:\n\n📦 *${selectedProduct.name}*\n💰 Price: ${selectedProduct.price}\n📂 Category: ${selectedProduct.category}\n\nPlease share more details. Thank you!`)}`} target="_blank" rel="noopener noreferrer">
+                <a href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi Home Sense! 👋\n\nI'm interested in:\n\n📦 *${selectedProduct.name}*\n💰 Price: ${selectedProduct.onSale && selectedProduct.discountPrice ? `${selectedProduct.discountPrice} (Sale! Was ${selectedProduct.price})` : selectedProduct.price}\n📂 Category: ${selectedProduct.category}\n\nPlease share more details. Thank you!`)}`} target="_blank" rel="noopener noreferrer">
                   <Button size="lg" variant="outline" className="border-green-500/50 text-green-400 hover:bg-green-500/10 hover:border-green-400">
                     <MessageCircle className="w-5 h-5 mr-2" />
                     WhatsApp
@@ -1480,9 +1501,18 @@ export default function Home() {
                                 {isPrimaryCategory(product.category) && <Star className="w-3 h-3 ml-0.5 fill-amber-200" />}
                               </span>
                             </div>
+                            {/* SALE badge */}
+                            {product.onSale && product.discountPrice && (
+                              <div className="absolute top-3 right-3">
+                                <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-red-500 text-white shadow-lg shadow-red-500/40 flex items-center gap-1 animate-pulse">
+                                  <Tag className="w-3 h-3" />
+                                  SALE
+                                </span>
+                              </div>
+                            )}
                             {/* Media count badge */}
                             {totalImages > 1 && (
-                              <div className="absolute top-3 right-3 flex gap-1">
+                              <div className={`absolute right-3 flex gap-1 ${product.onSale && product.discountPrice ? 'top-12' : 'top-3'}`}>
                                 <span className="px-2 py-1 rounded-full text-xs font-medium bg-white/20 backdrop-blur-sm text-white flex items-center gap-1">
                                   <ImageIcon className="w-3 h-3" /> {productImages.length}
                                 </span>
@@ -1524,9 +1554,22 @@ export default function Home() {
                               {product.description}
                             </p>
                             <div className="flex items-center justify-between">
-                              <span className="text-lg font-bold bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent price-float">
-                                {product.price}
-                              </span>
+                              <div className="flex items-center gap-2">
+                                {product.onSale && product.discountPrice ? (
+                                  <>
+                                    <span className="text-lg font-bold bg-gradient-to-r from-red-500 to-orange-400 bg-clip-text text-transparent price-float">
+                                      {product.discountPrice}
+                                    </span>
+                                    <span className="text-sm text-gray-500 line-through">
+                                      {product.price}
+                                    </span>
+                                  </>
+                                ) : (
+                                  <span className="text-lg font-bold bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent price-float">
+                                    {product.price}
+                                  </span>
+                                )}
+                              </div>
                               <RippleButton
                                 size="sm"
                                 className="bg-gradient-to-r from-sky-700 to-sky-500 hover:from-sky-600 hover:to-sky-400 text-white border-0 shadow-md shadow-sky-600/20 btn-gradient-shift"
@@ -2542,9 +2585,25 @@ export default function Home() {
                             {isPrimaryCategory(product.category) && ' ⭐'}
                           </span>
                         </div>
-                        <span className="text-sm font-bold bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent">
-                          {product.price}
-                        </span>
+                        <div className="text-right">
+                          {product.onSale && product.discountPrice ? (
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-sm font-bold bg-gradient-to-r from-red-500 to-orange-400 bg-clip-text text-transparent">
+                                {product.discountPrice}
+                              </span>
+                              <span className="text-xs text-gray-500 line-through">
+                                {product.price}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-sm font-bold bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent">
+                              {product.price}
+                            </span>
+                          )}
+                          {product.onSale && product.discountPrice && (
+                            <span className="text-[10px] font-bold text-red-400 bg-red-500/15 px-1.5 py-0.5 rounded-full">SALE</span>
+                          )}
+                        </div>
                       </div>
                       <p className="text-sm text-gray-500 line-clamp-2 mb-4">{product.description}</p>
                       <div className="flex gap-2">
@@ -2780,6 +2839,29 @@ export default function Home() {
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* Sale / Discount Section */}
+            <div className="rounded-xl border border-white/10 bg-white/3 p-4 space-y-4">
+              <div className="flex items-center gap-3">
+                <Switch checked={formData.onSale} onCheckedChange={(checked) => setFormData(prev => ({ ...prev, onSale: checked, discountPrice: checked ? prev.discountPrice : '' }))} />
+                <Label className="text-gray-300 flex items-center gap-2">
+                  <Tag className="w-4 h-4 text-red-400" />
+                  On Sale / Discount
+                </Label>
+              </div>
+              {formData.onSale && (
+                <div>
+                  <Label className="text-gray-300">Discount Price *</Label>
+                  <Input
+                    value={formData.discountPrice}
+                    onChange={(e) => setFormData(prev => ({ ...prev, discountPrice: e.target.value }))}
+                    placeholder="e.g. Rs. 15,000"
+                    className="mt-2 bg-white/5 border-red-500/30 text-white placeholder:text-gray-600 focus:border-red-500 focus:ring-red-500/20"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">This price will be shown as the sale price. Original price will have a strikethrough.</p>
+                </div>
+              )}
             </div>
 
             {/* Featured & Order Row */}

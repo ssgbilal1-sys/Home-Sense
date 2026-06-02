@@ -28,9 +28,21 @@ export async function POST() {
       ADD COLUMN IF NOT EXISTS "mapUrl" TEXT NOT NULL DEFAULT '';
     `)
 
+    // Add discountPrice column to Product if not exists
+    await pool.query(`
+      ALTER TABLE "Product"
+      ADD COLUMN IF NOT EXISTS "discountPrice" TEXT NOT NULL DEFAULT '';
+    `)
+
+    // Add onSale column to Product if not exists
+    await pool.query(`
+      ALTER TABLE "Product"
+      ADD COLUMN IF NOT EXISTS "onSale" BOOLEAN NOT NULL DEFAULT false;
+    `)
+
     return NextResponse.json({
       success: true,
-      message: 'Migration completed: businessHours and mapUrl columns added to SiteSettings table.',
+      message: 'Migration completed: businessHours, mapUrl columns added to SiteSettings; discountPrice, onSale columns added to Product table.',
     })
   } catch (error: any) {
     console.error('Migration error:', error)

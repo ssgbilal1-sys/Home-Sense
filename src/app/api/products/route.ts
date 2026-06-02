@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     if (!auth.authenticated) return auth.response!
 
     const body = await request.json()
-    const { name, description, price, image, images, video, category, featured, order } = body
+    const { name, description, price, discountPrice, onSale, image, images, video, category, featured, order } = body
 
     if (!name || !description || !price || !image) {
       return NextResponse.json(
@@ -37,6 +37,8 @@ export async function POST(request: Request) {
         name,
         description,
         price,
+        discountPrice: discountPrice || '',
+        onSale: onSale ?? false,
         image,
         images: images || '[]',
         video: video || null,

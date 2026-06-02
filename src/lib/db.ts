@@ -48,7 +48,12 @@ export const db = {
       
       const { data, error } = await query
       if (error) throw new Error(error.message)
-      return data || []
+      // Provide defaults for new columns that may not exist yet in the database
+      return (data || []).map((item: any) => ({
+        discountPrice: '',
+        onSale: false,
+        ...item,
+      }))
     },
 
     findUnique: async (opts: { where: { id: string } }) => {
@@ -59,14 +64,24 @@ export const db = {
         .eq('id', opts.where.id)
         .single()
       if (error && error.code !== 'PGRST116') throw new Error(error.message)
-      return data
+      // Provide defaults for new columns that may not exist yet in the database
+      return {
+        discountPrice: '',
+        onSale: false,
+        ...data,
+      }
     },
 
     create: async (opts: { data: Record<string, any> }) => {
       const supabase = getSupabaseAdmin()
-      const dataWithIdAndTimestamp = {
+      const dataWithDefaults = {
+        discountPrice: '',
+        onSale: false,
         ...opts.data,
-        id: opts.data.id || generateId(),
+      }
+      const dataWithIdAndTimestamp = {
+        ...dataWithDefaults,
+        id: dataWithDefaults.id || generateId(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       }
