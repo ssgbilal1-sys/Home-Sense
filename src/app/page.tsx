@@ -994,7 +994,7 @@ export default function Home() {
                     Get Quote
                   </RippleButton>
                 </a>
-                <a href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi Home Sense! 👋\n\nI'm interested in:\n\n📦 *${selectedProduct.name}*\n💰 Price: ${selectedProduct.price}\n📂 Category: ${selectedProduct.category}\n\n${selectedProduct.description}\n\nPlease share more details. Thank you!`)}`} target="_blank" rel="noopener noreferrer">
+                <a href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi Home Sense! 👋\n\nI'm interested in:\n\n📦 *${selectedProduct.name}*\n💰 Price: ${selectedProduct.price}\n📂 Category: ${selectedProduct.category}\n\nPlease share more details. Thank you!`)}`} target="_blank" rel="noopener noreferrer">
                   <Button size="lg" variant="outline" className="border-green-500/50 text-green-400 hover:bg-green-500/10 hover:border-green-400">
                     <MessageCircle className="w-5 h-5 mr-2" />
                     WhatsApp
