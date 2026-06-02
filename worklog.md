@@ -153,3 +153,37 @@ Stage Summary:
 - Performance-conscious with will-change, transform, opacity usage
 - Accessibility: prefers-reduced-motion support
 - Zero functionality regressions — all CRUD, admin, uploads, detail views intact
+---
+Task ID: 1
+Agent: Main Agent
+Task: Fix Contact Information Weak - Add Business Hours, Google Maps, Visit Our Showroom section
+
+Work Log:
+- Read current contact section in page.tsx (lines 1688-1763)
+- Added businessHours and mapUrl fields to Prisma schema (SiteSettings model)
+- Created /api/migrate endpoint for adding new DB columns to Supabase
+- Updated /api/settings to include businessHours and mapUrl in allowedFields
+- Updated SiteSettings interface with new fields
+- Updated default settings state with businessHours and mapUrl
+- Added Clock, Navigation, ExternalLink icons from lucide-react
+- Added Business Hours and Map URL inputs to admin settings form
+- Completely redesigned contact section with:
+  - Contact Cards Grid (Quick Reach) at top
+  - "Visit Our Showroom" banner section
+  - Address display with MapPin icon
+  - Business Hours with parsed day/time display
+  - Live Open/Closed status indicator (auto-detects current time vs business hours)
+  - "Get Directions on Google Maps" button
+  - Google Maps embed (custom URL from admin, or auto-generated from address)
+  - Fallback placeholder when no address is set
+- Enhanced footer with 3-column layout: Logo+Tagline, Quick Contact, Business Hours
+- Updated db.ts with graceful fallback for new columns that don't exist yet
+- Build test passed successfully
+- Pushed to GitHub (commit 4295abf)
+
+Stage Summary:
+- Contact section now has: Address, Business Hours (with live Open/Closed status), Google Maps embed, "Visit Our Showroom" banner, "Get Directions" button
+- Footer now shows: Address, Phone, Email, Business Hours, Logo + Tagline
+- Admin can edit Business Hours and Google Maps embed URL in settings
+- Database migration endpoint created at /api/migrate
+- Graceful fallback ensures site works even before DB migration runs
