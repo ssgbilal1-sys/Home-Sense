@@ -328,18 +328,18 @@ function HeroSlideshow() {
           key={src}
           src={src}
           alt="Luxury Bathroom Interior"
-          className="absolute inset-0 w-full h-full object-cover object-center sm:object-center"
+          className="absolute inset-0 w-full h-full object-cover object-center sm:object-[center_30%]"
           initial={false}
           animate={{ opacity: i === current ? 1 : 0 }}
           transition={{ duration: 1.5, ease: 'easeInOut' }}
         />
       ))}
       {/* Mobile: bottom-heavy overlay so image shows on top, text readable on bottom */}
-      <div className="absolute inset-0 sm:hidden bg-gradient-to-t from-[#080c14] via-[#080c14]/70 to-[#080c14]/20" />
+      <div className="absolute inset-0 sm:hidden bg-gradient-to-t from-[#080c14] via-[#080c14]/60 to-[#080c14]/10" />
       {/* Tablet: left-heavy overlay */}
-      <div className="absolute inset-0 hidden sm:block lg:hidden bg-gradient-to-r from-[#080c14]/90 via-[#080c14]/65 to-[#080c14]/30" />
+      <div className="absolute inset-0 hidden sm:block lg:hidden bg-gradient-to-r from-[#080c14]/85 via-[#080c14]/50 to-[#080c14]/20" />
       {/* Desktop: left-heavy overlay, image clearly visible on right */}
-      <div className="absolute inset-0 hidden lg:block bg-gradient-to-r from-[#080c14]/85 via-[#080c14]/55 to-[#080c14]/15" />
+      <div className="absolute inset-0 hidden lg:block bg-gradient-to-r from-[#080c14]/80 via-[#080c14]/40 to-transparent" />
       {/* Bottom fade into next section */}
       <div className="absolute bottom-0 left-0 right-0 h-24 sm:h-32 bg-gradient-to-t from-[#080c14] to-transparent" />
       {/* Slide indicators */}
