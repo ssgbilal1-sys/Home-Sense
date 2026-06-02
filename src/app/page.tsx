@@ -779,7 +779,15 @@ export default function Home() {
   const renderProductDetail = () => {
     if (!selectedProduct) return null
     const allImages = getProductImages(selectedProduct)
-    const displayImages = allImages[0] === selectedProduct.image ? allImages : [selectedProduct.image, ...allImages.filter(img => img !== selectedProduct.image)]
+    // Always put profile image first, then other images (avoid duplicates by comparing base URL)
+    const profileImage = selectedProduct.image
+    const otherImages = allImages.filter(img => {
+      // Compare without query params to handle signed URL differences
+      const imgBase = img.split('?')[0]
+      const profileBase = profileImage?.split('?')[0]
+      return imgBase !== profileBase
+    })
+    const displayImages = profileImage ? [profileImage, ...otherImages] : otherImages
 
     return (
       <motion.div
