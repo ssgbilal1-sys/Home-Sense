@@ -994,7 +994,7 @@ export default function Home() {
                     Get Quote
                   </RippleButton>
                 </a>
-                <a href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer">
+                <a href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi Home Sense! 👋\n\nI'm interested in:\n\n📦 *${selectedProduct.name}*\n💰 Price: ${selectedProduct.price}\n📂 Category: ${selectedProduct.category}\n\n${selectedProduct.description}\n\nPlease share more details. Thank you!`)}`} target="_blank" rel="noopener noreferrer">
                   <Button size="lg" variant="outline" className="border-green-500/50 text-green-400 hover:bg-green-500/10 hover:border-green-400">
                     <MessageCircle className="w-5 h-5 mr-2" />
                     WhatsApp
@@ -1698,7 +1698,7 @@ export default function Home() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
                   {[
                     { icon: Phone, label: 'Call Us', value: settings.phone, href: `tel:${settings.phone}`, color: 'from-green-500/20 to-green-600/20 border-green-500/20', iconColor: 'text-green-400' },
-                    { icon: MessageCircle, label: 'WhatsApp', value: settings.whatsapp, href: `https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}`, color: 'from-green-500/20 to-green-600/20 border-green-500/20', iconColor: 'text-green-400' },
+                    { icon: MessageCircle, label: 'WhatsApp', value: settings.whatsapp, href: `https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Hi Home Sense! 👋\n\nI\'m interested in your sanitary ware products. Please share more details. Thank you!')}`, color: 'from-green-500/20 to-green-600/20 border-green-500/20', iconColor: 'text-green-400' },
                     { icon: Mail, label: 'Email', value: settings.email, href: `mailto:${settings.email}`, color: 'from-sky-500/20 to-sky-700/20 border-sky-500/20 border-sky-500/20', iconColor: 'text-sky-400' },
                     { icon: Instagram, label: 'Instagram', value: settings.instagram, href: `https://instagram.com/${settings.instagram.replace('@', '')}`, color: 'from-pink-500/20 to-purple-600/20 border-pink-500/20', iconColor: 'text-pink-400' },
                     ...(settings.facebook ? [{ icon: Facebook, label: 'Facebook', value: settings.facebook.replace(/https?:\/\/(www\.)?facebook\.com\/?/i, '').replace(/\/$/, '') || 'Facebook Page', href: settings.facebook, color: 'from-sky-600/20 to-sky-800/20 border-sky-600/20', iconColor: 'text-sky-500' }] : []),
