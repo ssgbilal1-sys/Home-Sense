@@ -1980,11 +1980,10 @@ export default function Home() {
                     <Mail className="w-3 h-3 text-sky-400" /> {settings.email}
                   </a>
                 )}
-                {settings.address && (
-                  <div className="flex items-start gap-2 text-gray-400 text-xs">
-                    <MapPin className="w-3 h-3 text-amber-400 mt-0.5 shrink-0" />
-                    <span className="line-clamp-2">{settings.address}</span>
-                  </div>
+                {settings.whatsapp && (
+                  <a href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-xs">
+                    <MessageCircle className="w-3 h-3 text-green-400" /> {settings.whatsapp}
+                  </a>
                 )}
               </motion.div>
 
