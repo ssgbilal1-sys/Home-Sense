@@ -1944,82 +1944,23 @@ export default function Home() {
           className="relative z-10 border-t border-white/8 py-8 mt-auto"
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Top row: Logo + Quick Info */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-              {/* Logo & Tagline */}
-              <motion.div
-                initial={{ opacity: 0, x: -15 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, amount: 0.15 }}
-                transition={{ delay: 0.1, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-                className="flex flex-col items-start gap-2"
-              >
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
                 <img
                   src="/logo-homesense.jpg"
                   alt="Home Sense"
-                  className="h-12 w-auto object-contain rounded-lg"
+                  className="h-10 w-auto object-contain rounded-lg"
                 />
-                <p className="text-gray-500 text-xs">Authorized & Trusted Dealer of Zilver Sanitary Ware</p>
-              </motion.div>
-
-              {/* Quick Contact */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.15 }}
-                transition={{ delay: 0.2, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-                className="space-y-1.5"
-              >
-                {settings.phone && (
-                  <a href={`tel:${settings.phone}`} className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-xs">
-                    <Phone className="w-3 h-3 text-green-400" /> {settings.phone}
-                  </a>
-                )}
-                {settings.email && (
-                  <a href={`mailto:${settings.email}`} className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-xs">
-                    <Mail className="w-3 h-3 text-sky-400" /> {settings.email}
-                  </a>
-                )}
-                {settings.whatsapp && (
-                  <a href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-xs">
-                    <MessageCircle className="w-3 h-3 text-green-400" /> {settings.whatsapp}
-                  </a>
-                )}
-              </motion.div>
-
-              {/* Business Hours */}
-              <motion.div
-                initial={{ opacity: 0, x: 15 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, amount: 0.15 }}
-                transition={{ delay: 0.3, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-                className="space-y-1.5"
-              >
-                <div className="flex items-center gap-1.5 text-gray-300 text-xs font-semibold mb-1">
-                  <Clock className="w-3 h-3 text-sky-400" /> Business Hours
+                <div className="flex items-center gap-3 text-xs text-gray-500">
+                  {settings.phone && (
+                    <a href={`tel:${settings.phone}`} className="hover:text-white transition-colors">{settings.phone}</a>
+                  )}
+                  {settings.email && (
+                    <a href={`mailto:${settings.email}`} className="hover:text-white transition-colors">{settings.email}</a>
+                  )}
                 </div>
-                {(settings.businessHours || 'Mon-Sat: 10:00 AM - 8:00 PM|Sunday: Closed').split('|').map((line, i) => {
-                  const [label, time] = line.includes(':') ? [line.split(':').slice(0, -1).join(':').trim(), line.split(':').pop()?.trim() || ''] : [line.trim(), '']
-                  const isClosed = time.toLowerCase() === 'closed'
-                  return (
-                    <div key={i} className="flex items-center justify-between text-[11px]">
-                      <span className="text-gray-500">{label}{time ? ':' : ''}</span>
-                      <span className={isClosed ? 'text-red-400/70' : 'text-gray-400'}>{time}</span>
-                    </div>
-                  )
-                })}
-              </motion.div>
-            </div>
-
-            {/* Bottom row: Socials + Copyright */}
-            <div className="border-t border-white/5 pt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.15 }}
-                transition={{ delay: 0.2, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-                className="flex items-center gap-4"
-              >
+              </div>
+              <div className="flex items-center gap-4">
                 {[
                   { Icon: Facebook, href: settings.facebook || '#' },
                   { Icon: Instagram, href: settings.instagram ? `https://instagram.com/${settings.instagram.replace('@', '')}` : '#' },
@@ -2037,16 +1978,8 @@ export default function Home() {
                     <social.Icon className="w-4 h-4" />
                   </motion.a>
                 ))}
-              </motion.div>
-              <motion.p
-                initial={{ opacity: 0, x: 15 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, amount: 0.15 }}
-                transition={{ delay: 0.3, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-                className="text-gray-600 text-xs"
-              >
-                &copy; {new Date().getFullYear()} Home Sense. All rights reserved.
-              </motion.p>
+                <span className="text-gray-600 text-xs">&copy; {new Date().getFullYear()} Home Sense</span>
+              </div>
             </div>
           </div>
         </motion.footer>
