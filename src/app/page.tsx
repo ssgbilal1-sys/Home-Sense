@@ -1793,15 +1793,14 @@ export default function Home() {
                           </div>
                           <div className="flex-1">
                             <div className="font-semibold text-gray-300 text-sm mb-2">Business Hours</div>
-                            <div className="space-y-1.5">
+                            <div className="space-y-1">
                               {(settings.businessHours || 'Mon-Sat: 10:00 AM - 8:00 PM|Sunday: Closed').split('|').map((line, i) => {
                                 const [label, time] = line.includes(':') ? [line.split(':').slice(0, -1).join(':').trim(), line.split(':').pop()?.trim() || ''] : [line.trim(), '']
                                 const isClosed = time.toLowerCase() === 'closed'
                                 return (
-                                  <div key={i} className="flex items-center gap-2 text-sm">
-                                    <span className="text-gray-400">{label}{time ? ':' : ''}</span>
-                                    <span className={isClosed ? 'text-red-400/80' : 'text-gray-300'}>{time}</span>
-                                  </div>
+                                  <p key={i} className={`text-sm ${isClosed ? 'text-red-400/80' : 'text-gray-400'}`}>
+                                    {label}{time ? ': ' : ''}{time}
+                                  </p>
                                 )
                               })}
                             </div>
