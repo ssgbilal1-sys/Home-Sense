@@ -941,6 +941,10 @@ export default function Home() {
                 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3"
               >
                 {selectedProduct.name}
+                <a href={`/products/${selectedProduct.id}`} target="_blank" rel="noopener noreferrer" className="ml-3 inline-flex items-center gap-1 text-xs text-sky-400 hover:text-sky-300 font-normal align-middle">
+                  <Eye className="w-3.5 h-3.5" />
+                  Open Page
+                </a>
               </motion.h2>
 
               <motion.p
@@ -1494,7 +1498,9 @@ export default function Home() {
                           {/* Product Info */}
                           <div className="p-5">
                             <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-sky-300 transition-colors duration-300">
-                              {product.name}
+                              <a href={`/products/${product.id}`} onClick={(e) => e.stopPropagation()} className="hover:underline">
+                                {product.name}
+                              </a>
                             </h3>
                             <p className="text-sm text-gray-400 mb-4 line-clamp-2">
                               {product.description}
