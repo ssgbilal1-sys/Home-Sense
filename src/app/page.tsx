@@ -1310,7 +1310,7 @@ export default function Home() {
                   animate="visible"
                   className="text-sm sm:text-lg lg:text-xl text-gray-300 sm:text-gray-400 mb-5 sm:mb-8 max-w-lg [text-shadow:0_1px_6px_rgba(0,0,0,0.7)]"
                 >
-                  Home Sense brings you premium sanitary wares — vanities manufactured by us, plus the complete Zilver range of commodes, basins, shower sets, and art bowls.
+                  Home Sense brings you premium sanitary wares — vanities manufactured by us, plus vanities, commodes, shower sets, art bowls, basins, mixers, taps aur bohot kuch — sab kuch ek jagah!
                 </motion.p>
 
                 {/* CTA Buttons */}
@@ -1445,7 +1445,7 @@ export default function Home() {
                 <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent text-shimmer" style={{ backgroundSize: '200% auto' }}> Products</span>
               </h2>
               <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-                Discover our premium collection of vanities, commodes, basins, shower sets, and art bowls. Factory-direct vanities manufactured by us, plus the finest Zilver products — all available at Home Sense.
+                Discover our premium collection of vanities, commodes, shower sets, art bowls, basins, mixers, taps aur bohot kuch. Factory-direct vanities manufactured by us, plus top brands — all available at Home Sense.
               </p>
               {/* Active Category Filter */}
               {selectedCategory && (
@@ -1658,7 +1658,7 @@ export default function Home() {
                   transition={{ delay: 0.1 }}
                   className="text-gray-400 text-lg mb-8"
                 >
-                  Excellent details, durable components, compatible hardware result in Zilver quality. High standard, long life combined with superior performance thanks to the compatibility of all components, spare parts and durability. As the authorized distributor, Home Sense brings you the finest vanities, commodes, basins, shower sets, and art bowls — with our own manufactured vanities line.
+                  Excellent details, durable components, compatible hardware result in premium quality. High standard, long life combined with superior performance thanks to the compatibility of all components, spare parts and durability. As the authorized dealer, Home Sense brings you the finest vanities, commodes, shower sets, art bowls, basins, mixers, taps aur bohot kuch — with our own manufactured vanities line.
                 </motion.p>
                 <div className="space-y-6">
                   {[
