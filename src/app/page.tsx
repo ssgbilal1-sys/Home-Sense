@@ -226,6 +226,27 @@ function ScrollReveal({ children, className, delay = 0, direction = 'up', distan
 }) {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, amount: 0.1 })
+  const [hasBeenVisible, setHasBeenVisible] = useState(false)
+
+  // Once in view, mark as permanently visible so filter changes don't hide items
+  useEffect(() => {
+    if (isInView) setHasBeenVisible(true)
+  }, [isInView])
+
+  // If element is already in viewport on mount (e.g. after category filter),
+  // make it visible immediately with a short delay for smooth animation
+  useEffect(() => {
+    if (!hasBeenVisible && ref.current) {
+      const observer = new IntersectionObserver(([entry]) => {
+        if (entry.isIntersecting) {
+          setHasBeenVisible(true)
+          observer.disconnect()
+        }
+      }, { threshold: 0.05 })
+      observer.observe(ref.current)
+      return () => observer.disconnect()
+    }
+  }, [hasBeenVisible])
 
   const directionMap = {
     up: { y: distance, x: 0 },
@@ -238,13 +259,13 @@ function ScrollReveal({ children, className, delay = 0, direction = 'up', distan
     <motion.div
       ref={ref}
       initial={{ opacity: 0, ...directionMap[direction] }}
-      animate={isInView
+      animate={hasBeenVisible
         ? { opacity: 1, x: 0, y: 0 }
-        : undefined
+        : { opacity: 0, ...directionMap[direction] }
       }
       transition={{
-        delay,
-        duration: 0.6,
+        delay: hasBeenVisible ? delay : 0,
+        duration: 0.5,
         ease: [0.25, 0.46, 0.45, 0.94],
       }}
       className={className}
@@ -440,11 +461,19 @@ export default function Home() {
   const counter150 = useCounter(150, 2000)
   const counter99 = useCounter(99, 1500)
 
-  // Calculate category counts from products
+  // Calculate category counts from products (case-insensitive keys for reliable matching)
   const categoryCounts = products.reduce((acc, p) => {
-    acc[p.category] = (acc[p.category] || 0) + 1
+    const key = p.category.trim()
+    acc[key] = (acc[key] || 0) + 1
     return acc
   }, {} as Record<string, number>)
+
+  // Case-insensitive lookup for category counts
+  const getCategoryCount = (catName: string): number => {
+    const lower = catName.toLowerCase().trim()
+    return Object.entries(categoryCounts).reduce((total, [key, count]) =>
+      key.toLowerCase().trim() === lower ? total + count : total, 0)
+  }
 
   // Parse images from product
   const getProductImages = (product: Product): string[] => {
@@ -1346,7 +1375,7 @@ export default function Home() {
         <section className="relative z-10 py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-              {CATEGORIES.filter(cat => (categoryCounts[cat.name] || 0) > 0).map((cat, i) => (
+              {CATEGORIES.filter(cat => getCategoryCount(cat.name) > 0).map((cat, i) => (
                 <ScrollReveal key={i} delay={i * 0.1} direction="up" distance={30}>
                   <motion.div
                     whileHover={{ scale: 1.03 }}
@@ -1381,7 +1410,7 @@ export default function Home() {
                           ? cat.isPrimary ? 'text-amber-200' : 'text-sky-200'
                           : cat.isPrimary ? 'text-amber-300' : 'text-white'
                       }`}>{cat.name}</h3>
-                      <span className="text-xs text-gray-500">{categoryCounts[cat.name] || 0} Products</span>
+                      <span className="text-xs text-gray-500">{getCategoryCount(cat.name)} Products</span>
                       {cat.isPrimary && (
                         <div className="mt-2 flex items-center justify-center gap-1">
                           <span className="text-[9px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-medium">Manufactured by Us</span>
@@ -1445,7 +1474,7 @@ export default function Home() {
             </ScrollReveal>
 
             {/* Vanities Manufacturer Banner */}
-            {products.filter(p => !selectedCategory || p.category.toLowerCase() === selectedCategory.toLowerCase()).some(p => isPrimaryCategory(p.category)) && (
+            {products.filter(p => !selectedCategory || p.category.trim().toLowerCase() === selectedCategory.trim().toLowerCase()).some(p => isPrimaryCategory(p.category)) && (
               <ScrollReveal className="mb-10">
                 <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-orange-500/10 p-6 sm:p-8">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-[100px]" />
@@ -1468,12 +1497,12 @@ export default function Home() {
             {loading ? (
               <ProductSkeleton />
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-                {products.filter(p => !selectedCategory || p.category.toLowerCase() === selectedCategory.toLowerCase()).map((product, index) => {
+              <div key={selectedCategory || 'all'} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+                {products.filter(p => !selectedCategory || p.category.trim().toLowerCase() === selectedCategory.trim().toLowerCase()).map((product, index) => {
                   const productImages = getProductImages(product)
                   const totalImages = productImages.length + (product.video ? 1 : 0)
                   return (
-                    <ScrollReveal key={product.id} delay={index * 0.12} direction="up" distance={60}>
+                    <ScrollReveal key={product.id} delay={Math.min(index * 0.06, 0.3)} direction="up" distance={40}>
                       <motion.div
                           whileHover={{ y: -6 }}
                           transition={springTransition}
@@ -1583,7 +1612,7 @@ export default function Home() {
                     </ScrollReveal>
                   )
                 })}
-                {products.filter(p => !selectedCategory || p.category.toLowerCase() === selectedCategory.toLowerCase()).length === 0 && (
+                {products.filter(p => !selectedCategory || p.category.trim().toLowerCase() === selectedCategory.trim().toLowerCase()).length === 0 && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -2198,7 +2227,7 @@ export default function Home() {
               {/* Categories List */}
               <div className="space-y-3">
                 {CATEGORIES.map((cat, i) => {
-                  const count = categoryCounts[cat.name] || 0
+                  const count = getCategoryCount(cat.name)
                   const isEditing = editingCategory === cat.name
                   return (
                     <div key={cat.name} className="rounded-xl border border-white/8 bg-white/3 p-4">
