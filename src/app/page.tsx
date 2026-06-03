@@ -1665,21 +1665,49 @@ export default function Home() {
 
                   {/* Right: Google Maps Embed */}
                   <div className="relative min-h-[300px] lg:min-h-[400px] bg-gray-900/50">
-                    {settings.mapUrl ? (
+                    {(() => {
+                      // Convert any Google Maps URL to an embeddable URL
+                      let embedUrl = ''
+                      if (settings.mapUrl) {
+                        const url = settings.mapUrl.trim()
+                        // Already an embed URL — use as-is
+                        if (url.includes('/embed')) {
+                          embedUrl = url
+                        }
+                        // Google Maps place/link URL → convert to embed
+                        else if (url.includes('google.com/maps')) {
+                          // Try to extract place query or coordinates
+                          const placeMatch = url.match(/\/place\/([^/]+)/)
+                          const queryMatch = url.match(/[?&]q=([^&]+)/)
+                          const coordMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/)
+                          if (placeMatch) {
+                            embedUrl = `https://www.google.com/maps/embed/v1/place?key=&q=${encodeURIComponent(placeMatch[1].replace(/\+/g, ' '))}`
+                          } else if (queryMatch) {
+                            embedUrl = `https://www.google.com/maps/embed/v1/place?key=&q=${queryMatch[1]}`
+                          } else if (coordMatch) {
+                            embedUrl = `https://www.google.com/maps/embed/v1/view?key=¤ter=${coordMatch[1]},${coordMatch[2]}&zoom=16`
+                          } else {
+                            // Fallback: use URL as-is in embed format
+                            embedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(settings.address || 'Home Sense Faisalabad')}&output=embed`
+                          }
+                        }
+                        // Short link (goo.gl/maps, maps.app.goo.gl)
+                        else if (url.includes('goo.gl') || url.includes('maps.app')) {
+                          embedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(settings.address || 'Home Sense Faisalabad')}&output=embed`
+                        }
+                        // Anything else — try as embed fallback
+                        else {
+                          embedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(settings.address || 'Home Sense Faisalabad')}&output=embed`
+                        }
+                      }
+                      // No mapUrl set — use address-based embed
+                      if (!embedUrl && settings.address) {
+                        embedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(settings.address)}&output=embed`
+                      }
+
+                      return embedUrl ? (
                       <iframe
-                        src={settings.mapUrl}
-                        width="100%"
-                        height="100%"
-                        style={{ border: 0, minHeight: '300px' }}
-                        allowFullScreen
-                        loading="lazy"
-                        referrerPolicy="no-referrer-when-downgrade"
-                        title="Home Sense Showroom Location"
-                        className="absolute inset-0 w-full h-full"
-                      />
-                    ) : settings.address ? (
-                      <iframe
-                        src={`https://www.google.com/maps?q=${encodeURIComponent(settings.address)}&output=embed`}
+                        src={embedUrl}
                         width="100%"
                         height="100%"
                         style={{ border: 0, minHeight: '300px' }}
@@ -1694,7 +1722,8 @@ export default function Home() {
                         <MapPin className="w-12 h-12 opacity-30" />
                         <p className="text-sm text-center">Map will appear here once address is added in admin settings</p>
                       </div>
-                    )}
+                    )
+                    })()}
                   </div>
                 </div>
               </div>
