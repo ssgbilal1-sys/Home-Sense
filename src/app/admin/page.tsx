@@ -121,6 +121,8 @@ export default function AdminPage() {
   })
   const [savingReview, setSavingReview] = useState(false)
   const [deleteReviewConfirm, setDeleteReviewConfirm] = useState<string | null>(null)
+  const [reviewTableMissing, setReviewTableMissing] = useState(false)
+  const [creatingTable, setCreatingTable] = useState(false)
 
   // Settings state
   const [settings, setSettings] = useState<SiteSettings>({
@@ -217,7 +219,15 @@ export default function AdminPage() {
   const fetchReviews = useCallback(async () => {
     try {
       const res = await fetch('/api/reviews')
-      if (res.ok) setReviews(await res.json())
+      if (res.ok) {
+        setReviews(await res.json())
+        setReviewTableMissing(false)
+      } else {
+        const errData = await res.json().catch(() => ({}))
+        if (errData.error && (errData.error.includes('could not find') || errData.error.includes('does not exist') || errData.error.includes('schema cache') || errData.error.includes('table'))) {
+          setReviewTableMissing(true)
+        }
+      }
     } catch (error) {
       console.error('Error fetching reviews:', error)
     }
@@ -479,6 +489,25 @@ export default function AdminPage() {
       toast({ title: 'Review Updated', description: `Review ${review.approved ? 'unapproved' : 'approved'}.` })
       fetchReviews()
     } catch { toast({ title: 'Update Failed', description: 'Failed to update review.', variant: 'destructive' }) }
+  }
+
+  const handleCreateReviewTable = async () => {
+    setCreatingTable(true)
+    try {
+      const res = await fetch('/api/migrate', { method: 'POST' })
+      if (res.ok) {
+        toast({ title: 'Table Created', description: 'Review table has been created successfully.' })
+        setReviewTableMissing(false)
+        fetchReviews()
+      } else {
+        const errData = await res.json().catch(() => ({}))
+        toast({ title: 'Failed', description: errData.error || 'Could not create table. Try running migration from Supabase SQL Editor.', variant: 'destructive' })
+      }
+    } catch {
+      toast({ title: 'Failed', description: 'Could not create table. Try running migration from Supabase SQL Editor.', variant: 'destructive' })
+    } finally {
+      setCreatingTable(false)
+    }
   }
 
   // Not authenticated - show login
@@ -827,7 +856,32 @@ export default function AdminPage() {
                 <Plus className="w-4 h-4 mr-2" />Add Review
               </Button>
             </div>
-            {reviews.length === 0 ? (
+            {reviewTableMissing ? (
+              <div className="text-center py-20 rounded-2xl border border-dashed border-amber-500/30 bg-amber-500/5">
+                <Star className="w-12 h-12 text-amber-500/50 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-amber-400 mb-2">Review Table Not Found</h3>
+                <p className="text-gray-500 mb-6 max-w-md mx-auto text-sm">The Review table needs to be created in your database first. Click below to auto-create it, or run the SQL manually in Supabase SQL Editor.</p>
+                <Button onClick={handleCreateReviewTable} disabled={creatingTable} className="bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white border-0">
+                  {creatingTable ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
+                  {creatingTable ? 'Creating Table...' : 'Create Review Table'}
+                </Button>
+                <div className="mt-6 text-left max-w-lg mx-auto bg-black/30 rounded-lg p-4 border border-white/5">
+                  <p className="text-gray-500 text-[11px] mb-2">Or run this SQL in Supabase Dashboard → SQL Editor:</p>
+                  <pre className="text-green-400 text-[10px] overflow-x-auto whitespace-pre-wrap">CREATE TABLE IF NOT EXISTS "Review" (
+  "id" TEXT PRIMARY KEY,
+  "name" TEXT NOT NULL,
+  "rating" INTEGER NOT NULL DEFAULT 5,
+  "comment" TEXT NOT NULL,
+  "date" TEXT NOT NULL DEFAULT '',
+  "approved" BOOLEAN NOT NULL DEFAULT true,
+  "order" INTEGER NOT NULL DEFAULT 0,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT NOW()
+);
+ALTER TABLE "Review" DISABLE ROW LEVEL SECURITY;</pre>
+                </div>
+              </div>
+            ) : reviews.length === 0 ? (
               <div className="text-center py-20 rounded-2xl border border-dashed border-white/10">
                 <Star className="w-12 h-12 text-gray-600 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-400 mb-2">No Reviews Yet</h3>

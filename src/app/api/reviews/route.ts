@@ -2,47 +2,75 @@ import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
 import { verifyAdmin } from '@/lib/auth'
 import { createClient } from '@supabase/supabase-js'
-import { Pool } from 'pg'
 
-// Ensure the Review table exists in Supabase (fallback if migration didn't run)
+// SQL to create Review table manually in Supabase SQL Editor
+const CREATE_REVIEW_SQL = `
+CREATE TABLE IF NOT EXISTS "Review" (
+  "id" TEXT PRIMARY KEY,
+  "name" TEXT NOT NULL,
+  "rating" INTEGER NOT NULL DEFAULT 5,
+  "comment" TEXT NOT NULL,
+  "date" TEXT NOT NULL DEFAULT '',
+  "approved" BOOLEAN NOT NULL DEFAULT true,
+  "order" INTEGER NOT NULL DEFAULT 0,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT NOW()
+);
+ALTER TABLE "Review" DISABLE ROW LEVEL SECURITY;
+`
+
+// Check if Review table exists, return helpful error if not
 async function ensureReviewTable() {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
-  // Try a simple query first
   const { error: testError } = await supabase.from('Review').select('id').limit(1)
   if (!testError) return // Table exists, all good
 
-  if (!testError.message.includes('could not find') && !testError.message.includes('does not exist') && !testError.message.includes('schema cache')) {
-    return // Some other error, let it propagate naturally
-  }
+  if (testError.message.includes('could not find') || testError.message.includes('does not exist') || testError.message.includes('schema cache')) {
+    // Try to create via pg Pool (works if DIRECT_URL is accessible)
+    try {
+      const { Pool } = await import('pg')
+      const databaseUrl = process.env.DIRECT_URL || process.env.DATABASE_URL
+      if (databaseUrl && !databaseUrl.startsWith('file:')) {
+        const pool = new Pool({ connectionString: databaseUrl, ssl: { rejectUnauthorized: false } })
+        try {
+          await pool.query(CREATE_REVIEW_SQL)
+          console.log('Review table created via pg Pool')
+          return
+        } finally {
+          await pool.end()
+        }
+      }
+    } catch (pgError: any) {
+      console.error('Could not create Review table via pg:', pgError.message)
+    }
 
-  console.log('Review table not found, creating via direct SQL...')
-  const databaseUrl = process.env.DIRECT_URL || process.env.DATABASE_URL
-  if (!databaseUrl || databaseUrl.startsWith('file:')) {
-    throw new Error('Review table does not exist and cannot auto-create. Please add DIRECT_URL env variable or create the table manually in Supabase SQL Editor.')
-  }
+    // pg Pool failed — try Supabase SQL REST API
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+      const projectId = supabaseUrl.replace('https://', '').replace('.supabase.co', '')
+      const response = await fetch(`https://${projectId}.supabase.co/rest/v1/rpc/exec_sql`, {
+        method: 'POST',
+        headers: {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query: CREATE_REVIEW_SQL }),
+      })
+      if (response.ok) {
+        console.log('Review table created via Supabase RPC')
+        return
+      }
+    } catch (rpcError) {
+      console.error('Could not create Review table via RPC:', rpcError)
+    }
 
-  const pool = new Pool({ connectionString: databaseUrl, ssl: { rejectUnauthorized: false } })
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS "Review" (
-        "id" TEXT PRIMARY KEY,
-        "name" TEXT NOT NULL,
-        "rating" INTEGER NOT NULL DEFAULT 5,
-        "comment" TEXT NOT NULL,
-        "date" TEXT NOT NULL DEFAULT '',
-        "approved" BOOLEAN NOT NULL DEFAULT true,
-        "order" INTEGER NOT NULL DEFAULT 0,
-        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT NOW(),
-        "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT NOW()
-      );
-    `)
-    await pool.query(`ALTER TABLE "Review" DISABLE ROW LEVEL SECURITY;`)
-    console.log('Review table created successfully')
-  } finally {
-    await pool.end()
+    // All methods failed — throw with instructions
+    throw new Error('Review table does not exist. Please go to Supabase Dashboard → SQL Editor → Run this SQL:\n\n' + CREATE_REVIEW_SQL.trim())
   }
 }
 
