@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState, useCallback, useRef } from 'react'
-import { motion, AnimatePresence, useInView, useMotionValue, useSpring } from 'framer-motion'
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   Droplets, Menu, X, Plus, Trash2, Edit3,
   Upload, Save, ChevronRight, Phone, Mail,
@@ -28,8 +28,7 @@ interface Product {
   name: string
   description: string
   price: string
-  discountPrice: string
-  onSale: boolean
+  discountPercent: number
   image: string
   images: string
   video: string | null
@@ -53,134 +52,6 @@ interface SiteSettings {
   address: string
   businessHours: string
   mapUrl: string
-}
-
-// ───────────────────────────────────────────────────────
-// COUNTER ANIMATION HOOK — Counts up from 0 when visible, resets on scroll away
-// ───────────────────────────────────────────────────────
-function useCounter(target: number, duration: number = 2000) {
-  const [count, setCount] = useState(0)
-  const ref = useRef<HTMLDivElement>(null)
-  const isInView = useInView(ref, { once: true, amount: 0.3 })
-
-  useEffect(() => {
-    if (!isInView) return
-    let startTime: number | null = null
-    let cancelled = false
-    const step = (timestamp: number) => {
-      if (cancelled) return
-      if (!startTime) startTime = timestamp
-      const progress = Math.min((timestamp - startTime) / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      setCount(Math.floor(eased * target))
-      if (progress < 1) requestAnimationFrame(step)
-    }
-    requestAnimationFrame(step)
-    return () => { cancelled = true }
-  }, [isInView, target, duration])
-
-  return { count, ref }
-}
-
-// ───────────────────────────────────────────────────────
-// 3D TILT CARD COMPONENT — Mouse-tracking 3D perspective
-// ───────────────────────────────────────────────────────
-function TiltCard({ children, className }: { children: React.ReactNode; className?: string }) {
-  const x = useMotionValue(0)
-  const y = useMotionValue(0)
-  const springX = useSpring(x, { stiffness: 300, damping: 30 })
-  const springY = useSpring(y, { stiffness: 300, damping: 30 })
-  const ref = useRef<HTMLDivElement>(null)
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!ref.current) return
-    const rect = ref.current.getBoundingClientRect()
-    const centerX = rect.left + rect.width / 2
-    const centerY = rect.top + rect.height / 2
-    const rotateY = ((e.clientX - centerX) / (rect.width / 2)) * 8
-    const rotateX = -((e.clientY - centerY) / (rect.height / 2)) * 8
-    x.set(rotateY)
-    y.set(rotateX)
-  }
-
-  const handleMouseLeave = () => {
-    x.set(0)
-    y.set(0)
-  }
-
-  return (
-    <motion.div
-      ref={ref}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={{
-        rotateX: springY,
-        rotateY: springX,
-        transformStyle: 'preserve-3d',
-        perspective: 1000,
-      }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  )
-}
-
-// ───────────────────────────────────────────────────────
-// RIPPLE BUTTON WRAPPER — Material-style ripple on click
-// ───────────────────────────────────────────────────────
-function RippleButton({ children, className, onClick, ...props }: React.ComponentProps<typeof Button> & { children: React.ReactNode }) {
-  const buttonRef = useRef<HTMLButtonElement>(null)
-
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    const button = buttonRef.current
-    if (button) {
-      const rect = button.getBoundingClientRect()
-      const size = Math.max(rect.width, rect.height)
-      const x = e.clientX - rect.left - size / 2
-      const y = e.clientY - rect.top - size / 2
-      const ripple = document.createElement('span')
-      ripple.className = 'ripple-effect'
-      ripple.style.width = ripple.style.height = `${size}px`
-      ripple.style.left = `${x}px`
-      ripple.style.top = `${y}px`
-      button.appendChild(ripple)
-      setTimeout(() => ripple.remove(), 600)
-    }
-    onClick?.(e)
-  }
-
-  return (
-    <Button ref={buttonRef} className={`ripple-container ${className || ''}`} onClick={handleClick} {...props}>
-      {children}
-    </Button>
-  )
-}
-
-// ───────────────────────────────────────────────────────
-// WAVE SECTION DIVIDER
-// ───────────────────────────────────────────────────────
-function WaveDivider() {
-  return (
-    <div className="wave-divider relative z-10 w-full">
-      <svg
-        viewBox="0 0 1440 60"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className="w-[200%] h-full"
-        preserveAspectRatio="none"
-      >
-        <path
-          d="M0 30C240 10 480 50 720 30C960 10 1200 50 1440 30C1680 10 1920 50 2160 30C2400 10 2640 50 2880 30V60H0V30Z"
-          fill="rgba(2,132,199,0.03)"
-        />
-        <path
-          d="M0 35C240 15 480 55 720 35C960 15 1200 55 1440 35C1680 15 1920 55 2160 35C2400 15 2640 55 2880 35V60H0V35Z"
-          fill="rgba(56,189,248,0.02)"
-        />
-      </svg>
-    </div>
-  )
 }
 
 // ───────────────────────────────────────────────────────
@@ -208,132 +79,65 @@ function ProductSkeleton() {
 }
 
 // ───────────────────────────────────────────────────────
-// SPRING TRANSITION PRESETS
+// SPRING TRANSITION PRESETS (outside component)
 // ───────────────────────────────────────────────────────
 const springTransition = { type: 'spring' as const, stiffness: 100, damping: 15 }
 const springBouncy = { type: 'spring' as const, stiffness: 200, damping: 12 }
 const springGentle = { type: 'spring' as const, stiffness: 80, damping: 20 }
 
 // ───────────────────────────────────────────────────────
-// SCROLL REVEAL — Dramatic scroll-triggered reveal with blur+scale+slide
+// PREDEFINED CATEGORIES (outside component)
 // ───────────────────────────────────────────────────────
-function ScrollReveal({ children, className, delay = 0, direction = 'up', distance = 40 }: {
-  children: React.ReactNode
-  className?: string
-  delay?: number
-  direction?: 'up' | 'down' | 'left' | 'right'
-  distance?: number
-}) {
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, amount: 0.1 })
-  const [hasBeenVisible, setHasBeenVisible] = useState(false)
-
-  // Once in view, mark as permanently visible so filter changes don't hide items
-  useEffect(() => {
-    if (isInView) setHasBeenVisible(true)
-  }, [isInView])
-
-  // If element is already in viewport on mount (e.g. after category filter),
-  // make it visible immediately with a short delay for smooth animation
-  useEffect(() => {
-    if (!hasBeenVisible && ref.current) {
-      const observer = new IntersectionObserver(([entry]) => {
-        if (entry.isIntersecting) {
-          setHasBeenVisible(true)
-          observer.disconnect()
-        }
-      }, { threshold: 0.05 })
-      observer.observe(ref.current)
-      return () => observer.disconnect()
-    }
-  }, [hasBeenVisible])
-
-  const directionMap = {
-    up: { y: distance, x: 0 },
-    down: { y: -distance, x: 0 },
-    left: { x: distance, y: 0 },
-    right: { x: -distance, y: 0 },
-  }
-
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, ...directionMap[direction] }}
-      animate={hasBeenVisible
-        ? { opacity: 1, x: 0, y: 0 }
-        : { opacity: 0, ...directionMap[direction] }
-      }
-      transition={{
-        delay: hasBeenVisible ? delay : 0,
-        duration: 0.5,
-        ease: [0.25, 0.46, 0.45, 0.94],
-      }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  )
-}
+const PREDEFINED_CATEGORIES = [
+  { name: 'Vanities', icon: Bath, isPrimary: true, badge: 'Manufactured by Us', description: 'We design and manufacture every vanity in-house — ensuring premium quality, custom options, and factory-direct pricing.' },
+  { name: 'Commode', icon: Package, isPrimary: false },
+  { name: 'Basin', icon: Bath, isPrimary: false },
+  { name: 'Shower Sets', icon: Droplets, isPrimary: false },
+  { name: 'Art Bowls', icon: Star, isPrimary: false },
+]
 
 // ───────────────────────────────────────────────────────
-// MAGNETIC HOVER — Mouse-following magnetic effect on cards
-// ───────────────────────────────────────────────────────
-function MagneticHover({ children, className }: { children: React.ReactNode; className?: string }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const x = useMotionValue(0)
-  const y = useMotionValue(0)
-  const springX = useSpring(x, { stiffness: 150, damping: 15 })
-  const springY = useSpring(y, { stiffness: 150, damping: 15 })
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!ref.current) return
-    const rect = ref.current.getBoundingClientRect()
-    const centerX = rect.left + rect.width / 2
-    const centerY = rect.top + rect.height / 2
-    x.set((e.clientX - centerX) * 0.15)
-    y.set((e.clientY - centerY) * 0.15)
-  }
-
-  const handleMouseLeave = () => {
-    x.set(0)
-    y.set(0)
-  }
-
-  return (
-    <motion.div
-      ref={ref}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={{ x: springX, y: springY }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  )
-}
-
-// ───────────────────────────────────────────────────────
-// TEXT REVEAL — Character-by-character staggered text animation
-// ───────────────────────────────────────────────────────
-function TextReveal({ text, className }: { text: string; className?: string }) {
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, amount: 0.5 })
-
-  return (
-    <motion.span ref={ref} className={className} style={{ display: 'inline' }}>
-      {isInView ? text : ''}
-    </motion.span>
-  )
-}
-
-// ───────────────────────────────────────────────────────
-// HERO BACKGROUND SLIDESHOW — Auto-rotating bathroom images
+// HERO IMAGES (outside component)
 // ───────────────────────────────────────────────────────
 const HERO_IMAGES = [
   '/bathroom-1.jpg',
   '/bathroom-2.jpg',
 ]
 
+// ───────────────────────────────────────────────────────
+// HERO TEXT REVEAL VARIANTS (outside component)
+// ───────────────────────────────────────────────────────
+const heroTextVariants = {
+  hidden: { opacity: 0, y: 40 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: 0.3 + i * 0.15,
+      duration: 0.8,
+      ease: [0.25, 0.46, 0.45, 0.94],
+    },
+  }),
+}
+
+// Category icons mapping (outside component)
+const getCategoryIcon = (category: string) => {
+  switch (category.toLowerCase()) {
+    case 'vanities': return Bath
+    case 'commode': return Package
+    case 'basin': return Bath
+    case 'shower sets': return Droplets
+    case 'art bowls': return Star
+    default: return Droplets
+  }
+}
+
+// Check if a category is the primary (Vanities)
+const isPrimaryCategory = (category: string) => category.toLowerCase() === 'vanities'
+
+// ───────────────────────────────────────────────────────
+// HERO BACKGROUND SLIDESHOW — Auto-rotating bathroom images (CSS-based)
+// ───────────────────────────────────────────────────────
 function HeroSlideshow() {
   const [current, setCurrent] = useState(0)
 
@@ -347,14 +151,12 @@ function HeroSlideshow() {
   return (
     <div className="absolute inset-0 z-0">
       {HERO_IMAGES.map((src, i) => (
-        <motion.img
+        <img
           key={src}
           src={src}
           alt="Luxury Bathroom Interior"
-          className="absolute inset-0 w-full h-full object-cover object-center sm:object-[center_30%]"
-          initial={false}
-          animate={{ opacity: i === current ? 1 : 0 }}
-          transition={{ duration: 1.5, ease: 'easeInOut' }}
+          loading={i === 0 ? undefined : 'lazy'}
+          className={`hero-slide absolute inset-0 w-full h-full object-cover object-center sm:object-[center_30%] ${i === current ? 'opacity-100' : 'opacity-0'}`}
         />
       ))}
       {/* Mobile: bottom-heavy overlay so image shows on top, text readable on bottom */}
@@ -399,8 +201,7 @@ export default function Home() {
     name: '',
     description: '',
     price: '',
-    discountPrice: '',
-    onSale: false,
+    discountPercent: 0,
     image: '',
     images: [] as string[],
     video: '',
@@ -456,17 +257,33 @@ export default function Home() {
   // Parallax scroll for hero
   const heroRef = useRef<HTMLElement>(null)
 
-  // Counter animations for stats
-  const counter50 = useCounter(50, 2000)
-  const counter150 = useCounter(150, 2000)
-  const counter99 = useCounter(99, 1500)
+  // Single shared IntersectionObserver for all scroll-reveal elements
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible')
+          }
+        })
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+    )
+    document.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el))
+    return () => observer.disconnect()
+  }, [products, viewMode, selectedCategory])
 
-  // Calculate category counts from products (case-insensitive keys for reliable matching)
-  const categoryCounts = products.reduce((acc, p) => {
-    const key = p.category.trim()
-    acc[key] = (acc[key] || 0) + 1
-    return acc
-  }, {} as Record<string, number>)
+  // useMemo for filtered products
+  const filteredProducts = useMemo(() =>
+    products.filter(p => !selectedCategory || p.category.toLowerCase() === selectedCategory.toLowerCase()),
+    [products, selectedCategory]
+  )
+
+  // useMemo for category counts
+  const categoryCounts = useMemo(() =>
+    products.reduce((acc, p) => { const key = p.category.trim(); acc[key] = (acc[key] || 0) + 1; return acc }, {} as Record<string, number>),
+    [products]
+  )
 
   // Case-insensitive lookup for category counts
   const getCategoryCount = (catName: string): number => {
@@ -474,6 +291,18 @@ export default function Home() {
     return Object.entries(categoryCounts).reduce((total, [key, count]) =>
       key.toLowerCase().trim() === lower ? total + count : total, 0)
   }
+
+  // Build full category list: predefined + any custom categories from DB
+  const CATEGORIES = useMemo(() => {
+    const dbCategoryNames = [...new Set(products.map(p => p.category))]
+    const customCategoryNames = dbCategoryNames.filter(
+      name => !PREDEFINED_CATEGORIES.some(c => c.name.toLowerCase() === name.toLowerCase())
+    )
+    return [
+      ...PREDEFINED_CATEGORIES,
+      ...customCategoryNames.map(name => ({ name, icon: Droplets, isPrimary: false })),
+    ]
+  }, [products])
 
   // Parse images from product
   const getProductImages = (product: Product): string[] => {
@@ -558,6 +387,26 @@ export default function Home() {
     }
     checkAuth()
   }, [])
+
+  // Auto-run database migration when admin logs in (ensures discountPercent column exists)
+  const [migrationRun, setMigrationRun] = useState(false)
+  useEffect(() => {
+    if (!isAdminAuthenticated || migrationRun) return
+    const runMigration = async () => {
+      try {
+        const res = await fetch('/api/migrate', { method: 'POST' })
+        if (res.ok) {
+          const data = await res.json()
+          console.log('Migration result:', data.message)
+          fetchProducts()
+        }
+      } catch (e) {
+        console.error('Auto-migration failed:', e)
+      }
+      setMigrationRun(true)
+    }
+    runMigration()
+  }, [isAdminAuthenticated, migrationRun, fetchProducts])
 
   // Admin login handler (server-side authentication)
   const handleAdminLogin = async () => {
@@ -682,6 +531,16 @@ export default function Home() {
     }
   }
 
+  // Calculate discounted price from price string and discount percentage
+  const calcDiscountedPrice = (priceStr: string, percent: number): string => {
+    if (!percent || percent <= 0) return priceStr
+    const num = parseFloat(priceStr.replace(/[^0-9.]/g, ''))
+    if (isNaN(num) || num <= 0) return priceStr
+    const discounted = Math.round(num * (1 - percent / 100))
+    const prefix = priceStr.match(/^[^0-9]*/)?.[0] || ''
+    return prefix + discounted.toLocaleString('en-PK')
+  }
+
   // Open product dialog for add/edit
   const openProductDialog = (product?: Product) => {
     if (product) {
@@ -690,14 +549,14 @@ export default function Home() {
       try { parsedImages = JSON.parse(product.images || '[]') } catch {}
       setFormData({
         name: product.name, description: product.description, price: product.price,
-        discountPrice: product.discountPrice || '', onSale: product.onSale || false,
+        discountPercent: product.discountPercent || 0,
         image: product.image, images: parsedImages, video: product.video || '',
         category: product.category, featured: product.featured, order: product.order,
       })
     } else {
       setEditingProduct(null)
       setFormData({
-        name: '', description: '', price: '', discountPrice: '', onSale: false,
+        name: '', description: '', price: '', discountPercent: 0,
         image: '', images: [], video: '', category: 'Vanities', featured: true, order: products.length + 1,
       })
     }
@@ -717,21 +576,29 @@ export default function Home() {
         images: JSON.stringify(formData.images),
       }
       if (editingProduct) {
-        await fetch(`/api/products/${editingProduct.id}`, {
+        const res = await fetch(`/api/products/${editingProduct.id}`, {
           method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
         })
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}))
+          throw new Error(errData.error || 'Update failed')
+        }
         toast({ title: 'Product Updated', description: `${formData.name} has been updated.` })
       } else {
-        await fetch('/api/products', {
+        const res = await fetch('/api/products', {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
         })
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}))
+          throw new Error(errData.error || 'Create failed')
+        }
         toast({ title: 'Product Added', description: `${formData.name} has been added to your store.` })
       }
       setShowProductDialog(false)
       fetchProducts()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving product:', error)
-      toast({ title: 'Save Failed', description: 'Failed to save product.', variant: 'destructive' })
+      toast({ title: 'Save Failed', description: error.message || 'Failed to save product.', variant: 'destructive' })
     } finally {
       setSaving(false)
     }
@@ -757,66 +624,14 @@ export default function Home() {
     setDetailImageKey(prev => prev + 1)
   }
 
-  // Category configuration — predefined + dynamic from products
-  const PREDEFINED_CATEGORIES = [
-    { name: 'Vanities', icon: Bath, isPrimary: true, badge: 'Manufactured by Us', description: 'We design and manufacture every vanity in-house — ensuring premium quality, custom options, and factory-direct pricing.' },
-    { name: 'Commode', icon: Package, isPrimary: false },
-    { name: 'Basin', icon: Bath, isPrimary: false },
-    { name: 'Shower Sets', icon: Droplets, isPrimary: false },
-    { name: 'Art Bowls', icon: Star, isPrimary: false },
-  ]
-
-  // Build full category list: predefined + any custom categories from DB
-  const dbCategoryNames = [...new Set(products.map(p => p.category))]
-  const customCategoryNames = dbCategoryNames.filter(
-    name => !PREDEFINED_CATEGORIES.some(c => c.name.toLowerCase() === name.toLowerCase())
-  )
-  const CATEGORIES = [
-    ...PREDEFINED_CATEGORIES,
-    ...customCategoryNames.map(name => ({ name, icon: Droplets, isPrimary: false })),
-  ]
-
-  // Category icons mapping
-  const getCategoryIcon = (category: string) => {
-    switch (category.toLowerCase()) {
-      case 'vanities': return Bath
-      case 'commode': return Package
-      case 'basin': return Bath
-      case 'shower sets': return Droplets
-      case 'art bowls': return Star
-      default: return Droplets
-    }
-  }
-
-  // Check if a category is the primary (Vanities)
-  const isPrimaryCategory = (category: string) => category.toLowerCase() === 'vanities'
-
   // ───────────────────────────────────────────────────────
-  // HERO TEXT REVEAL VARIANTS — Staggered luxury reveal
-  // ───────────────────────────────────────────────────────
-  const heroTextVariants = {
-    hidden: { opacity: 0, y: 40 },
-    visible: (i: number) => ({
-      opacity: 1,
-      y: 0,
-      transition: {
-        delay: 0.3 + i * 0.15,
-        duration: 0.8,
-        ease: [0.25, 0.46, 0.45, 0.94],
-      },
-    }),
-  }
-
-  // ───────────────────────────────────────────────────────
-  // PRODUCT DETAIL VIEW (overlay) — Enhanced with animations
+  // PRODUCT DETAIL VIEW (overlay) — Kept with motion for modal open/close
   // ───────────────────────────────────────────────────────
   const renderProductDetail = () => {
     if (!selectedProduct) return null
     const allImages = getProductImages(selectedProduct)
-    // Always put profile image first, then other images (avoid duplicates by comparing base URL)
     const profileImage = selectedProduct.image
     const otherImages = allImages.filter(img => {
-      // Compare without query params to handle signed URL differences
       const imgBase = img.split('?')[0]
       const profileBase = profileImage?.split('?')[0]
       return imgBase !== profileBase
@@ -829,7 +644,7 @@ export default function Home() {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
-        className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+        className="fixed inset-0 z-[100] bg-[#080c14]/98 flex items-center justify-center p-4"
         onClick={() => setSelectedProduct(null)}
       >
         <motion.div
@@ -841,23 +656,16 @@ export default function Home() {
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close button */}
-          <motion.button
+          <button
             onClick={() => setSelectedProduct(null)}
-            whileHover={{ scale: 1.1, rotate: 90 }}
-            whileTap={{ scale: 0.9 }}
-            className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/80 transition-colors"
+            className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80 transition-colors hover:scale-110 hover:rotate-90 active:scale-90"
           >
             <X className="w-5 h-5" />
-          </motion.button>
+          </button>
 
           <div className="grid lg:grid-cols-2 gap-0">
             {/* Left: Images & Video */}
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2, ...springGentle }}
-              className="p-6"
-            >
+            <div className="p-6">
               {/* Main Image / Video */}
               <div className="relative aspect-square rounded-xl overflow-hidden bg-black/30 mb-4">
                 <AnimatePresence mode="wait">
@@ -890,33 +698,29 @@ export default function Home() {
                 {/* Navigation arrows */}
                 {displayImages.length > 1 && detailImageIndex >= 0 && (
                   <>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
+                    <button
                       onClick={() => {
                         setDetailImageIndex((detailImageIndex - 1 + displayImages.length) % displayImages.length)
                         setDetailImageKey(prev => prev + 1)
                       }}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/80 transition-colors"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80 transition-all hover:scale-110 active:scale-90"
                     >
                       <ChevronLeft className="w-5 h-5" />
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
+                    </button>
+                    <button
                       onClick={() => {
                         setDetailImageIndex((detailImageIndex + 1) % displayImages.length)
                         setDetailImageKey(prev => prev + 1)
                       }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/80 transition-colors rotate-180"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80 transition-all hover:scale-110 active:scale-90 rotate-180"
                     >
                       <ChevronLeft className="w-5 h-5" />
-                    </motion.button>
+                    </button>
                   </>
                 )}
                 {/* Image counter */}
                 {displayImages.length > 1 && detailImageIndex >= 0 && (
-                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/60 backdrop-blur-sm text-white text-sm">
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/60 text-white text-sm">
                     {detailImageIndex + 1} / {displayImages.length}
                   </div>
                 )}
@@ -925,25 +729,21 @@ export default function Home() {
               {/* Thumbnail strip */}
               <div className="flex gap-2 overflow-x-auto pb-2">
                 {displayImages.map((img, i) => (
-                  <motion.button
+                  <button
                     key={i}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
                     onClick={() => { setDetailImageIndex(i); setDetailImageKey(prev => prev + 1) }}
-                    className={`shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                    className={`shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all hover:scale-105 active:scale-95 ${
                       detailImageIndex === i ? 'border-sky-400 ring-1 ring-sky-400/50' : 'border-white/10 hover:border-white/30'
                     }`}
                   >
                     <img src={img} alt={`${selectedProduct.name} ${i + 1}`} className="w-full h-full object-cover" />
-                  </motion.button>
+                  </button>
                 ))}
                 {/* Video thumbnail */}
                 {selectedProduct.video && (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                  <button
                     onClick={() => setDetailImageIndex(-1)}
-                    className={`shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all relative ${
+                    className={`shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all relative hover:scale-105 active:scale-95 ${
                       detailImageIndex === -1 ? 'border-red-400 ring-1 ring-red-400/50' : 'border-white/10 hover:border-red-400/50'
                     }`}
                   >
@@ -951,26 +751,16 @@ export default function Home() {
                     <div className="absolute inset-0 flex items-center justify-center">
                       <Play className="w-6 h-6 text-white fill-white" />
                     </div>
-                  </motion.button>
+                  </button>
                 )}
               </div>
-            </motion.div>
+            </div>
 
-            {/* Right: Product Info — slides in from right */}
-            <motion.div
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.35, ...springGentle }}
-              className="p-6 lg:p-8 flex flex-col justify-center"
-            >
-              {/* Category badge — Vanities highlighted */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="mb-4"
-              >
-                <span className={`px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm text-white flex items-center gap-1.5 w-fit ${
+            {/* Right: Product Info */}
+            <div className="p-6 lg:p-8 flex flex-col justify-center">
+              {/* Category badge */}
+              <div className="mb-4">
+                <span className={`px-3 py-1.5 rounded-full text-xs font-medium text-white flex items-center gap-1.5 w-fit ${
                   isPrimaryCategory(selectedProduct.category)
                     ? 'bg-gradient-to-r from-amber-500/90 to-orange-500/90 shadow-lg shadow-amber-500/30'
                     : 'bg-gradient-to-r from-sky-700/80 to-sky-500/80'
@@ -984,46 +774,31 @@ export default function Home() {
                     </>
                   )}
                 </span>
-              </motion.div>
+              </div>
 
-              <motion.h2
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.55 }}
-                className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3"
-              >
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3">
                 {selectedProduct.name}
                 <a href={`/products/${selectedProduct.id}`} target="_blank" rel="noopener noreferrer" className="ml-3 inline-flex items-center gap-1 text-xs text-sky-400 hover:text-sky-300 font-normal align-middle">
                   <Eye className="w-3.5 h-3.5" />
                   Open Page
                 </a>
-              </motion.h2>
+              </h2>
 
-              <motion.p
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-                className="text-gray-400 text-base mb-6 leading-relaxed"
-              >
+              <p className="text-gray-400 text-base mb-6 leading-relaxed">
                 {selectedProduct.description}
-              </motion.p>
+              </p>
 
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.65 }}
-                className="mb-6"
-              >
-                {selectedProduct.onSale && selectedProduct.discountPrice ? (
+              <div className="mb-6">
+                {selectedProduct.discountPercent > 0 ? (
                   <div className="flex items-center gap-3 flex-wrap">
                     <span className="text-3xl font-bold bg-gradient-to-r from-red-500 to-orange-400 bg-clip-text text-transparent">
-                      {selectedProduct.discountPrice}
+                      {calcDiscountedPrice(selectedProduct.price, selectedProduct.discountPercent)}
                     </span>
                     <span className="text-lg text-gray-500 line-through">
                       {selectedProduct.price}
                     </span>
                     <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-red-500/20 text-red-400 border border-red-500/30">
-                      SALE
+                      -{selectedProduct.discountPercent}%
                     </span>
                   </div>
                 ) : (
@@ -1031,7 +806,7 @@ export default function Home() {
                     {selectedProduct.price}
                   </span>
                 )}
-              </motion.div>
+              </div>
 
               {/* Features */}
               <div className="space-y-3 mb-8">
@@ -1040,40 +815,29 @@ export default function Home() {
                   { icon: Star, text: 'International Standards Compliant' },
                   { icon: Wrench, text: 'Spare Parts Available' },
                 ].map((item, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.7 + i * 0.1, ...springTransition }}
-                    className="flex items-center gap-3"
-                  >
+                  <div key={i} className="flex items-center gap-3">
                     <item.icon className="w-5 h-5 text-sky-400 shrink-0" />
                     <span className="text-gray-300 text-sm">{item.text}</span>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
 
               {/* Action buttons */}
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1 }}
-                className="flex gap-3"
-              >
+              <div className="flex gap-3">
                 <a href="#contact" onClick={() => setSelectedProduct(null)}>
-                  <RippleButton size="lg" className="bg-gradient-to-r from-sky-700 to-sky-500 hover:from-sky-600 hover:to-sky-400 text-white border-0 shadow-lg shadow-sky-600/25 btn-gradient-shift">
+                  <Button size="lg" className="bg-gradient-to-r from-sky-700 to-sky-500 hover:from-sky-600 hover:to-sky-400 text-white border-0 shadow-lg shadow-sky-600/25 btn-gradient-shift">
                     <Phone className="w-5 h-5 mr-2" />
                     Get Quote
-                  </RippleButton>
+                  </Button>
                 </a>
-                <a href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi Home Sense! 👋\n\nI'm interested in:\n\n📦 *${selectedProduct.name}*\n💰 Price: ${selectedProduct.onSale && selectedProduct.discountPrice ? `${selectedProduct.discountPrice} (Sale! Was ${selectedProduct.price})` : selectedProduct.price}\n📂 Category: ${selectedProduct.category}\n\nPlease share more details. Thank you!`)}`} target="_blank" rel="noopener noreferrer">
+                <a href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi Home Sense! 👋\n\nI'm interested in:\n\n📦 *${selectedProduct.name}*\n💰 Price: ${selectedProduct.discountPercent > 0 ? `${calcDiscountedPrice(selectedProduct.price, selectedProduct.discountPercent)} (${selectedProduct.discountPercent}% OFF! Was ${selectedProduct.price})` : selectedProduct.price}\n📂 Category: ${selectedProduct.category}\n\nPlease share more details. Thank you!`)}`} target="_blank" rel="noopener noreferrer">
                   <Button size="lg" variant="outline" className="border-green-500/50 text-green-400 hover:bg-green-500/10 hover:border-green-400">
                     <MessageCircle className="w-5 h-5 mr-2" />
                     WhatsApp
                   </Button>
                 </a>
-              </motion.div>
-            </motion.div>
+              </div>
+            </div>
           </div>
         </motion.div>
       </motion.div>
@@ -1087,57 +851,34 @@ export default function Home() {
   if (viewMode === 'storefront') {
     return (
       <div className="min-h-screen flex flex-col bg-[#080c14] text-white overflow-x-hidden">
-        {/* Animated background — Floating Orbs (CSS-only animation, reduced blur for performance) */}
-        <div className="fixed inset-0 z-0 pointer-events-none">
-          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-sky-700/15 rounded-full blur-[80px] orb-float-1" />
-          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-sky-500/10 rounded-full blur-[60px] orb-float-2" />
-          <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-sky-500/8 rounded-full blur-[50px] orb-float-3" />
-        </div>
-
-        {/* Navigation — Enhanced with logo glow, active indicators, smooth mobile menu */}
-        <nav className="relative z-50 border-b border-white/8 backdrop-blur-xl bg-[#080c14]/85">
+        {/* Navigation — solid background instead of backdrop-blur */}
+        <nav className="relative z-50 border-b border-white/8 bg-[#080c14]/95">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16 sm:h-20">
-              {/* Logo Image + Animated HOME SENSE text */}
-              <motion.a
-                href="#home"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={springTransition}
-                className="flex items-center gap-2 sm:gap-3 cursor-pointer logo-glow"
-              >
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
+              {/* Logo Image + HOME SENSE text */}
+              <a href="#home" className="flex items-center gap-2 sm:gap-3 cursor-pointer">
+                <div>
                   <img
                     src="/logo-homesense.jpg"
                     alt="Home Sense"
+                    loading="lazy"
                     className="h-10 sm:h-12 w-auto object-contain rounded-lg"
                   />
-                </motion.div>
+                </div>
                 <span className="text-xl sm:text-2xl font-extrabold tracking-wider">
-                  <motion.span
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1, duration: 0.5 }}
-                    className="bg-gradient-to-r from-sky-400 via-sky-300 to-sky-500 bg-clip-text text-transparent text-shimmer"
+                  <span
+                    className="bg-gradient-to-r from-sky-400 via-sky-300 to-sky-500 bg-clip-text text-transparent"
                     style={{ backgroundSize: '200% auto' }}
                   >
                     HOME
-                  </motion.span>
-                  <motion.span
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3, duration: 0.5 }}
-                    className="text-white"
-                  >
+                  </span>
+                  <span className="text-white">
                     {' '}SENSE
-                  </motion.span>
+                  </span>
                 </span>
-              </motion.a>
+              </a>
 
-              {/* Desktop Nav — with sliding underline indicators */}
+              {/* Desktop Nav */}
               <div className="hidden md:flex items-center gap-8">
                 {[
                   { label: 'Home', href: '#home' },
@@ -1145,8 +886,8 @@ export default function Home() {
                   { label: 'Products', href: '#products' },
                   { label: 'About', href: '#about' },
                   { label: 'Contact', href: '#contact' },
-                ].map((link, i) => (
-                  <motion.a
+                ].map((link) => (
+                  <a
                     key={link.label}
                     href={link.href}
                     onClick={() => {
@@ -1154,9 +895,6 @@ export default function Home() {
                         setSelectedCategory(selectedCategory === (link as any).category ? null : (link as any).category)
                       }
                     }}
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 + i * 0.05, ...springTransition }}
                     className={`text-sm transition-colors nav-link ${
                       (link as any).isPrimary
                         ? 'text-amber-400 hover:text-amber-300 font-semibold'
@@ -1165,13 +903,9 @@ export default function Home() {
                   >
                     {(link as any).isPrimary && <Star className="w-3 h-3 inline mr-1 fill-amber-400" />}
                     {link.label}
-                  </motion.a>
+                  </a>
                 ))}
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, ...springTransition }}
-                >
+                <div>
                   <Button
                     onClick={() => {
                       if (isAdminAuthenticated) setViewMode('admin')
@@ -1184,7 +918,7 @@ export default function Home() {
                     <Shield className="w-4 h-4 mr-1" />
                     Admin
                   </Button>
-                </motion.div>
+                </div>
               </div>
 
               {/* Mobile buttons */}
@@ -1202,7 +936,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Mobile menu — Enhanced with stagger and backdrop blur */}
+          {/* Mobile menu — solid background */}
           <AnimatePresence>
             {mobileMenuOpen && (
               <motion.div
@@ -1210,7 +944,7 @@ export default function Home() {
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-                className="md:hidden border-t border-white/8 bg-[#080c14]/95 backdrop-blur-xl overflow-hidden"
+                className="md:hidden border-t border-white/8 bg-[#080c14]/98 overflow-hidden"
               >
                 <div className="px-4 py-4 space-y-1">
                   {[
@@ -1219,8 +953,8 @@ export default function Home() {
                     { label: 'Products', href: '#products' },
                     { label: 'About', href: '#about' },
                     { label: 'Contact', href: '#contact' },
-                  ].map((link, i) => (
-                    <motion.a
+                  ].map((link) => (
+                    <a
                       key={link.label}
                       href={link.href}
                       onClick={() => {
@@ -1229,9 +963,6 @@ export default function Home() {
                         }
                         setMobileMenuOpen(false)
                       }}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.05 + i * 0.05, ...springTransition }}
                       className={`block py-2 px-3 rounded-lg transition-colors ${
                         (link as any).isPrimary
                           ? 'text-amber-400 font-semibold hover:text-amber-300 hover:bg-amber-500/10'
@@ -1240,7 +971,7 @@ export default function Home() {
                     >
                       {(link as any).isPrimary && <Star className="w-3 h-3 inline mr-1 fill-amber-400" />}
                       {link.label}
-                    </motion.a>
+                    </a>
                   ))}
                 </div>
               </motion.div>
@@ -1257,19 +988,20 @@ export default function Home() {
           >
             <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-end lg:items-center">
               <div>
-                {/* Badge — glow pulse */}
+                {/* Badge */}
                 <motion.div
                   custom={0}
                   variants={heroTextVariants}
                   initial="hidden"
                   animate="visible"
-                  className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/5 border border-white/10 mb-4 sm:mb-6 glow-pulse"
+                  className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/5 border border-white/10 mb-4 sm:mb-6"
+                  style={{ boxShadow: '0 0 20px rgba(56,189,248,0.15)' }}
                 >
                   <span className="text-[10px] sm:text-sm font-bold bg-gradient-to-r from-sky-400 to-sky-300 bg-clip-text text-transparent">HOME SENSE</span>
                   <span className="text-[10px] sm:text-sm text-gray-400 hidden xs:inline">Sanitary Fitting & Ware Showroom</span>
                 </motion.div>
 
-                {/* Title — with text shadow for mobile readability */}
+                {/* Title */}
                 <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold leading-snug sm:leading-tight lg:leading-none mb-4 sm:mb-6 [text-shadow:0_2px_10px_rgba(0,0,0,0.8)]">
                   <motion.span
                     custom={1}
@@ -1278,7 +1010,7 @@ export default function Home() {
                     animate="visible"
                     className="block"
                   >
-                    <TextReveal text="Innovative," />
+                    Innovative,
                   </motion.span>
                   <motion.span
                     custom={2}
@@ -1287,8 +1019,8 @@ export default function Home() {
                     animate="visible"
                     className="block"
                   >
-                    <span className="bg-gradient-to-r from-sky-500 via-sky-300 to-sky-400 bg-clip-text text-transparent text-shimmer" style={{ backgroundSize: '200% auto' }}>
-                      <TextReveal text="Efficient" />
+                    <span className="bg-gradient-to-r from-sky-500 via-sky-300 to-sky-400 bg-clip-text text-transparent" style={{ backgroundSize: '200% auto' }}>
+                      Efficient
                     </span>
                   </motion.span>
                   <motion.span
@@ -1298,7 +1030,7 @@ export default function Home() {
                     animate="visible"
                     className="block"
                   >
-                    <TextReveal text="& Elegant" />
+                    & Elegant
                   </motion.span>
                 </h1>
 
@@ -1322,18 +1054,16 @@ export default function Home() {
                   className="flex flex-wrap gap-3 sm:gap-4"
                 >
                   <a href="#products">
-                    <RippleButton size="default" className="sm:h-12 sm:px-6 bg-gradient-to-r from-sky-700 to-sky-500 hover:from-sky-600 hover:to-sky-400 text-white border-0 shadow-lg shadow-sky-600/25 btn-gradient-shift text-sm sm:text-base">
+                    <Button size="default" className="sm:h-12 sm:px-6 bg-gradient-to-r from-sky-700 to-sky-500 hover:from-sky-600 hover:to-sky-400 text-white border-0 shadow-lg shadow-sky-600/25 btn-gradient-shift text-sm sm:text-base">
                       <Package className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
                       Explore Products
-                    </RippleButton>
+                    </Button>
                   </a>
                   <a href="#contact">
-                    <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                      <Button size="default" className="sm:h-12 sm:px-6 border-white/20 text-gray-300 hover:text-white hover:border-white/40 text-sm sm:text-base">
-                        Contact Us
-                        <ArrowRight className="w-4 h-4 ml-1.5 sm:ml-2" />
-                      </Button>
-                    </motion.div>
+                    <Button size="default" className="sm:h-12 sm:px-6 border-white/20 text-gray-300 hover:text-white hover:border-white/40 text-sm sm:text-base">
+                      Contact Us
+                      <ArrowRight className="w-4 h-4 ml-1.5 sm:ml-2" />
+                    </Button>
                   </a>
                 </motion.div>
               </div>
@@ -1345,20 +1075,20 @@ export default function Home() {
                 transition={{ duration: 0.8, delay: 0.4 }}
                 className="relative hidden lg:flex items-center justify-center"
               >
-                <div className="relative hero-card-float">
+                <div className="relative">
                   {/* Glass card */}
-                  <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl p-6 shadow-2xl shadow-black/20">
-                    <img src="/logo-homesense.jpg" alt="Home Sense" className="h-24 w-auto object-contain rounded-lg mx-auto mb-3" />
+                  <div className="bg-white/10 border border-white/20 rounded-2xl p-6 shadow-2xl shadow-black/20">
+                    <img src="/logo-homesense.jpg" alt="Home Sense" loading="lazy" className="h-24 w-auto object-contain rounded-lg mx-auto mb-3" />
                     <p className="text-center text-white/90 text-sm font-semibold tracking-wide">Authorized & Trusted Dealer</p>
                   </div>
-                  {/* Floating icon badges — CSS animation instead of Framer Motion */}
+                  {/* Floating icon badges */}
                   <div
-                    className="absolute -top-3 -right-3 bg-gradient-to-r from-sky-700 to-sky-500 rounded-xl p-3 shadow-lg shadow-sky-600/30 hero-icon-float-1"
+                    className="absolute -top-3 -right-3 bg-gradient-to-r from-sky-700 to-sky-500 rounded-xl p-3 shadow-lg shadow-sky-600/30"
                   >
                     <Droplets className="w-5 h-5 text-white" />
                   </div>
                   <div
-                    className="absolute -bottom-3 -left-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-3 shadow-lg shadow-amber-500/30 hero-icon-float-2"
+                    className="absolute -bottom-3 -left-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-3 shadow-lg shadow-amber-500/30"
                   >
                     <Star className="w-5 h-5 text-white fill-white" />
                   </div>
@@ -1368,25 +1098,28 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Wave Divider */}
-        <WaveDivider />
+        {/* Wave Divider — plain div */}
+        <div className="wave-divider relative z-10 w-full">
+          <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[200%] h-full" preserveAspectRatio="none">
+            <path d="M0 30C240 10 480 50 720 30C960 10 1200 50 1440 30C1680 10 1920 50 2160 30C2400 10 2640 50 2880 30V60H0V30Z" fill="rgba(2,132,199,0.03)" />
+            <path d="M0 35C240 15 480 55 720 35C960 15 1200 55 1440 35C1680 15 1920 55 2160 35C2400 15 2640 55 2880 35V60H0V35Z" fill="rgba(56,189,248,0.02)" />
+          </svg>
+        </div>
 
-        {/* Category Quick Links — Icon bounce, card glow */}
+        {/* Category Quick Links */}
         <section className="relative z-10 py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-              {CATEGORIES.filter(cat => getCategoryCount(cat.name) > 0).map((cat, i) => (
-                <ScrollReveal key={i} delay={i * 0.1} direction="up" distance={30}>
-                  <motion.div
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
+              {CATEGORIES.filter(cat => (getCategoryCount(cat.name) || 0) > 0).map((cat, i) => (
+                <div key={i} className={`scroll-reveal scroll-reveal-delay-${Math.min(i + 1, 4)}`}>
+                  <div
                     onClick={() => {
                       setSelectedCategory(selectedCategory === cat.name ? null : cat.name)
                       document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })
                     }}
                     className="group cursor-pointer"
                   >
-                    <div className={`rounded-xl transition-all duration-300 p-5 text-center card-shine card-glow card-glow-trail ${
+                    <div className={`rounded-xl transition-all duration-300 p-5 text-center card-shine ${
                       selectedCategory === cat.name
                         ? cat.isPrimary
                           ? 'border-2 border-amber-400 bg-gradient-to-b from-amber-500/20 to-amber-500/5 shadow-lg shadow-amber-500/20'
@@ -1395,16 +1128,13 @@ export default function Home() {
                           ? 'border-2 border-amber-500/50 bg-gradient-to-b from-amber-500/10 to-transparent hover:border-amber-400/70 hover:from-amber-500/15'
                           : 'border border-white/8 bg-white/3 hover:bg-white/5 hover:border-sky-600/30'
                     }`}>
-                      <motion.div
-                        whileHover={{ scale: 1.2, rotate: 5 }}
-                        transition={springBouncy}
-                      >
+                      <div>
                         <cat.icon className={`w-8 h-8 mx-auto mb-3 group-hover:scale-110 transition-transform ${
                           selectedCategory === cat.name
                             ? cat.isPrimary ? 'text-amber-300' : 'text-sky-300'
                             : cat.isPrimary ? 'text-amber-400' : 'text-sky-400'
                         }`} />
-                      </motion.div>
+                      </div>
                       <h3 className={`font-semibold text-sm mb-1 ${
                         selectedCategory === cat.name
                           ? cat.isPrimary ? 'text-amber-200' : 'text-sky-200'
@@ -1426,34 +1156,35 @@ export default function Home() {
                         </div>
                       )}
                     </div>
-                  </motion.div>
-                </ScrollReveal>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Wave Divider */}
-        <WaveDivider />
+        {/* Wave Divider — plain div */}
+        <div className="wave-divider relative z-10 w-full">
+          <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[200%] h-full" preserveAspectRatio="none">
+            <path d="M0 30C240 10 480 50 720 30C960 10 1200 50 1440 30C1680 10 1920 50 2160 30C2400 10 2640 50 2880 30V60H0V30Z" fill="rgba(2,132,199,0.03)" />
+            <path d="M0 35C240 15 480 55 720 35C960 15 1200 55 1440 35C1680 15 1920 55 2160 35C2400 15 2640 55 2880 35V60H0V35Z" fill="rgba(56,189,248,0.02)" />
+          </svg>
+        </div>
 
-        {/* Products Section — 3D tilt, shine sweep, stagger, price float */}
+        {/* Products Section — CSS-based product cards */}
         <section id="products" className="relative z-10 py-16 sm:py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <ScrollReveal className="text-center mb-12 sm:mb-16">
+            <div className="scroll-reveal text-center mb-12 sm:mb-16">
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
                 Featured
-                <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent text-shimmer" style={{ backgroundSize: '200% auto' }}> Products</span>
+                <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent" style={{ backgroundSize: '200% auto' }}> Products</span>
               </h2>
               <p className="text-gray-400 text-lg max-w-2xl mx-auto">
                 Discover our premium collection of vanities, commodes, basins, shower sets, and art bowls. Factory-direct vanities manufactured by us, plus the finest products — all available at Home Sense.
               </p>
               {/* Active Category Filter */}
               {selectedCategory && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-4 flex items-center justify-center gap-2"
-                >
+                <div className="mt-4 flex items-center justify-center gap-2">
                   <span className="text-sm text-gray-400">Showing:</span>
                   <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${
                     isPrimaryCategory(selectedCategory)
@@ -1469,13 +1200,13 @@ export default function Home() {
                       ×
                     </button>
                   </span>
-                </motion.div>
+                </div>
               )}
-            </ScrollReveal>
+            </div>
 
             {/* Vanities Manufacturer Banner */}
-            {products.filter(p => !selectedCategory || p.category.trim().toLowerCase() === selectedCategory.trim().toLowerCase()).some(p => isPrimaryCategory(p.category)) && (
-              <ScrollReveal className="mb-10">
+            {filteredProducts.some(p => isPrimaryCategory(p.category)) && (
+              <div className="scroll-reveal mb-10">
                 <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-orange-500/10 p-6 sm:p-8">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-[100px]" />
                   <div className="relative flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
@@ -1491,36 +1222,34 @@ export default function Home() {
                     </span>
                   </div>
                 </div>
-              </ScrollReveal>
+              </div>
             )}
 
             {loading ? (
               <ProductSkeleton />
             ) : (
               <div key={selectedCategory || 'all'} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-                {products.filter(p => !selectedCategory || p.category.trim().toLowerCase() === selectedCategory.trim().toLowerCase()).map((product, index) => {
+                {filteredProducts.map((product, index) => {
                   const productImages = getProductImages(product)
                   const totalImages = productImages.length + (product.video ? 1 : 0)
                   return (
-                    <ScrollReveal key={product.id} delay={Math.min(index * 0.06, 0.3)} direction="up" distance={40}>
-                      <motion.div
-                          whileHover={{ y: -6 }}
-                          transition={springTransition}
-                          className="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/8 hover:border-sky-600/40 transition-all duration-500 cursor-pointer card-shine"
+                    <div key={product.id} className={`scroll-reveal scroll-reveal-delay-${Math.min((index % 4) + 1, 4)}`}>
+                      <div
+                          className="product-card group relative rounded-2xl overflow-hidden bg-white/5 border border-white/8 hover:border-sky-600/40 transition-all duration-500 cursor-pointer card-shine"
                           onClick={() => openProductDetail(product)}
                         >
-                          {/* Product Image — enhanced zoom with parallax */}
+                          {/* Product Image */}
                           <div className="relative aspect-square overflow-hidden">
-                            <motion.img
+                            <img
                               src={product.image}
                               alt={product.name}
                               loading="lazy"
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                              className="product-card-img w-full h-full object-cover"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                            {/* Category badge — Vanities gets special highlight */}
+                            {/* Category badge */}
                             <div className="absolute top-3 left-3">
-                              <span className={`px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm text-white flex items-center gap-1 ${
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium text-white flex items-center gap-1 ${
                                 isPrimaryCategory(product.category)
                                   ? 'bg-gradient-to-r from-amber-500/90 to-orange-500/90 shadow-lg shadow-amber-500/30'
                                   : 'bg-gradient-to-r from-sky-700/80 to-sky-500/80'
@@ -1531,45 +1260,37 @@ export default function Home() {
                               </span>
                             </div>
                             {/* SALE badge */}
-                            {product.onSale && product.discountPrice && (
+                            {product.discountPercent > 0 && (
                               <div className="absolute top-3 right-3">
                                 <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-red-500 text-white shadow-lg shadow-red-500/40 flex items-center gap-1 animate-pulse">
-                                  <Tag className="w-3 h-3" />
-                                  SALE
+                                  <Percent className="w-3 h-3" />
+                                  {product.discountPercent}% OFF
                                 </span>
                               </div>
                             )}
                             {/* Media count badge */}
                             {totalImages > 1 && (
-                              <div className={`absolute right-3 flex gap-1 ${product.onSale && product.discountPrice ? 'top-12' : 'top-3'}`}>
-                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-white/20 backdrop-blur-sm text-white flex items-center gap-1">
+                              <div className={`absolute right-3 flex gap-1 ${product.discountPercent > 0 ? 'top-12' : 'top-3'}`}>
+                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-white/20 text-white flex items-center gap-1">
                                   <ImageIcon className="w-3 h-3" /> {productImages.length}
                                 </span>
                                 {product.video && (
-                                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-500/80 backdrop-blur-sm text-white flex items-center gap-1">
+                                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-500/80 text-white flex items-center gap-1">
                                     <Play className="w-3 h-3 fill-white" />
                                   </span>
                                 )}
                               </div>
                             )}
-                            {/* Quick view overlay — smooth reveal */}
+                            {/* Quick view overlay */}
                             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                              <motion.div
-                                initial={{ scale: 0.8 }}
-                                whileHover={{ scale: 1 }}
-                                className="w-14 h-14 rounded-full bg-white/25 backdrop-blur-sm flex items-center justify-center border-2 border-white/40"
-                              >
+                              <div className="w-14 h-14 rounded-full bg-white/25 flex items-center justify-center border-2 border-white/40">
                                 <Eye className="w-7 h-7 text-white" />
-                              </motion.div>
+                              </div>
                             </div>
                             {/* Click hint */}
-                            <motion.div
-                              initial={{ opacity: 0, y: 10 }}
-                              whileHover={{ opacity: 1, y: 0 }}
-                              className="absolute bottom-3 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300"
-                            >
-                              <span className="text-xs text-white/80 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full">Click to view details</span>
-                            </motion.div>
+                            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                              <span className="text-xs text-white/80 bg-black/50 px-3 py-1 rounded-full">Click to view details</span>
+                            </div>
                           </div>
 
                           {/* Product Info */}
@@ -1584,40 +1305,37 @@ export default function Home() {
                             </p>
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                {product.onSale && product.discountPrice ? (
+                                {product.discountPercent > 0 ? (
                                   <>
-                                    <span className="text-lg font-bold bg-gradient-to-r from-red-500 to-orange-400 bg-clip-text text-transparent price-float">
-                                      {product.discountPrice}
+                                    <span className="text-lg font-bold bg-gradient-to-r from-red-500 to-orange-400 bg-clip-text text-transparent">
+                                      {calcDiscountedPrice(product.price, product.discountPercent)}
                                     </span>
                                     <span className="text-sm text-gray-500 line-through">
                                       {product.price}
                                     </span>
+                                    <span className="text-[10px] font-bold text-red-400 bg-red-500/15 px-1.5 py-0.5 rounded-full">-{product.discountPercent}%</span>
                                   </>
                                 ) : (
-                                  <span className="text-lg font-bold bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent price-float">
+                                  <span className="text-lg font-bold bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent">
                                     {product.price}
                                   </span>
                                 )}
                               </div>
-                              <RippleButton
+                              <Button
                                 size="sm"
                                 className="bg-gradient-to-r from-sky-700 to-sky-500 hover:from-sky-600 hover:to-sky-400 text-white border-0 shadow-md shadow-sky-600/20 btn-gradient-shift"
                                 onClick={(e) => { e.stopPropagation(); openProductDetail(product) }}
                               >
                                 View Details
-                              </RippleButton>
+                              </Button>
                             </div>
                           </div>
-                            </motion.div>
-                    </ScrollReveal>
+                        </div>
+                    </div>
                   )
                 })}
-                {products.filter(p => !selectedCategory || p.category.trim().toLowerCase() === selectedCategory.trim().toLowerCase()).length === 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="col-span-full text-center py-16"
-                  >
+                {filteredProducts.length === 0 && (
+                  <div className="col-span-full text-center py-16">
                     <Package className="w-16 h-16 mx-auto mb-4 text-gray-600" />
                     <h3 className="text-xl font-semibold text-gray-400 mb-2">No products found</h3>
                     <p className="text-gray-500 mb-4">No products in "{selectedCategory}" category yet.</p>
@@ -1627,170 +1345,133 @@ export default function Home() {
                     >
                       Show All Products
                     </button>
-                  </motion.div>
+                  </div>
                 )}
               </div>
             )}
           </div>
         </section>
 
-        {/* Wave Divider */}
-        <WaveDivider />
+        {/* Wave Divider — plain div */}
+        <div className="wave-divider relative z-10 w-full">
+          <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[200%] h-full" preserveAspectRatio="none">
+            <path d="M0 30C240 10 480 50 720 30C960 10 1200 50 1440 30C1680 10 1920 50 2160 30C2400 10 2640 50 2880 30V60H0V30Z" fill="rgba(2,132,199,0.03)" />
+            <path d="M0 35C240 15 480 55 720 35C960 15 1200 55 1440 35C1680 15 1920 55 2160 35C2400 15 2640 55 2880 35V60H0V35Z" fill="rgba(56,189,248,0.02)" />
+          </svg>
+        </div>
 
-        {/* Why Zilver Section — Enhanced scroll reveals, counter animation, spring feature items */}
+        {/* Why Home Sense Section — plain HTML, scroll-reveal CSS */}
         <section id="about" className="relative z-10 py-16 sm:py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <ScrollReveal direction="left" distance={60}>
-                <motion.h2
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.15 }}
-                  className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6"
-                >
+              <div className="scroll-reveal">
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6">
                   All-in-One
-                  <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent text-shimmer" style={{ backgroundSize: '200% auto' }}> Sanitary Wares</span>
-                </motion.h2>
-                <motion.p
-                  initial={{ opacity: 0, y: 15 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.15 }}
-                  transition={{ delay: 0.1 }}
-                  className="text-gray-400 text-lg mb-8"
-                >
+                  <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent" style={{ backgroundSize: '200% auto' }}> Sanitary Wares</span>
+                </h2>
+                <p className="text-gray-400 text-lg mb-8">
                   Excellent details, durable components, compatible hardware result in premium quality. High standard, long life combined with superior performance thanks to the compatibility of all components, spare parts and durability. As the authorized dealer, Home Sense brings you the finest vanities, commodes, basins, shower sets, and art bowls — with our own manufactured vanities line.
-                </motion.p>
+                </p>
                 <div className="space-y-6">
                   {[
                     { icon: CheckCircle, title: 'Quality Standards', desc: 'Carefully engineered, all parts complying with international standards. Premium materials built to last.' },
                     { icon: Star, title: 'Innovative Design', desc: 'Modern multifaceted solutions with aesthetically appealing and functional products that match your lifestyle.' },
                     { icon: Wrench, title: 'Spare Parts Available', desc: 'Long-term performance guaranteed with full compatibility of all components and readily available spare parts.' },
                   ].map((item, i) => (
-                    <ScrollReveal key={i} delay={i * 0.15} direction="left" distance={30}>
-                      <motion.div
-                        whileHover={{ x: 5 }}
-                        className="flex gap-4 group cursor-default"
-                      >
-                        <motion.div
-                          whileHover={{ scale: 1.1, rotate: 5 }}
-                          transition={springBouncy}
-                          className="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-sky-700/20 to-sky-500/20 border border-white/8 flex items-center justify-center"
-                        >
+                    <div key={i} className={`scroll-reveal scroll-reveal-delay-${i + 1}`}>
+                      <div className="flex gap-4 group cursor-default">
+                        <div className="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-sky-700/20 to-sky-500/20 border border-white/8 flex items-center justify-center">
                           <item.icon className="w-6 h-6 text-sky-400" />
-                        </motion.div>
+                        </div>
                         <div>
                           <h3 className="font-semibold text-white mb-1 group-hover:text-sky-300 transition-colors">{item.title}</h3>
                           <p className="text-gray-400 text-sm">{item.desc}</p>
                         </div>
-                      </motion.div>
-                    </ScrollReveal>
+                      </div>
+                    </div>
                   ))}
                 </div>
-              </ScrollReveal>
+              </div>
 
-              <ScrollReveal direction="right" distance={60}>
+              <div className="scroll-reveal">
                 <div
-                  className="absolute inset-0 rounded-3xl bg-gradient-to-br from-sky-700/15 to-sky-500/15 blur-2xl contact-glow-pulse"
+                  className="absolute inset-0 rounded-3xl bg-gradient-to-br from-sky-700/15 to-sky-500/15 blur-2xl"
                 />
                 <div className="relative rounded-3xl border border-white/8 overflow-hidden bg-white/3 p-8 sm:p-12">
                   <div className="text-center">
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true, amount: 0.15 }}
-                      transition={{ delay: 0.2, ...springBouncy }}
-                      className="mx-auto mb-6"
-                    >
-                      <img src="/logo-homesense.jpg" alt="Home Sense" className="h-28 w-auto object-contain rounded-xl mx-auto" />
-                    </motion.div>
-                    <motion.h3
-                      initial={{ opacity: 0, y: 15 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true, amount: 0.15 }}
-                      transition={{ delay: 0.3 }}
-                      className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent mb-2 text-shimmer"
+                    <div className="mx-auto mb-6">
+                      <img src="/logo-homesense.jpg" alt="Home Sense" loading="lazy" className="h-28 w-auto object-contain rounded-xl mx-auto" />
+                    </div>
+                    <h3 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent mb-2"
                       style={{ backgroundSize: '200% auto' }}
                     >
                       HOME SENSE
-                    </motion.h3>
-                    <motion.p
-                      initial={{ opacity: 0 }}
-                      whileInView={{ opacity: 1 }}
-                      viewport={{ once: true, amount: 0.15 }}
-                      transition={{ delay: 0.4 }}
-                      className="text-sm text-gray-400 mb-2"
-                    >
+                    </h3>
+                    <p className="text-sm text-gray-400 mb-2">
                       Sanitary Fitting & Ware
-                    </motion.p>
-                    <motion.p
-                      initial={{ opacity: 0 }}
-                      whileInView={{ opacity: 1 }}
-                      viewport={{ once: true, amount: 0.15 }}
-                      transition={{ delay: 0.45 }}
-                      className="text-gray-500 text-xs mb-8"
-                    >
+                    </p>
+                    <p className="text-gray-500 text-xs mb-8">
                       Quality Sanitary Ware Solutions
-                    </motion.p>
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true, amount: 0.15 }}
-                      transition={{ delay: 0.48 }}
-                      className="mb-6"
-                    >
+                    </p>
+                    <div className="mb-6">
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/8 text-[10px] text-gray-400">
                         <CheckCircle className="w-3 h-3 text-sky-400" />
                         Distributed by Home Sense
                       </span>
-                    </motion.div>
+                    </div>
 
-                    {/* Counter animation stats */}
+                    {/* Static stats (replacing counter animation) */}
                     <div className="grid grid-cols-3 gap-4">
-                      <ScrollReveal delay={0.5} distance={20}>
+                      <div className="scroll-reveal">
                         <div className="text-center">
-                          <div className="text-2xl sm:text-3xl font-bold text-white" ref={counter50.ref}>{counter50.count}+</div>
+                          <div className="text-2xl sm:text-3xl font-bold text-white">50+</div>
                           <div className="text-xs text-gray-500 mt-1">Projects</div>
                         </div>
-                      </ScrollReveal>
-                      <ScrollReveal delay={0.6} distance={20}>
+                      </div>
+                      <div className="scroll-reveal scroll-reveal-delay-2">
                         <div className="text-center">
-                          <div className="text-2xl sm:text-3xl font-bold text-white" ref={counter150.ref}>{counter150.count}+</div>
+                          <div className="text-2xl sm:text-3xl font-bold text-white">150+</div>
                           <div className="text-xs text-gray-500 mt-1">Products</div>
                         </div>
-                      </ScrollReveal>
-                      <ScrollReveal delay={0.7} distance={20}>
+                      </div>
+                      <div className="scroll-reveal scroll-reveal-delay-3">
                         <div className="text-center">
-                          <div className="text-2xl sm:text-3xl font-bold text-white" ref={counter99.ref}>{counter99.count}%</div>
+                          <div className="text-2xl sm:text-3xl font-bold text-white">99%</div>
                           <div className="text-xs text-gray-500 mt-1">Quality</div>
                         </div>
-                      </ScrollReveal>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </ScrollReveal>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Wave Divider */}
-        <WaveDivider />
+        {/* Wave Divider — plain div */}
+        <div className="wave-divider relative z-10 w-full">
+          <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[200%] h-full" preserveAspectRatio="none">
+            <path d="M0 30C240 10 480 50 720 30C960 10 1200 50 1440 30C1680 10 1920 50 2160 30C2400 10 2640 50 2880 30V60H0V30Z" fill="rgba(2,132,199,0.03)" />
+            <path d="M0 35C240 15 480 55 720 35C960 15 1200 55 1440 35C1680 15 1920 55 2160 35C2400 15 2640 55 2880 35V60H0V35Z" fill="rgba(56,189,248,0.02)" />
+          </svg>
+        </div>
 
-        {/* Contact Section — Redesigned with Business Hours, Map, Showroom CTA */}
+        {/* Contact Section */}
         <section id="contact" className="relative z-10 py-16 sm:py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <ScrollReveal className="text-center mb-12">
+            <div className="scroll-reveal text-center mb-12">
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
                 Get in
-                <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent text-shimmer" style={{ backgroundSize: '200% auto' }}> Touch</span>
+                <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent" style={{ backgroundSize: '200% auto' }}> Touch</span>
               </h2>
               <p className="text-gray-400 text-lg max-w-2xl mx-auto">
                 Have a question or need a quote? We would love to hear from you.
               </p>
-            </ScrollReveal>
+            </div>
 
-            {/* Contact Cards Grid — Quick Reach */}
-            <ScrollReveal delay={0.1} className="max-w-4xl mx-auto mb-8">
-              <div className="rounded-2xl border border-white/8 bg-white/3 backdrop-blur-sm p-6 sm:p-8 card-shine">
+            {/* Contact Cards Grid */}
+            <div className="scroll-reveal max-w-4xl mx-auto mb-8">
+              <div className="rounded-2xl border border-white/8 bg-white/3 p-6 sm:p-8 card-shine">
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                   {[
                     { icon: Phone, label: 'Call Us', value: settings.phone, href: `tel:${settings.phone}`, color: 'from-green-500/20 to-green-600/20 border-green-500/20', iconColor: 'text-green-400' },
@@ -1800,45 +1481,35 @@ export default function Home() {
                     ...(settings.facebook ? [{ icon: Facebook, label: 'Facebook', value: settings.facebook.replace(/https?:\/\/(www\.)?facebook\.com\/?/i, '').replace(/\/$/, '') || 'Facebook Page', href: settings.facebook, color: 'from-sky-600/20 to-sky-800/20 border-sky-600/20', iconColor: 'text-sky-500' }] : []),
                     ...(settings.youtube ? [{ icon: Youtube, label: 'YouTube', value: settings.youtube.replace(/https?:\/\/(www\.)?youtube\.com\/(c\/|@)?/i, '').replace(/\/$/, '') || 'YouTube Channel', href: settings.youtube, color: 'from-red-500/20 to-red-700/20 border-red-500/20', iconColor: 'text-red-400' }] : []),
                   ].map((contact, i) => (
-                    <ScrollReveal key={i} delay={0.15 + i * 0.06} distance={20}>
-                      <motion.a
-                        href={contact.href}
-                        target={contact.href.startsWith('http') ? '_blank' : undefined}
-                        rel={contact.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                        whileHover={{ scale: 1.05, y: -3 }}
-                        className="flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-white/5 transition-colors group"
-                      >
-                        <motion.div
-                          whileHover={{ scale: 1.15, rotate: [0, -10, 10, 0] }}
-                          transition={springBouncy}
-                          className={`w-12 h-12 rounded-xl bg-gradient-to-br ${contact.color} border flex items-center justify-center icon-bounce-hover`}
-                        >
-                          <contact.icon className={`w-5 h-5 ${contact.iconColor}`} />
-                        </motion.div>
-                        <div className="text-center">
-                          <div className="font-semibold text-white text-xs">{contact.label}</div>
-                          <div className="text-gray-400 text-[11px] mt-0.5 break-all leading-tight max-w-[140px]">{contact.value}</div>
-                        </div>
-                      </motion.a>
-                    </ScrollReveal>
+                    <a
+                      key={i}
+                      href={contact.href}
+                      target={contact.href.startsWith('http') ? '_blank' : undefined}
+                      rel={contact.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                      className="flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-white/5 transition-colors group"
+                    >
+                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${contact.color} border flex items-center justify-center icon-bounce-hover`}>
+                        <contact.icon className={`w-5 h-5 ${contact.iconColor}`} />
+                      </div>
+                      <div className="text-center">
+                        <div className="font-semibold text-white text-xs">{contact.label}</div>
+                        <div className="text-gray-400 text-[11px] mt-0.5 break-all leading-tight max-w-[140px]">{contact.value}</div>
+                      </div>
+                    </a>
                   ))}
                 </div>
               </div>
-            </ScrollReveal>
+            </div>
 
-            {/* Visit Our Showroom Section — Address + Business Hours + Map */}
-            <ScrollReveal delay={0.2} className="max-w-6xl mx-auto">
-              <div className="rounded-2xl border border-white/8 bg-white/3 backdrop-blur-sm overflow-hidden card-shine">
+            {/* Visit Our Showroom Section */}
+            <div className="scroll-reveal max-w-6xl mx-auto">
+              <div className="rounded-2xl border border-white/8 bg-white/3 overflow-hidden card-shine">
                 {/* Showroom Header Banner */}
                 <div className="relative bg-gradient-to-r from-sky-900/60 via-sky-800/40 to-sky-900/60 px-6 sm:px-10 py-6 border-b border-white/8">
                   <div className="flex items-center gap-4">
-                    <motion.div
-                      whileHover={{ scale: 1.1, rotate: [0, -5, 5, 0] }}
-                      transition={springBouncy}
-                      className="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-500/30 to-sky-700/30 border border-sky-500/30 flex items-center justify-center shrink-0"
-                    >
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-500/30 to-sky-700/30 border border-sky-500/30 flex items-center justify-center shrink-0">
                       <MapPin className="w-7 h-7 text-sky-400" />
-                    </motion.div>
+                    </div>
                     <div>
                       <h3 className="text-xl sm:text-2xl font-bold text-white">
                         Visit Our
@@ -1879,8 +1550,7 @@ export default function Home() {
                             <div className="space-y-1">
                               {(settings.businessHours || 'Mon-Sat: 10:00 AM - 8:00 PM|Sunday: Closed').split('|').map((line, i) => {
                                 const colonIdx = line.indexOf(':')
-                                const label = colonIdx !== -1 ? line.substring(0, colonIdx).trim() : line.trim()
-                                const time = colonIdx !== -1 ? line.substring(colonIdx + 1).trim() : ''
+                                const [label, time] = colonIdx >= 0 ? [line.substring(0, colonIdx).trim(), line.substring(colonIdx + 1).trim()] : [line.trim(), '']
                                 const isClosed = time.toLowerCase() === 'closed'
                                 return (
                                   <p key={i} className={`text-sm ${isClosed ? 'text-red-400/80' : 'text-gray-400'}`}>
@@ -1892,84 +1562,74 @@ export default function Home() {
                             {/* Open/Closed Status */}
                             {(() => {
                               const now = new Date()
-                              const day = now.getDay() // 0=Sun, 6=Sat
+                              const day = now.getDay()
                               const hours = now.getHours()
                               const minutes = now.getMinutes()
                               const currentTime = hours * 60 + minutes
                               const hoursStr = settings.businessHours || 'Mon-Sat: 10:00 AM - 8:00 PM|Sunday: Closed'
-                              // Trim each line to handle " | " separator with spaces
-                              const lines = hoursStr.split('|').map(l => l.trim()).filter(l => l.length > 0)
 
-                              // Day name mapping for specific day matching
+                              const lines = hoursStr.split('|').map(l => l.trim()).filter(Boolean)
+
                               const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+                              const dayAbbr = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
                               const todayName = dayNames[day]
+                              const todayAbbr = dayAbbr[day]
 
                               let isOpen = false
-                              let matchedBySpecificDay = false
+                              let matchedSpecific = false
 
-                              // Helper: parse time string like "10:00 AM" to minutes
-                              const parseTime = (t: string) => {
-                                const match = t.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i)
-                                if (!match) return 0
-                                let h = parseInt(match[1])
-                                const m = parseInt(match[2])
-                                const ampm = match[3].toUpperCase()
-                                if (ampm === 'PM' && h !== 12) h += 12
-                                if (ampm === 'AM' && h === 12) h = 0
-                                return h * 60 + m
-                              }
-
-                              // Helper: check if time range means open
-                              const checkTimeRange = (timeStr: string) => {
-                                if (timeStr.toLowerCase() === 'closed') return false
-                                const timeParts = timeStr.split('-').map(t => t.trim())
-                                if (timeParts.length === 2) {
-                                  const openTime = parseTime(timeParts[0])
-                                  const closeTime = parseTime(timeParts[1])
-                                  return currentTime >= openTime && currentTime <= closeTime
+                              const parseTimeRange = (timeStr: string): number | null => {
+                                const timeParts = timeStr.split(/\s*[-–—]\s*/).map(t => t.trim())
+                                if (timeParts.length !== 2) return null
+                                const parseTime = (t: string) => {
+                                  const match = t.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i)
+                                  if (!match) return -1
+                                  let h = parseInt(match[1])
+                                  const m = parseInt(match[2])
+                                  const ampm = match[3].toUpperCase()
+                                  if (ampm === 'PM' && h !== 12) h += 12
+                                  if (ampm === 'AM' && h === 12) h = 0
+                                  return h * 60 + m
                                 }
-                                return false
+                                const openTime = parseTime(timeParts[0])
+                                const closeTime = parseTime(timeParts[1])
+                                if (openTime < 0 || closeTime < 0) return null
+                                return (currentTime >= openTime && currentTime < closeTime) ? 1 : 0
                               }
 
-                              // First pass: check for specific day rules (e.g., "Friday: Closed")
-                              // These take priority over range rules (e.g., "Mon-Sat")
                               for (const line of lines) {
                                 const colonIdx = line.indexOf(':')
-                                if (colonIdx === -1) continue
+                                if (colonIdx < 0) continue
                                 const dayLabel = line.substring(0, colonIdx).trim().toLowerCase()
                                 const timeStr = line.substring(colonIdx + 1).trim()
 
-                                // Check if this is a specific single-day rule that matches today
-                                const isSpecificDay = dayNames.some(name =>
-                                  dayLabel === name || dayLabel === name + 's'
+                                const isSpecificDay = (
+                                  dayLabel === todayName || dayLabel === todayAbbr
                                 )
-                                if (isSpecificDay && dayLabel === todayName) {
-                                  matchedBySpecificDay = true
-                                  isOpen = checkTimeRange(timeStr)
+                                const isRangeMatch = (
+                                  (dayLabel.includes('mon-sun') && day >= 0 && day <= 6) ||
+                                  (dayLabel.includes('mon-sat') && day >= 1 && day <= 6) ||
+                                  (dayLabel.includes('mon-fri') && day >= 1 && day <= 5) ||
+                                  (dayLabel.includes('every') || dayLabel.includes('daily'))
+                                )
+
+                                if (isSpecificDay) {
+                                  if (timeStr.toLowerCase() === 'closed') {
+                                    isOpen = false
+                                  } else {
+                                    const result = parseTimeRange(timeStr)
+                                    isOpen = result === 1
+                                  }
+                                  matchedSpecific = true
                                   break
                                 }
-                              }
 
-                              // Second pass: check range rules only if no specific day matched
-                              if (!matchedBySpecificDay) {
-                                for (const line of lines) {
-                                  const colonIdx = line.indexOf(':')
-                                  if (colonIdx === -1) continue
-                                  const dayLabel = line.substring(0, colonIdx).trim().toLowerCase()
-                                  const timeStr = line.substring(colonIdx + 1).trim()
-
-                                  const isRangeRule = (
-                                    (dayLabel.includes('mon-sun') && day >= 0 && day <= 6) ||
-                                    (dayLabel.includes('mon-sat') && day >= 1 && day <= 6) ||
-                                    (dayLabel.includes('mon-fri') && day >= 1 && day <= 5) ||
-                                    (dayLabel.includes('sunday') && day === 0) ||
-                                    (dayLabel.includes('sat') && !dayLabel.includes('mon') && day === 6) ||
-                                    (dayLabel.includes('every') || dayLabel.includes('daily'))
-                                  )
-
-                                  if (isRangeRule) {
-                                    isOpen = checkTimeRange(timeStr)
-                                    break
+                                if (!matchedSpecific && isRangeMatch) {
+                                  if (timeStr.toLowerCase() === 'closed') {
+                                    isOpen = false
+                                  } else {
+                                    const result = parseTimeRange(timeStr)
+                                    isOpen = result === 1
                                   }
                                 }
                               }
@@ -1990,18 +1650,16 @@ export default function Home() {
 
                     {/* Get Directions Button */}
                     {settings.address && (
-                      <motion.a
+                      <a
                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        whileHover={{ scale: 1.02, y: -2 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="flex items-center justify-center gap-2 w-full px-5 py-3 rounded-xl bg-gradient-to-r from-sky-700 to-sky-500 hover:from-sky-600 hover:to-sky-400 text-white font-medium text-sm transition-all"
+                        className="flex items-center justify-center gap-2 w-full px-5 py-3 rounded-xl bg-gradient-to-r from-sky-700 to-sky-500 hover:from-sky-600 hover:to-sky-400 text-white font-medium text-sm transition-all hover:-translate-y-0.5"
                       >
                         <Navigation className="w-4 h-4" />
                         Get Directions on Google Maps
                         <ExternalLink className="w-3 h-3 opacity-60" />
-                      </motion.a>
+                      </a>
                     )}
                   </div>
 
@@ -2040,7 +1698,7 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-            </ScrollReveal>
+            </div>
           </div>
         </section>
 
@@ -2049,20 +1707,15 @@ export default function Home() {
           {selectedProduct && renderProductDetail()}
         </AnimatePresence>
 
-        {/* Footer — Scroll reveal */}
-        <motion.footer
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.15 }}
-          transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="relative z-10 border-t border-white/8 py-8 mt-auto"
-        >
+        {/* Footer — plain HTML */}
+        <footer className="relative z-10 border-t border-white/8 py-8 mt-auto scroll-reveal">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <img
                   src="/logo-homesense.jpg"
                   alt="Home Sense"
+                  loading="lazy"
                   className="h-10 w-auto object-contain rounded-lg"
                 />
                 <div className="flex items-center gap-3 text-xs text-gray-500">
@@ -2080,23 +1733,21 @@ export default function Home() {
                   { Icon: Instagram, href: settings.instagram ? `https://instagram.com/${settings.instagram.replace('@', '')}` : '#' },
                   { Icon: Youtube, href: settings.youtube || '#' },
                 ].filter(s => s.href !== '#').map((social, i) => (
-                  <motion.a
+                  <a
                     key={i}
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    whileHover={{ scale: 1.2, y: -2 }}
-                    whileTap={{ scale: 0.9 }}
                     className="text-gray-500 hover:text-gray-300 transition-colors"
                   >
                     <social.Icon className="w-4 h-4" />
-                  </motion.a>
+                  </a>
                 ))}
                 <span className="text-gray-600 text-xs">&copy; {new Date().getFullYear()} Home Sense</span>
               </div>
             </div>
           </div>
-        </motion.footer>
+        </footer>
 
         {/* Admin Login Dialog */}
         <Dialog open={showAdminLogin} onOpenChange={setShowAdminLogin}>
@@ -2139,17 +1790,17 @@ export default function Home() {
   }
 
   // ───────────────────────────────────────────────────────
-  // ADMIN PANEL VIEW
+  // ADMIN PANEL VIEW — plain divs, no fancy animations needed
   // ───────────────────────────────────────────────────────
 
   return (
     <div className="min-h-screen flex flex-col bg-[#080c14] text-white">
-      {/* Admin Header */}
-      <header className="border-b border-white/8 backdrop-blur-xl bg-[#080c14]/90 sticky top-0 z-50">
+      {/* Admin Header — solid background */}
+      <header className="border-b border-white/8 bg-[#080c14]/95 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20">
             <div className="flex items-center gap-3">
-              <img src="/logo-homesense.jpg" alt="Home Sense" className="h-12 sm:h-14 w-auto object-contain rounded-lg" />
+              <img src="/logo-homesense.jpg" alt="Home Sense" loading="lazy" className="h-12 sm:h-14 w-auto object-contain rounded-lg" />
               <div>
                 <h1 className="text-lg sm:text-xl font-bold text-white">Home Sense Admin</h1>
                 <p className="text-xs text-gray-500 hidden sm:block">Manage your store & products</p>
@@ -2186,22 +1837,19 @@ export default function Home() {
             { label: 'Categories', value: [...new Set(products.map(p => p.category))].length, color: 'from-sky-500 to-sky-600' },
             { label: 'Store Status', value: 'Live', color: 'from-green-500 to-green-600' },
           ].map((stat, i) => (
-            <motion.div
+            <div
               key={i}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1, ...springTransition }}
               className="rounded-xl border border-white/8 bg-white/3 p-4"
             >
               <div className="text-xs text-gray-500 mb-1">{stat.label}</div>
               <div className={`text-2xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}>
                 {stat.value}
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
 
-        {/* Admin Tabs — Products & Settings */}
+        {/* Admin Tabs */}
         <div className="flex gap-2 mb-6 border-b border-white/8 pb-0">
           <button
             onClick={() => setAdminTab('products')}
@@ -2240,12 +1888,8 @@ export default function Home() {
 
         {/* Categories Tab Content */}
         {adminTab === 'categories' && (
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={springTransition}
-          >
-            <div className="rounded-2xl border border-white/8 bg-white/3 backdrop-blur-sm p-6 sm:p-8 max-w-3xl">
+          <div>
+            <div className="rounded-2xl border border-white/8 bg-white/3 p-6 sm:p-8 max-w-3xl">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-700/20 to-sky-500/20 border border-white/8 flex items-center justify-center">
                   <Bath className="w-5 h-5 text-sky-400" />
@@ -2258,8 +1902,8 @@ export default function Home() {
 
               {/* Categories List */}
               <div className="space-y-3">
-                {CATEGORIES.map((cat, i) => {
-                  const count = getCategoryCount(cat.name)
+                {CATEGORIES.map((cat) => {
+                  const count = getCategoryCount(cat.name) || 0
                   const isEditing = editingCategory === cat.name
                   return (
                     <div key={cat.name} className="rounded-xl border border-white/8 bg-white/3 p-4">
@@ -2416,17 +2060,13 @@ export default function Home() {
                 <p className="text-gray-400 text-xs mb-3">To add a new category, create a product and type a new category name in the category field.</p>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* Settings Tab Content */}
         {adminTab === 'settings' && (
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={springTransition}
-          >
-            <div className="rounded-2xl border border-white/8 bg-white/3 backdrop-blur-sm p-6 sm:p-8 max-w-3xl">
+          <div>
+            <div className="rounded-2xl border border-white/8 bg-white/3 p-6 sm:p-8 max-w-3xl">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-700/20 to-sky-500/20 border border-white/8 flex items-center justify-center">
                   <Phone className="w-5 h-5 text-sky-400" />
@@ -2569,7 +2209,7 @@ export default function Home() {
                 </Button>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* Products Tab Content */}
@@ -2604,15 +2244,10 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((product, index) => {
+            {products.map((product) => {
               const productImages = getProductImages(product)
               return (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05, ...springTransition }}
-                >
+                <div key={product.id}>
                   <div className="rounded-xl border border-white/8 bg-white/3 overflow-hidden hover:border-sky-600/30 transition-colors group">
                     {/* Product Image */}
                     <div className="relative aspect-video overflow-hidden bg-black/30">
@@ -2647,22 +2282,20 @@ export default function Home() {
                           </span>
                         </div>
                         <div className="text-right">
-                          {product.onSale && product.discountPrice ? (
-                            <div className="flex items-center gap-1.5">
+                          {product.discountPercent > 0 ? (
+                            <div className="flex flex-col items-end gap-0.5">
                               <span className="text-sm font-bold bg-gradient-to-r from-red-500 to-orange-400 bg-clip-text text-transparent">
-                                {product.discountPrice}
+                                {calcDiscountedPrice(product.price, product.discountPercent)}
                               </span>
                               <span className="text-xs text-gray-500 line-through">
                                 {product.price}
                               </span>
+                              <span className="text-[10px] font-bold text-red-400 bg-red-500/15 px-1.5 py-0.5 rounded-full">-{product.discountPercent}%</span>
                             </div>
                           ) : (
                             <span className="text-sm font-bold bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent">
                               {product.price}
                             </span>
-                          )}
-                          {product.onSale && product.discountPrice && (
-                            <span className="text-[10px] font-bold text-red-400 bg-red-500/15 px-1.5 py-0.5 rounded-full">SALE</span>
                           )}
                         </div>
                       </div>
@@ -2679,7 +2312,7 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               )
             })}
           </div>
@@ -2737,7 +2370,6 @@ export default function Home() {
                 Additional Images ({formData.images.length} uploaded)
               </Label>
               <div className="mt-2">
-                {/* Show uploaded extra images */}
                 {formData.images.length > 0 && (
                   <div className="grid grid-cols-3 gap-2 mb-3">
                     {formData.images.map((img, i) => (
@@ -2753,7 +2385,6 @@ export default function Home() {
                     ))}
                   </div>
                 )}
-                {/* Upload more images */}
                 <label className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-white/10 hover:border-sky-600/50 transition-colors cursor-pointer py-6 bg-white/3">
                   {uploadingExtra ? (
                     <Loader2 className="w-6 h-6 text-sky-500 animate-spin mb-2" />
@@ -2904,23 +2535,41 @@ export default function Home() {
 
             {/* Sale / Discount Section */}
             <div className="rounded-xl border border-white/10 bg-white/3 p-4 space-y-4">
-              <div className="flex items-center gap-3">
-                <Switch checked={formData.onSale} onCheckedChange={(checked) => setFormData(prev => ({ ...prev, onSale: checked, discountPrice: checked ? prev.discountPrice : '' }))} />
-                <Label className="text-gray-300 flex items-center gap-2">
-                  <Tag className="w-4 h-4 text-red-400" />
-                  On Sale / Discount
-                </Label>
+              <div className="flex items-center gap-2 mb-2">
+                <Tag className="w-4 h-4 text-red-400" />
+                <Label className="text-gray-300 font-semibold">Discount / Sale</Label>
               </div>
-              {formData.onSale && (
-                <div>
-                  <Label className="text-gray-300">Discount Price *</Label>
+              <p className="text-xs text-gray-500">Set 0 for no discount, or enter a percentage (1-90%) to put this product on sale.</p>
+              <div>
+                <Label className="text-gray-300">Discount Percentage</Label>
+                <div className="mt-2 flex items-center gap-3">
                   <Input
-                    value={formData.discountPrice}
-                    onChange={(e) => setFormData(prev => ({ ...prev, discountPrice: e.target.value }))}
-                    placeholder="e.g. Rs. 15,000"
-                    className="mt-2 bg-white/5 border-red-500/30 text-white placeholder:text-gray-600 focus:border-red-500 focus:ring-red-500/20"
+                    type="number"
+                    min={0}
+                    max={90}
+                    value={formData.discountPercent || 0}
+                    onChange={(e) => setFormData(prev => ({ ...prev, discountPercent: Math.min(90, Math.max(0, parseInt(e.target.value) || 0)) }))}
+                    placeholder="0 = no discount"
+                    className="flex-1 bg-white/5 border-red-500/30 text-white placeholder:text-gray-600 focus:border-red-500 focus:ring-red-500/20"
                   />
-                  <p className="text-xs text-gray-500 mt-1">This price will be shown as the sale price. Original price will have a strikethrough.</p>
+                  <span className="text-gray-400 text-lg font-bold">%</span>
+                </div>
+              </div>
+              {/* Live Preview */}
+              {formData.discountPercent > 0 && formData.price && (
+                <div className="rounded-lg bg-black/30 border border-white/5 p-3 space-y-2">
+                  <p className="text-xs text-gray-500 font-medium">Live Preview:</p>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="text-xl font-bold bg-gradient-to-r from-red-500 to-orange-400 bg-clip-text text-transparent">
+                      {calcDiscountedPrice(formData.price, formData.discountPercent)}
+                    </span>
+                    <span className="text-sm text-gray-500 line-through">
+                      {formData.price}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-red-500/20 text-red-400 border border-red-500/30">
+                      -{formData.discountPercent}%
+                    </span>
+                  </div>
                 </div>
               )}
             </div>

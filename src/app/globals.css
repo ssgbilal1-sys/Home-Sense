@@ -153,77 +153,11 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   GRADIENT TEXT SHIMMER — Sparkle sweep across gradient text
+   GRADIENT TEXT SHIMMER — Lightweight, no infinite animation
    ═══════════════════════════════════════════════════════════ */
-@keyframes shimmer-text {
-  0% {
-    background-position: -200% center;
-  }
-  100% {
-    background-position: 200% center;
-  }
-}
-
 .text-shimmer {
   background-size: 200% auto;
-  animation: shimmer-text 4s linear infinite;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   GLOW PULSE — Subtle glow pulsing for badges and logos
-   ═══════════════════════════════════════════════════════════ */
-@keyframes glow-pulse {
-  0%, 100% {
-    box-shadow: 0 0 8px rgba(14, 165, 233, 0.15), 0 0 20px rgba(3, 105, 161, 0.05);
-  }
-  50% {
-    box-shadow: 0 0 16px rgba(14, 165, 233, 0.35), 0 0 40px rgba(3, 105, 161, 0.15);
-  }
-}
-
-.glow-pulse {
-  animation: glow-pulse 3s ease-in-out infinite;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   FLOATING ORB — Smooth floating for background orbs
-   ═══════════════════════════════════════════════════════════ */
-@keyframes float-orb-1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(30px, -40px) scale(1.05); }
-  50% { transform: translate(-20px, -60px) scale(1.02); }
-  75% { transform: translate(10px, -30px) scale(0.98); }
-}
-
-@keyframes float-orb-2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(-40px, 30px) scale(0.98); }
-  50% { transform: translate(20px, 50px) scale(1.04); }
-  75% { transform: translate(-30px, 20px) scale(1.01); }
-}
-
-@keyframes float-orb-3 {
-  0%, 100% { transform: translate(-50%, -50%) scale(1); }
-  33% { transform: translate(calc(-50% + 40px), calc(-50% - 30px)) scale(1.03); }
-  66% { transform: translate(calc(-50% - 30px), calc(-50% + 40px)) scale(0.97); }
-}
-
-.orb-float-1 {
-  animation: float-orb-1 25s ease-in-out infinite;
-  will-change: transform;
-  contain: layout style paint;
-}
-
-.orb-float-2 {
-  animation: float-orb-2 30s ease-in-out infinite;
-  will-change: transform;
-  contain: layout style paint;
-}
-
-.orb-float-3 {
-  animation: float-orb-3 22s ease-in-out infinite;
-  will-change: transform;
-  contain: layout style paint;
+  transition: background-position 0.3s ease;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -268,37 +202,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   CARD BORDER GLOW — Glow effect matching theme color
-   ═══════════════════════════════════════════════════════════ */
-@keyframes border-glow {
-  0%, 100% {
-    border-color: rgba(3, 105, 161, 0.2);
-    box-shadow: 0 0 10px rgba(14, 165, 233, 0.05);
-  }
-  50% {
-    border-color: rgba(14, 165, 233, 0.5);
-    box-shadow: 0 0 20px rgba(14, 165, 233, 0.15), 0 0 40px rgba(3, 105, 161, 0.08);
-  }
-}
-
-.card-glow:hover {
-  animation: border-glow 2s ease-in-out infinite;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   PRICE FLOAT — Gentle floating animation for price text
-   ═══════════════════════════════════════════════════════════ */
-@keyframes price-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
-}
-
-.price-float {
-  animation: price-float 3s ease-in-out infinite;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   BUTTON GRADIENT SHIFT — Rotating gradient on hover
+   BUTTON GRADIENT SHIFT — Rotating gradient on hover only
    ═══════════════════════════════════════════════════════════ */
 @keyframes gradient-shift {
   0% { background-position: 0% 50%; }
@@ -343,13 +247,8 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   WAVE DIVIDER — Animated section dividers
+   WAVE DIVIDER — Lightweight section dividers
    ═══════════════════════════════════════════════════════════ */
-@keyframes wave-flow {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
 .wave-divider {
   overflow: hidden;
   position: relative;
@@ -357,12 +256,11 @@
 }
 
 .wave-divider svg {
-  animation: wave-flow 12s linear infinite;
   will-change: transform;
 }
 
 /* ═══════════════════════════════════════════════════════════
-   SKELETON LOADING — Shimmer skeleton animation
+   SKELETON LOADING — Shimmer skeleton animation (only during loading)
    ═══════════════════════════════════════════════════════════ */
 @keyframes skeleton-shimmer {
   0% {
@@ -385,23 +283,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   LOGO GLOW — Subtle glow pulse on the logo
-   ═══════════════════════════════════════════════════════════ */
-@keyframes logo-glow {
-  0%, 100% {
-    filter: drop-shadow(0 0 4px rgba(14, 165, 233, 0.2));
-  }
-  50% {
-    filter: drop-shadow(0 0 12px rgba(14, 165, 233, 0.5)) drop-shadow(0 0 24px rgba(3, 105, 161, 0.2));
-  }
-}
-
-.logo-glow {
-  animation: logo-glow 4s ease-in-out infinite;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   CONTACT ICON SPIN/PULSE — Unique hover animation for icons
+   CONTACT ICON BOUNCE — Hover only, no infinite animation
    ═══════════════════════════════════════════════════════════ */
 @keyframes icon-bounce-in {
   0% { transform: scale(1); }
@@ -413,40 +295,6 @@
 
 .icon-bounce-hover:hover {
   animation: icon-bounce-in 0.5s ease forwards;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   GRADIENT BORDER ANIMATION — Moving gradient border
-   ═══════════════════════════════════════════════════════════ */
-@keyframes border-rotate {
-  0% { --angle: 0deg; }
-  100% { --angle: 360deg; }
-}
-
-/* ═══════════════════════════════════════════════════════════
-   PRODUCT CARD 3D TILT — Perspective transforms for tilt
-   ═══════════════════════════════════════════════════════════ */
-.tilt-card {
-  transform-style: preserve-3d;
-  will-change: transform;
-}
-
-.tilt-card-inner {
-  transform: translateZ(40px);
-}
-
-/* ═══════════════════════════════════════════════════════════
-   FOOTER SLIDE UP — Smooth slide up when in view
-   ═══════════════════════════════════════════════════════════ */
-@keyframes slide-up-fade {
-  0% {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -486,6 +334,55 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
+   SCROLL REVEAL — CSS-only scroll animation (replaces 29 Framer Motion instances)
+   ═══════════════════════════════════════════════════════════ */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.scroll-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger delays for children */
+.scroll-reveal-delay-1 { transition-delay: 0.1s; }
+.scroll-reveal-delay-2 { transition-delay: 0.2s; }
+.scroll-reveal-delay-3 { transition-delay: 0.3s; }
+.scroll-reveal-delay-4 { transition-delay: 0.4s; }
+
+/* ═══════════════════════════════════════════════════════════
+   PRODUCT CARD HOVER — CSS transforms instead of Framer Motion
+   ═══════════════════════════════════════════════════════════ */
+.product-card {
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              box-shadow 0.3s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.product-card-img {
+  transition: transform 0.4s ease;
+}
+
+.product-card:hover .product-card-img {
+  transform: scale(1.05);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HERO SLIDESHOW — CSS transitions instead of Framer Motion
+   ═══════════════════════════════════════════════════════════ */
+.hero-slide {
+  transition: opacity 1.5s ease-in-out;
+}
+
+/* ═══════════════════════════════════════════════════════════
    REDUCE MOTION — Accessibility: disable animations for users who prefer reduced motion
    ═══════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
@@ -497,150 +394,4 @@
   html {
     scroll-behavior: auto;
   }
-}
-
-/* ═══════════════════════════════════════════════════════════
-   MOBILE ANIMATION REDUCTION — Less intense on small screens
-   ═══════════════════════════════════════════════════════════ */
-@media (max-width: 768px) {
-  .orb-float-1,
-  .orb-float-2,
-  .orb-float-3 {
-    animation-duration: 30s;
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════
-   PARTICLE/SPARKLE FLOAT — Premium particle animation
-   ═══════════════════════════════════════════════════════════ */
-@keyframes particle-float {
-  0% { transform: translateY(0) scale(0); opacity: 0; }
-  10% { opacity: 1; transform: translateY(-10px) scale(1); }
-  90% { opacity: 1; }
-  100% { transform: translateY(-80px) scale(0); opacity: 0; }
-}
-
-.particle {
-  animation: particle-float 3s ease-out infinite;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   TEXT GLOW — Animated glow effect for premium text
-   ═══════════════════════════════════════════════════════════ */
-@keyframes text-glow {
-  0%, 100% { text-shadow: 0 0 10px rgba(14, 165, 233, 0.3), 0 0 20px rgba(3, 105, 161, 0.1); }
-  50% { text-shadow: 0 0 20px rgba(14, 165, 233, 0.5), 0 0 40px rgba(3, 105, 161, 0.2); }
-}
-
-.text-glow {
-  animation: text-glow 3s ease-in-out infinite;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   GLOW TRAIL — Magnetic glow trail on card hover
-   ═══════════════════════════════════════════════════════════ */
-@keyframes glow-trail {
-  0% { background-position: 0% 0%; }
-  100% { background-position: 200% 0%; }
-}
-
-.card-glow-trail:hover {
-  background-image: linear-gradient(90deg, transparent, rgba(14, 165, 233, 0.1), transparent);
-  background-size: 200% 100%;
-  animation: glow-trail 1.5s linear infinite;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   SECTION REVEAL — Clip-path reveal for section transitions
-   ═══════════════════════════════════════════════════════════ */
-@keyframes section-reveal {
-  0% { clip-path: inset(0 100% 0 0); }
-  100% { clip-path: inset(0 0 0 0); }
-}
-
-.section-reveal {
-  animation: section-reveal 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   BLUR IN — Smooth blur-to-sharp entrance
-   ═══════════════════════════════════════════════════════════ */
-@keyframes blur-in {
-  0% { opacity: 0; filter: blur(12px); transform: scale(0.95); }
-  100% { opacity: 1; filter: blur(0px); transform: scale(1); }
-}
-
-.blur-in {
-  animation: blur-in 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   SPARKLE SHIMMER — Premium sparkle sweep effect
-   ═══════════════════════════════════════════════════════════ */
-@keyframes sparkle-shimmer {
-  0% { background-position: -200% center; filter: brightness(1); }
-  50% { filter: brightness(1.2); }
-  100% { background-position: 200% center; filter: brightness(1); }
-}
-
-.sparkle-shimmer {
-  background-size: 200% auto;
-  animation: sparkle-shimmer 4s linear infinite;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   HERO CARD FLOAT — Smooth CSS float replacing Framer Motion infinite
-   ═══════════════════════════════════════════════════════════ */
-@keyframes hero-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-
-.hero-card-float {
-  animation: hero-float 5s ease-in-out infinite;
-  will-change: transform;
-}
-
-@keyframes hero-icon-float-1 {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-6px) rotate(5deg); }
-}
-
-@keyframes hero-icon-float-2 {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(6px) rotate(-5deg); }
-}
-
-.hero-icon-float-1 {
-  animation: hero-icon-float-1 3.5s ease-in-out infinite;
-  will-change: transform;
-}
-
-.hero-icon-float-2 {
-  animation: hero-icon-float-2 3.5s ease-in-out 1.2s infinite;
-  will-change: transform;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   CONTACT GLOW PULSE — CSS pulse replacing Framer Motion infinite
-   ═══════════════════════════════════════════════════════════ */
-@keyframes glow-pulse-subtle {
-  0%, 100% { opacity: 0.15; transform: scale(1); }
-  50% { opacity: 0.2; transform: scale(1.02); }
-}
-
-.contact-glow-pulse {
-  animation: glow-pulse-subtle 5s ease-in-out infinite;
-  will-change: transform, opacity;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   GPU ACCELERATION — Force hardware acceleration for animated elements
-   ═══════════════════════════════════════════════════════════ */
-.orb-float-1,
-.orb-float-2,
-.orb-float-3 {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  contain: layout style paint;
 }
