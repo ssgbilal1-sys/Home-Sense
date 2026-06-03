@@ -52,8 +52,8 @@ export async function POST(request: Request) {
     })
 
     return NextResponse.json(review, { status: 201 })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating review:', error)
-    return NextResponse.json({ error: 'Failed to create review' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to create review: ' + (error.message || 'Unknown error') }, { status: 500 })
   }
 }

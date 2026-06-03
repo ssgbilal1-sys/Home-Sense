@@ -55,6 +55,15 @@ export async function POST() {
       );
     `)
 
+    // Ensure RLS policies allow service role access on Review table
+    // Disable RLS on Review table since we use service_role key (bypasses RLS)
+    // But if RLS is on and no policies exist, even service_role inserts could fail
+    try {
+      await pool.query(`ALTER TABLE "Review" DISABLE ROW LEVEL SECURITY;`)
+    } catch {
+      // RLS might already be disabled, ignore error
+    }
+
     // Add discountPercent column to Product if not exists
     await pool.query(`
       ALTER TABLE "Product"

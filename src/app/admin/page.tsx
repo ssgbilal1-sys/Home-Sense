@@ -439,19 +439,25 @@ export default function AdminPage() {
         const res = await fetch(`/api/reviews/${editingReview.id}`, {
           method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(reviewForm),
         })
-        if (!res.ok) throw new Error('Update failed')
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}))
+          throw new Error(errData.error || 'Update failed')
+        }
         toast({ title: 'Review Updated', description: `${reviewForm.name}'s review has been updated.` })
       } else {
         const res = await fetch('/api/reviews', {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(reviewForm),
         })
-        if (!res.ok) throw new Error('Create failed')
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}))
+          throw new Error(errData.error || 'Create failed')
+        }
         toast({ title: 'Review Added', description: `${reviewForm.name}'s review has been added.` })
       }
       setShowReviewDialog(false)
       fetchReviews()
-    } catch {
-      toast({ title: 'Save Failed', description: 'Failed to save review.', variant: 'destructive' })
+    } catch (error: any) {
+      toast({ title: 'Save Failed', description: error.message || 'Failed to save review.', variant: 'destructive' })
     } finally { setSavingReview(false) }
   }
 
