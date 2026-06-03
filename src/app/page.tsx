@@ -1897,30 +1897,30 @@ export default function Home() {
                               const hoursStr = settings.businessHours || 'Mon-Sat: 10:00 AM - 8:00 PM|Sunday: Closed'
                               const lines = hoursStr.split('|')
 
+                              // Day name mapping for specific day matching
+                              const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+                              const todayName = dayNames[day]
+
                               let isOpen = false
-                              let currentDayLabel = ''
+                              let matchedBySpecificDay = false
 
+                              // First pass: check for specific day rules (e.g., "Friday: Closed")
+                              // These take priority over range rules (e.g., "Mon-Sat")
                               for (const line of lines) {
-                                const parts = line.split(':')
-                                if (parts.length < 2) continue
-                                const dayLabel = parts.slice(0, -1).join(':').trim().toLowerCase()
-                                const timeStr = parts[parts.length - 1].trim()
+                                const colonIdx = line.indexOf(':')
+                                if (colonIdx === -1) continue
+                                const dayLabel = line.substring(0, colonIdx).trim().toLowerCase()
+                                const timeStr = line.substring(colonIdx + 1).trim()
 
-                                // Check if today matches this schedule
-                                const isToday = (
-                                  (dayLabel.includes('mon-sat') && day >= 1 && day <= 6) ||
-                                  (dayLabel.includes('mon-fri') && day >= 1 && day <= 5) ||
-                                  (dayLabel.includes('sunday') && day === 0) ||
-                                  (dayLabel.includes('sat') && !dayLabel.includes('mon') && day === 6) ||
-                                  (dayLabel.includes('every') || dayLabel.includes('daily'))
+                                // Check if this is a specific single-day rule that matches today
+                                const isSpecificDay = dayNames.some(name =>
+                                  dayLabel === name || dayLabel === name + 's'
                                 )
-
-                                if (isToday) {
-                                  currentDayLabel = dayLabel
+                                if (isSpecificDay && dayLabel.includes(todayName)) {
+                                  matchedBySpecificDay = true
                                   if (timeStr.toLowerCase() === 'closed') {
                                     isOpen = false
                                   } else {
-                                    // Parse time range like "10:00 AM - 8:00 PM"
                                     const timeParts = timeStr.split('-').map(t => t.trim())
                                     if (timeParts.length === 2) {
                                       const parseTime = (t: string) => {
@@ -1939,6 +1939,48 @@ export default function Home() {
                                     }
                                   }
                                   break
+                                }
+                              }
+
+                              // Second pass: check range rules (e.g., "Mon-Sat") only if no specific day matched
+                              if (!matchedBySpecificDay) {
+                                for (const line of lines) {
+                                  const colonIdx = line.indexOf(':')
+                                  if (colonIdx === -1) continue
+                                  const dayLabel = line.substring(0, colonIdx).trim().toLowerCase()
+                                  const timeStr = line.substring(colonIdx + 1).trim()
+
+                                  const isRangeRule = (
+                                    (dayLabel.includes('mon-sat') && day >= 1 && day <= 6) ||
+                                    (dayLabel.includes('mon-fri') && day >= 1 && day <= 5) ||
+                                    (dayLabel.includes('sunday') && day === 0) ||
+                                    (dayLabel.includes('sat') && !dayLabel.includes('mon') && day === 6) ||
+                                    (dayLabel.includes('every') || dayLabel.includes('daily'))
+                                  )
+
+                                  if (isRangeRule) {
+                                    if (timeStr.toLowerCase() === 'closed') {
+                                      isOpen = false
+                                    } else {
+                                      const timeParts = timeStr.split('-').map(t => t.trim())
+                                      if (timeParts.length === 2) {
+                                        const parseTime = (t: string) => {
+                                          const match = t.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i)
+                                          if (!match) return 0
+                                          let h = parseInt(match[1])
+                                          const m = parseInt(match[2])
+                                          const ampm = match[3].toUpperCase()
+                                          if (ampm === 'PM' && h !== 12) h += 12
+                                          if (ampm === 'AM' && h === 12) h = 0
+                                          return h * 60 + m
+                                        }
+                                        const openTime = parseTime(timeParts[0])
+                                        const closeTime = parseTime(timeParts[1])
+                                        isOpen = currentTime >= openTime && currentTime <= closeTime
+                                      }
+                                    }
+                                    break
+                                  }
                                 }
                               }
 
