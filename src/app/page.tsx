@@ -1897,7 +1897,8 @@ export default function Home() {
                               const minutes = now.getMinutes()
                               const currentTime = hours * 60 + minutes
                               const hoursStr = settings.businessHours || 'Mon-Sat: 10:00 AM - 8:00 PM|Sunday: Closed'
-                              const lines = hoursStr.split('|')
+                              // Trim each line to handle " | " separator with spaces
+                              const lines = hoursStr.split('|').map(l => l.trim()).filter(l => l.length > 0)
 
                               // Day name mapping for specific day matching
                               const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
@@ -1905,6 +1906,30 @@ export default function Home() {
 
                               let isOpen = false
                               let matchedBySpecificDay = false
+
+                              // Helper: parse time string like "10:00 AM" to minutes
+                              const parseTime = (t: string) => {
+                                const match = t.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i)
+                                if (!match) return 0
+                                let h = parseInt(match[1])
+                                const m = parseInt(match[2])
+                                const ampm = match[3].toUpperCase()
+                                if (ampm === 'PM' && h !== 12) h += 12
+                                if (ampm === 'AM' && h === 12) h = 0
+                                return h * 60 + m
+                              }
+
+                              // Helper: check if time range means open
+                              const checkTimeRange = (timeStr: string) => {
+                                if (timeStr.toLowerCase() === 'closed') return false
+                                const timeParts = timeStr.split('-').map(t => t.trim())
+                                if (timeParts.length === 2) {
+                                  const openTime = parseTime(timeParts[0])
+                                  const closeTime = parseTime(timeParts[1])
+                                  return currentTime >= openTime && currentTime <= closeTime
+                                }
+                                return false
+                              }
 
                               // First pass: check for specific day rules (e.g., "Friday: Closed")
                               // These take priority over range rules (e.g., "Mon-Sat")
@@ -1918,33 +1943,14 @@ export default function Home() {
                                 const isSpecificDay = dayNames.some(name =>
                                   dayLabel === name || dayLabel === name + 's'
                                 )
-                                if (isSpecificDay && dayLabel.includes(todayName)) {
+                                if (isSpecificDay && dayLabel === todayName) {
                                   matchedBySpecificDay = true
-                                  if (timeStr.toLowerCase() === 'closed') {
-                                    isOpen = false
-                                  } else {
-                                    const timeParts = timeStr.split('-').map(t => t.trim())
-                                    if (timeParts.length === 2) {
-                                      const parseTime = (t: string) => {
-                                        const match = t.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i)
-                                        if (!match) return 0
-                                        let h = parseInt(match[1])
-                                        const m = parseInt(match[2])
-                                        const ampm = match[3].toUpperCase()
-                                        if (ampm === 'PM' && h !== 12) h += 12
-                                        if (ampm === 'AM' && h === 12) h = 0
-                                        return h * 60 + m
-                                      }
-                                      const openTime = parseTime(timeParts[0])
-                                      const closeTime = parseTime(timeParts[1])
-                                      isOpen = currentTime >= openTime && currentTime <= closeTime
-                                    }
-                                  }
+                                  isOpen = checkTimeRange(timeStr)
                                   break
                                 }
                               }
 
-                              // Second pass: check range rules (e.g., "Mon-Sat") only if no specific day matched
+                              // Second pass: check range rules only if no specific day matched
                               if (!matchedBySpecificDay) {
                                 for (const line of lines) {
                                   const colonIdx = line.indexOf(':')
@@ -1953,6 +1959,7 @@ export default function Home() {
                                   const timeStr = line.substring(colonIdx + 1).trim()
 
                                   const isRangeRule = (
+                                    (dayLabel.includes('mon-sun') && day >= 0 && day <= 6) ||
                                     (dayLabel.includes('mon-sat') && day >= 1 && day <= 6) ||
                                     (dayLabel.includes('mon-fri') && day >= 1 && day <= 5) ||
                                     (dayLabel.includes('sunday') && day === 0) ||
@@ -1961,26 +1968,7 @@ export default function Home() {
                                   )
 
                                   if (isRangeRule) {
-                                    if (timeStr.toLowerCase() === 'closed') {
-                                      isOpen = false
-                                    } else {
-                                      const timeParts = timeStr.split('-').map(t => t.trim())
-                                      if (timeParts.length === 2) {
-                                        const parseTime = (t: string) => {
-                                          const match = t.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i)
-                                          if (!match) return 0
-                                          let h = parseInt(match[1])
-                                          const m = parseInt(match[2])
-                                          const ampm = match[3].toUpperCase()
-                                          if (ampm === 'PM' && h !== 12) h += 12
-                                          if (ampm === 'AM' && h === 12) h = 0
-                                          return h * 60 + m
-                                        }
-                                        const openTime = parseTime(timeParts[0])
-                                        const closeTime = parseTime(timeParts[1])
-                                        isOpen = currentTime >= openTime && currentTime <= closeTime
-                                      }
-                                    }
+                                    isOpen = checkTimeRange(timeStr)
                                     break
                                   }
                                 }
