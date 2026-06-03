@@ -1,189 +1,92 @@
----
-Task ID: 1
-Agent: Main Agent
-Task: Build Zilver Brand Demo Website with Admin Panel
+# Home Sense Website Restructure — Worklog
 
-Work Log:
-- Initialized Next.js project with fullstack-dev skill
-- Updated Prisma schema with Product model (name, description, price, image, category, featured, order)
-- Pushed schema to SQLite database
-- Created API routes: GET/POST /api/products, GET/PUT/DELETE /api/products/[id], POST /api/seed, POST /api/upload
-- Generated 4 AI product images (watch, bracelet, necklace, ring) and brand logo
-- Seeded 4 demo products into database
-- Built complete storefront with: Navigation, Hero section, Products grid, About section, Contact section, Footer
-- Built Admin Panel with: Stats dashboard, Product CRUD (Add/Edit/Delete), Image upload, Featured toggle, Delete confirmation
-- Added smooth animations with Framer Motion
-- Added responsive design for mobile/tablet/desktop
-- Custom scrollbar styling for dark theme
-- Admin login with password protection (zilver2024)
-- All lint checks passing
+## Date: 2026-06-03
 
-Stage Summary:
-- Zilver Brand website initially built with jewelry theme (incorrect)
+## Summary
+Restructured Home Sense website from a single-page application (2700+ lines in `page.tsx`) to a multi-page Next.js application with 6 routes, plus added a Reviews feature.
 
----
-Task ID: 2
-Agent: Main Agent
-Task: Redesign website to match real Zilver brand (Bathroom & Kitchen Sanitary Solutions)
+## Changes Made
 
-Work Log:
-- Scraped zilver.co website to understand real brand identity
-- Discovered Zilver is "Quality Bathroom and Kitchen Solutions" brand (Concetti Italiano - Sanitary Wares)
-- Generated 4 new AI product images: Basin, Mixer, Shower, Commode
-- Generated new brand logo matching sanitary ware identity
-- Updated seed data with sanitary products (Wash Basins, Tap & Mixers, Showers, Commode)
-- Completely redesigned storefront with blue/cyan/teal color scheme
-- Added category quick links section (Tap & Mixers, Wash Basins, Showers, Kitchen)
-- Updated hero section with "Innovative, Efficient & Elegant" tagline
-- Updated about section with "All-in-One Sanitary Wares" content
-- Fixed lucide-react icon import issues (Kitchen -> CookingPot, ShowerHead)
-- Re-seeded database with sanitary products
-- All lint checks passing, site running on 200 OK
+### 1. Database Schema & Backend
+- **prisma/schema.prisma**: Added `Review` model with fields: id, name, rating, comment, date, approved, order, createdAt, updatedAt
+- **src/lib/db.ts**: Added `review` operations (findMany, findUnique, create, update, delete) following the same pattern as product operations
+- **src/app/api/reviews/route.ts**: Created GET (with optional `?approved=true` filter) and POST (admin-only) endpoints
+- **src/app/api/reviews/[id]/route.ts**: Created PUT (admin-only) and DELETE (admin-only) endpoints
+- **src/app/api/migrate/route.ts**: Added Review table creation SQL and discountPercent column migration
 
-Stage Summary:
-- Website fully redesigned to match real zilver.co brand identity
-- 4 demo sanitary products: Art Wash Basin (Rs. 18,500), Basin Mixer (Rs. 12,000), Rain Shower System (Rs. 35,000), Wall Hung Commode (Rs. 28,000)
-- Blue/cyan/teal color scheme matching sanitary ware industry
-- Admin panel still functional with same password: zilver2024
+### 2. Shared Components
+- **src/components/Navbar.tsx**: Extracted navigation from page.tsx. Changed from section anchors (#home, #products, #about, #contact) to route links (/, /products, /about, /reviews, /contact). Added Reviews link. Same glass morphism styling. Admin login dialog included.
+- **src/components/Footer.tsx**: Extracted footer with page links, social media links, and copyright
+- **src/components/LayoutContent.tsx**: Client component wrapper for Navbar + Footer in root layout
 
----
-Task ID: 1
-Agent: Full-Stack Developer (Animation Specialist)
-Task: Add OUTCLASS, PREMIUM-QUALITY animations throughout the entire Ziver website
+### 3. Layout Update
+- **src/app/layout.tsx**: Added LayoutContent (Navbar + Footer) wrapper so they appear on ALL pages. Body now has `bg-[#080c14] text-white` classes.
 
-Work Log:
-- Read existing page.tsx (1283 lines) and globals.css (150 lines) to understand current codebase
-- Updated globals.css with 12+ custom CSS keyframes and animation utilities:
-  - Gradient text shimmer (text-shimmer) — continuous sparkle sweep on gradient text
-  - Glow pulse (glow-pulse) — subtle cyan/blue glow pulsing for badges and logos
-  - Floating orbs (orb-float-1/2/3) — smooth multi-directional float with different speeds (18-25s cycles)
-  - Card shine sweep (card-shine) — diagonal light reflection on hover
-  - Card border glow (card-glow) — animated border color glow matching theme
-  - Price float (price-float) — gentle floating animation for price text
-  - Button gradient shift (btn-gradient-shift) — rotating gradient on hover
-  - Ripple effect (ripple-expand) — Material-style click ripple
-  - Wave divider animation (wave-flow) — horizontal scrolling wave SVG
-  - Skeleton shimmer loading (skeleton-shimmer) — beautiful skeleton placeholder
-  - Logo glow (logo-glow) — subtle glow pulse on the logo
-  - Icon bounce (icon-bounce-hover) — spring bounce on icon hover
-  - Nav link sliding indicator (nav-link::after) — smooth underline on hover
-  - Crossfade animation for product detail images
-  - Reduced motion media query for accessibility
-  - Mobile animation reduction (slower orb floats on small screens)
-  - Premium custom scrollbar with gradient thumb (blue-to-cyan)
+### 4. Pages Created
 
-- Created reusable animation components in page.tsx:
-  - useCounter hook — counts up from 0 with eased cubic timing when element scrolls into view
-  - TiltCard component — 3D perspective tilt following mouse position with spring physics
-  - RippleButton component — Material-style ripple effect on click with DOM span injection
-  - WaveDivider component — animated SVG wave section dividers between sections
-  - ProductSkeleton component — beautiful skeleton loading cards with shimmer effect
+#### `/` — Home Page (src/app/page.tsx)
+- Hero section with slideshow (same Framer Motion text animations)
+- Featured products section (only featured products, "View All" link to /products)
+- Product detail overlay modal (same as original)
+- About summary section (condensed version with CTA to /about)
+- Reviews preview (latest 3 reviews, "See All Reviews" link to /reviews)
+- Quick contact CTA (links to /contact and WhatsApp)
+- CSS scroll-reveal animations preserved
 
-- Hero Section animations:
-  - Staggered text reveal: Each line (Innovative, Efficient, & Elegant) slides up from y:60 with skewY correction and staggered delay
-  - Gradient text shimmer: "Efficient" and other gradient texts have continuous shimmer animation
-  - Floating background orbs: 3 orbs with different float keyframes at 18-25s cycles
-  - Parallax scroll: Hero content moves at different speed using useScroll/useTransform
-  - Badge glow pulse: "Quality Bathroom & Kitchen Solutions" badge has cyan glow pulse
-  - CTA buttons: RippleButton with gradient shift animation
+#### `/products` — Products Page (src/app/products/page.tsx)
+- Full product catalog with category filters
+- Same category filter UI with case-insensitive matching
+- Product detail modal (same as original)
+- Vanities manufacturer banner
+- Same product card styling with discount badges
 
-- Product Cards animations:
-  - 3D tilt effect: TiltCard wrapper tracks mouse position with spring physics (stiffness:300, damping:30)
-  - Shine sweep: CSS card-shine class creates diagonal light sweep on hover
-  - Image zoom: Enhanced scale on hover with smooth easing
-  - Staggered entrance: Products appear one by one with spring physics (opacity:0, y:40, scale:0.95 → 1)
-  - Price tag float: Subtle floating animation on price text
-  - Ripple buttons: Material-style ripple on "View Details" click
+#### `/about` — About Page (src/app/about/page.tsx)
+- Full about section (same content as original #about section)
+- Quality standards, innovative design, spare parts
+- Stats (50+ Projects, 150+ Products, 99% Quality)
+- Vanities manufacturer banner
+- CTA to /reviews
 
-- Product Detail View animations:
-  - Scale-in with spring physics (scale:0.9 → 1, y:30 → 0)
-  - Image crossfade: AnimatePresence mode="wait" with scale transition on image change
-  - Content slide-in from right with delay stagger
-  - Feature items stagger in from right with spring physics
-  - Close button: rotate 90° on hover with scale
+#### `/reviews` — Reviews Page (src/app/reviews/page.tsx) — NEW
+- Displays all approved reviews with star ratings
+- Customer name, rating (1-5 stars), review text, date
+- Average rating stats bar
+- Google Reviews placeholder section ("Coming Soon" card)
+- Reviews only added by admin (no public submission)
 
-- Section animations:
-  - Wave dividers between all major sections with flowing SVG animation
-  - Enhanced scroll reveals with spring physics and viewport detection
-  - Counter animation: "500+", "300+", "100%" count up from 0 with eased cubic timing
-  - Feature items: Staggered slide-in from left with spring physics, slight x-shift on hover
+#### `/contact` — Contact Page (src/app/contact/page.tsx)
+- Contact info (phone, WhatsApp, email, social links)
+- Business hours with auto Open/Closed status (same parsing logic)
+- Google Maps embed with pin + clickable overlay for directions
+- "Get Directions" button
+- Same map URL parsing functions (extractMapCoords, extractPlaceName)
 
-- Navigation animations:
-  - Sliding underline indicator on hover (nav-link::after with width transition)
-  - Logo glow pulse with drop-shadow animation
-  - Nav items stagger in from top with spring physics
-  - Mobile menu: Enhanced stagger animation with sliding items and overflow hidden
+#### `/admin` — Admin Page (src/app/admin/page.tsx)
+- Admin login dialog (redirects to /admin on success)
+- Tabs: Products | Categories | Settings | Reviews (NEW tab)
+- All existing admin functionality preserved:
+  - Product CRUD with image/video upload, discount, categories
+  - Category rename/delete
+  - Settings (contact details, business hours, map URL)
+- NEW: Reviews tab
+  - Add/Edit/Delete reviews
+  - Fields: Customer Name, Rating (1-5 stars with clickable), Review Text, Date, Approved toggle, Order
+  - Approve/Hide toggle per review
+  - Star rating display in list view
 
-- Button animations:
-  - Gradient shift on hover (btn-gradient-shift class)
-  - Ripple effect on click (RippleButton component)
-  - Scale bounce on hover (whileHover/whileTap)
+### 5. Preserved Elements
+- All visual design (dark theme, colors, gradients, animations)
+- CSS-based scroll-reveal (IntersectionObserver for .scroll-reveal elements)
+- Framer Motion only for Hero text animations and Product Detail modal
+- Business hours parsing (indexOf(':'), Mon-Sun range, two-pass priority)
+- Category filter logic (case-insensitive matching, getCategoryCount())
+- Discount display logic (calcDiscountedPrice(), onSale badges)
+- Map URL parser functions
+- Admin authentication flow (password-based, JWT session cookie)
+- Image/video upload via Supabase Storage
 
-- Category Cards animations:
-  - Icon bounce with spring physics on hover (whileHover scale + rotate)
-  - Card glow border animation matching theme color
-  - Shine sweep effect
-
-- Contact Section animations:
-  - Icon wiggle/bounce on hover (rotate: [-10, 10, 0])
-  - Card stagger entrance with spring physics
-  - Hover lift effect (y: -3)
-
-- Footer animations:
-  - Slide up reveal when scrolled into view
-  - Social icons: scale + lift on hover
-  - Staggered child reveals (logo, socials, copyright)
-
-- Global effects:
-  - Smooth page scroll (CSS scroll-behavior: smooth)
-  - Custom scrollbar with gradient thumb
-  - Skeleton loading with shimmer animation
-  - Reduced motion media query for accessibility
-  - Mobile animation reduction
-  - GPU-accelerated animations (will-change, transform, opacity)
-
-- All existing functionality preserved: Product CRUD, admin panel, video upload, multiple images, product detail view, admin login
-- Lint checks: All passing (0 errors)
-- Dev server: Running normally, no compilation errors
-
-Stage Summary:
-- Comprehensive premium animation system added across the entire Ziver website
-- 12+ CSS keyframe animations, 5 reusable animation components, spring physics throughout
-- All animations GPU-accelerated and mobile-responsive
-- Performance-conscious with will-change, transform, opacity usage
-- Accessibility: prefers-reduced-motion support
-- Zero functionality regressions — all CRUD, admin, uploads, detail views intact
----
-Task ID: 1
-Agent: Main Agent
-Task: Fix Contact Information Weak - Add Business Hours, Google Maps, Visit Our Showroom section
-
-Work Log:
-- Read current contact section in page.tsx (lines 1688-1763)
-- Added businessHours and mapUrl fields to Prisma schema (SiteSettings model)
-- Created /api/migrate endpoint for adding new DB columns to Supabase
-- Updated /api/settings to include businessHours and mapUrl in allowedFields
-- Updated SiteSettings interface with new fields
-- Updated default settings state with businessHours and mapUrl
-- Added Clock, Navigation, ExternalLink icons from lucide-react
-- Added Business Hours and Map URL inputs to admin settings form
-- Completely redesigned contact section with:
-  - Contact Cards Grid (Quick Reach) at top
-  - "Visit Our Showroom" banner section
-  - Address display with MapPin icon
-  - Business Hours with parsed day/time display
-  - Live Open/Closed status indicator (auto-detects current time vs business hours)
-  - "Get Directions on Google Maps" button
-  - Google Maps embed (custom URL from admin, or auto-generated from address)
-  - Fallback placeholder when no address is set
-- Enhanced footer with 3-column layout: Logo+Tagline, Quick Contact, Business Hours
-- Updated db.ts with graceful fallback for new columns that don't exist yet
-- Build test passed successfully
-- Pushed to GitHub (commit 4295abf)
-
-Stage Summary:
-- Contact section now has: Address, Business Hours (with live Open/Closed status), Google Maps embed, "Visit Our Showroom" banner, "Get Directions" button
-- Footer now shows: Address, Phone, Email, Business Hours, Logo + Tagline
-- Admin can edit Business Hours and Google Maps embed URL in settings
-- Database migration endpoint created at /api/migrate
-- Graceful fallback ensures site works even before DB migration runs
+### Build Verification
+- `bun run lint` — passes with no errors
+- `npx next build` — compiles successfully, all routes generated
+- All 6 page routes verified: /, /products, /about, /reviews, /contact, /admin
+- All API routes verified: /api/products, /api/reviews, /api/categories, /api/settings, /api/auth/*, /api/migrate

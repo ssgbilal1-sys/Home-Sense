@@ -40,9 +40,30 @@ export async function POST() {
       ADD COLUMN IF NOT EXISTS "onSale" BOOLEAN NOT NULL DEFAULT false;
     `)
 
+    // Create Review table if not exists
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS "Review" (
+        "id" TEXT PRIMARY KEY,
+        "name" TEXT NOT NULL,
+        "rating" INTEGER NOT NULL DEFAULT 5,
+        "comment" TEXT NOT NULL,
+        "date" TEXT NOT NULL DEFAULT '',
+        "approved" BOOLEAN NOT NULL DEFAULT true,
+        "order" INTEGER NOT NULL DEFAULT 0,
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT NOW(),
+        "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT NOW()
+      );
+    `)
+
+    // Add discountPercent column to Product if not exists
+    await pool.query(`
+      ALTER TABLE "Product"
+      ADD COLUMN IF NOT EXISTS "discountPercent" INTEGER NOT NULL DEFAULT 0;
+    `)
+
     return NextResponse.json({
       success: true,
-      message: 'Migration completed: businessHours, mapUrl columns added to SiteSettings; discountPrice, onSale columns added to Product table.',
+      message: 'Migration completed: businessHours, mapUrl columns added to SiteSettings; discountPrice, onSale, discountPercent columns added to Product; Review table created.',
     })
   } catch (error: any) {
     console.error('Migration error:', error)
