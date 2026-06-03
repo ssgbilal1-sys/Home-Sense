@@ -55,6 +55,47 @@ interface SiteSettings {
 }
 
 // ───────────────────────────────────────────────────────
+// MAP URL PARSER — extracts lat/lng from various Google Maps URL formats
+// ───────────────────────────────────────────────────────
+function extractMapCoords(url: string): { lat: number; lng: number } | null {
+  if (!url) return null
+  try {
+    // Format: @LAT,LNG,zoom  e.g. /@31.4504,73.1005,17z
+    const atMatch = url.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/)
+    if (atMatch) return { lat: parseFloat(atMatch[1]), lng: parseFloat(atMatch[2]) }
+
+    // Format: ?q=LAT,LNG  or &q=LAT,LNG
+    const qMatch = url.match(/[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/)
+    if (qMatch) return { lat: parseFloat(qMatch[1]), lng: parseFloat(qMatch[2]) }
+
+    // Format: /place/NAME/@LAT,LNG  (already caught by @ match above)
+
+    // Format: destination=LAT,LNG  (directions URL)
+    const destMatch = url.match(/destination=(-?\d+\.?\d*),(-?\d+\.?\d*)/)
+    if (destMatch) return { lat: parseFloat(destMatch[1]), lng: parseFloat(destMatch[2]) }
+
+    // Format: center=LAT,LNG
+    const centerMatch = url.match(/center=(-?\d+\.?\d*),(-?\d+\.?\d*)/)
+    if (centerMatch) return { lat: parseFloat(centerMatch[1]), lng: parseFloat(centerMatch[2]) }
+
+    // Format: ll=LAT,LNG
+    const llMatch = url.match(/ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/)
+    if (llMatch) return { lat: parseFloat(llMatch[1]), lng: parseFloat(llMatch[2]) }
+  } catch { /* ignore */ }
+  return null
+}
+
+// Extract place name from Google Maps URL for fallback
+function extractPlaceName(url: string): string | null {
+  if (!url) return null
+  try {
+    const placeMatch = url.match(/\/place\/([^\/\?@]+)/)
+    if (placeMatch) return decodeURIComponent(placeMatch[1].replace(/\+/g, ' '))
+  } catch { /* ignore */ }
+  return null
+}
+
+// ───────────────────────────────────────────────────────
 // SKELETON LOADING COMPONENT
 // ───────────────────────────────────────────────────────
 function ProductSkeleton() {
@@ -1649,39 +1690,96 @@ export default function Home() {
                     )}
 
                     {/* Get Directions Button */}
-                    {settings.address && (
-                      <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-2 w-full px-5 py-3 rounded-xl bg-gradient-to-r from-sky-700 to-sky-500 hover:from-sky-600 hover:to-sky-400 text-white font-medium text-sm transition-all hover:-translate-y-0.5"
-                      >
-                        <Navigation className="w-4 h-4" />
-                        Get Directions on Google Maps
-                        <ExternalLink className="w-3 h-3 opacity-60" />
-                      </a>
-                    )}
+                    {(() => {
+                      const coords = extractMapCoords(settings.mapUrl || '')
+                      const placeName = extractPlaceName(settings.mapUrl || '')
+                      const directionsUrl = coords
+                        ? `https://www.google.com/maps/dir/?api=1&destination=${coords.lat},${coords.lng}`
+                        : settings.mapUrl
+                          ? settings.mapUrl
+                          : settings.address
+                            ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`
+                            : ''
+                      return directionsUrl ? (
+                        <a
+                          href={directionsUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-2 w-full px-5 py-3 rounded-xl bg-gradient-to-r from-sky-700 to-sky-500 hover:from-sky-600 hover:to-sky-400 text-white font-medium text-sm transition-all hover:-translate-y-0.5"
+                        >
+                          <Navigation className="w-4 h-4" />
+                          Get Directions on Google Maps
+                          <ExternalLink className="w-3 h-3 opacity-60" />
+                        </a>
+                      ) : null
+                    })()}
                   </div>
 
-                  {/* Right: Map Embed — OpenStreetMap for reliable pin */}
+                  {/* Right: Map Embed — shows pin at exact location, clickable for directions */}
                   <div className="relative min-h-[300px] lg:min-h-[400px] bg-gray-900/50">
-                    {settings.address ? (
-                      <iframe
-                        src={`https://www.openstreetmap.org/export/embed.html?bbox=73.04%2C31.40%2C73.16%2C31.50&layer=mapnik&marker=31.4504%2C73.1005`}
-                        width="100%"
-                        height="100%"
-                        style={{ border: 0, minHeight: '300px' }}
-                        allowFullScreen
-                        loading="lazy"
-                        title="Home Sense Showroom Location"
-                        className="absolute inset-0 w-full h-full"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 gap-3 p-6">
-                        <MapPin className="w-12 h-12 opacity-30" />
-                        <p className="text-sm text-center">Map will appear here once address is added in admin settings</p>
-                      </div>
-                    )}
+                    {(() => {
+                      const mapUrl = settings.mapUrl || ''
+                      const coords = extractMapCoords(mapUrl)
+                      const placeName = extractPlaceName(mapUrl)
+
+                      // Build directions URL for the clickable overlay
+                      const directionsUrl = coords
+                        ? `https://www.google.com/maps/dir/?api=1&destination=${coords.lat},${coords.lng}`
+                        : mapUrl
+                          ? mapUrl
+                          : ''
+
+                      // Build embed src
+                      let embedSrc = ''
+                      if (coords) {
+                        // Use Google Maps embed with coordinates — shows pin reliably
+                        const delta = 0.008
+                        const bbox = `${coords.lng - delta}%2C${coords.lat - delta}%2C${coords.lng + delta}%2C${coords.lat + delta}`
+                        embedSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${coords.lat}%2C${coords.lng}`
+                      } else if (placeName) {
+                        // Fallback: use place name in Google Maps embed
+                        embedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(placeName)}&z=15&output=embed`
+                      } else if (settings.address) {
+                        // Fallback: use address in Google Maps embed
+                        embedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(settings.address)}&z=15&output=embed`
+                      }
+
+                      if (!embedSrc) {
+                        return (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 gap-3 p-6">
+                            <MapPin className="w-12 h-12 opacity-30" />
+                            <p className="text-sm text-center">Map will appear here once address is added in admin settings</p>
+                          </div>
+                        )
+                      }
+
+                      return (
+                        <>
+                          <iframe
+                            src={embedSrc}
+                            width="100%"
+                            height="100%"
+                            style={{ border: 0, minHeight: '300px' }}
+                            allowFullScreen
+                            loading="lazy"
+                            title="Home Sense Showroom Location"
+                            className="absolute inset-0 w-full h-full"
+                          />
+                          {/* Clickable overlay — clicking map opens Google Maps directions */}
+                          {directionsUrl && (
+                            <a
+                              href={directionsUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="absolute inset-0 z-10 cursor-pointer"
+                              title="Click to open directions in Google Maps"
+                            >
+                              <span className="sr-only">Open directions in Google Maps</span>
+                            </a>
+                          )}
+                        </>
+                      )
+                    })()}
                   </div>
                 </div>
               </div>
@@ -2164,13 +2262,13 @@ export default function Home() {
 
                 <div className="space-y-2 sm:col-span-2">
                   <Label className="text-gray-300 text-sm flex items-center gap-2">
-                    <Navigation className="w-4 h-4 text-green-400" /> Google Maps Embed URL
+                    <Navigation className="w-4 h-4 text-green-400" /> Google Maps Location URL
                   </Label>
-                  <p className="text-[11px] text-gray-500 mb-1">Go to Google Maps → Share → Embed a map → Copy ONLY the src URL from the iframe code</p>
+                  <p className="text-[11px] text-gray-500 mb-1">Go to Google Maps → Find your shop → Click Share → Copy the link (any Google Maps URL works)</p>
                   <Input
                     value={settingsForm.mapUrl}
                     onChange={(e) => setSettingsForm(prev => ({ ...prev, mapUrl: e.target.value }))}
-                    placeholder="https://www.google.com/maps/embed?pb=..."
+                    placeholder="https://www.google.com/maps/place/..."
                     className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-500"
                   />
                 </div>
