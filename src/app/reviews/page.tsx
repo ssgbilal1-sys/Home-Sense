@@ -66,7 +66,7 @@ export default function ReviewsPage() {
           <div className="scroll-reveal text-center mb-16">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
               Customer
-              <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent" style={{ backgroundSize: '200% auto' }}> Reviews</span>
+              <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent text-shimmer"> Reviews</span>
             </h1>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
               See what our customers have to say about Home Sense products and services.

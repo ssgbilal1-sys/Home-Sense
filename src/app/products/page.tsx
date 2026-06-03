@@ -296,7 +296,7 @@ export default function ProductsPage() {
           <div className="scroll-reveal text-center mb-12 sm:mb-16">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
               Our
-              <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent" style={{ backgroundSize: '200% auto' }}> Products</span>
+              <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent text-shimmer"> Products</span>
             </h2>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
               Discover our premium collection of vanities, commodes, basins, shower sets, and art bowls. Factory-direct vanities manufactured by us, plus the finest products — all available at Home Sense.

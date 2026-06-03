@@ -469,7 +469,7 @@ export default function HomePage() {
               <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold leading-snug sm:leading-tight lg:leading-none mb-4 sm:mb-6 [text-shadow:0_2px_10px_rgba(0,0,0,0.8)]">
                 <motion.span custom={1} variants={heroTextVariants} initial="hidden" animate="visible" className="block">Innovative,</motion.span>
                 <motion.span custom={2} variants={heroTextVariants} initial="hidden" animate="visible" className="block">
-                  <span className="bg-gradient-to-r from-sky-500 via-sky-300 to-sky-400 bg-clip-text text-transparent" style={{ backgroundSize: '200% auto' }}>Efficient</span>
+                  <span className="bg-gradient-to-r from-sky-500 via-sky-300 to-sky-400 bg-clip-text text-transparent text-shimmer">Efficient</span>
                 </motion.span>
                 <motion.span custom={3} variants={heroTextVariants} initial="hidden" animate="visible" className="block">& Elegant</motion.span>
               </h1>
@@ -533,7 +533,7 @@ export default function HomePage() {
           <div className="scroll-reveal text-center mb-12 sm:mb-16">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
               Featured
-              <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent" style={{ backgroundSize: '200% auto' }}> Products</span>
+              <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent text-shimmer"> Products</span>
             </h2>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
               Discover our premium collection of vanities, commodes, basins, shower sets, and art bowls.
@@ -663,7 +663,7 @@ export default function HomePage() {
             <div className="scroll-reveal">
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6">
                 All-in-One
-                <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent" style={{ backgroundSize: '200% auto' }}> Sanitary Wares</span>
+                <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent text-shimmer"> Sanitary Wares</span>
               </h2>
               <p className="text-gray-400 text-lg mb-8">
                 Excellent details, durable components, compatible hardware result in premium quality. As the authorized dealer, Home Sense brings you the finest vanities, commodes, basins, shower sets, and art bowls.
@@ -703,7 +703,7 @@ export default function HomePage() {
                   <div className="mx-auto mb-6">
                     <img src="/logo-homesense.jpg" alt="Home Sense" loading="lazy" className="h-28 w-auto object-contain rounded-xl mx-auto" />
                   </div>
-                  <h3 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent mb-2" style={{ backgroundSize: '200% auto' }}>
+                  <h3 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent mb-2 text-shimmer">
                     HOME SENSE
                   </h3>
                   <p className="text-sm text-gray-400 mb-2">Sanitary Fitting & Ware</p>
@@ -739,7 +739,7 @@ export default function HomePage() {
           <div className="scroll-reveal text-center mb-12">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
               Customer
-              <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent" style={{ backgroundSize: '200% auto' }}> Reviews</span>
+              <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent text-shimmer"> Reviews</span>
             </h2>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
               See what our customers have to say about Home Sense.

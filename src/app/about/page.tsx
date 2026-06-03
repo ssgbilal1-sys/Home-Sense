@@ -30,7 +30,7 @@ export default function AboutPage() {
           <div className="scroll-reveal text-center mb-16">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
               About
-              <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent" style={{ backgroundSize: '200% auto' }}> Home Sense</span>
+              <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent text-shimmer"> Home Sense</span>
             </h1>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
               Your authorized & trusted dealer for premium sanitary ware solutions.
@@ -41,7 +41,7 @@ export default function AboutPage() {
             <div className="scroll-reveal">
               <h2 className="text-3xl sm:text-4xl font-bold mb-6">
                 All-in-One
-                <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent" style={{ backgroundSize: '200% auto' }}> Sanitary Wares</span>
+                <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent text-shimmer"> Sanitary Wares</span>
               </h2>
               <p className="text-gray-400 text-lg mb-4">
                 Excellent details, durable components, compatible hardware result in premium quality. High standard, long life combined with superior performance thanks to the compatibility of all components, spare parts and durability.
@@ -76,7 +76,7 @@ export default function AboutPage() {
                   <div className="mx-auto mb-6">
                     <img src="/logo-homesense.jpg" alt="Home Sense" loading="lazy" className="h-28 w-auto object-contain rounded-xl mx-auto" />
                   </div>
-                  <h3 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent mb-2" style={{ backgroundSize: '200% auto' }}>
+                  <h3 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent mb-2 text-shimmer">
                     HOME SENSE
                   </h3>
                   <p className="text-sm text-gray-400 mb-2">Sanitary Fitting & Ware</p>

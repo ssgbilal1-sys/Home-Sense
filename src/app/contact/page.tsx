@@ -92,7 +92,7 @@ export default function ContactPage() {
           <div className="scroll-reveal text-center mb-12">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
               Get in
-              <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent" style={{ backgroundSize: '200% auto' }}> Touch</span>
+              <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent text-shimmer"> Touch</span>
             </h1>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
               Have a question or need a quote? We would love to hear from you.
