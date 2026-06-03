@@ -156,14 +156,17 @@
    GRADIENT TEXT SHIMMER — Water-like flowing effect on gradient text
    ═══════════════════════════════════════════════════════════ */
 @keyframes text-shimmer-flow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% { background-position: 0% center; }
+  50% { background-position: 100% center; }
+  100% { background-position: 0% center; }
 }
 
 .text-shimmer {
-  background-size: 200% auto;
-  animation: text-shimmer-flow 4s ease-in-out infinite;
+  background-size: 200% auto !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  animation: text-shimmer-flow 3s ease-in-out infinite !important;
 }
 
 /* ═══════════════════════════════════════════════════════════
