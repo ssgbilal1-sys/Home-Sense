@@ -1878,7 +1878,9 @@ export default function Home() {
                             <div className="font-semibold text-gray-300 text-sm mb-2">Business Hours</div>
                             <div className="space-y-1">
                               {(settings.businessHours || 'Mon-Sat: 10:00 AM - 8:00 PM|Sunday: Closed').split('|').map((line, i) => {
-                                const [label, time] = line.includes(':') ? [line.split(':').slice(0, -1).join(':').trim(), line.split(':').pop()?.trim() || ''] : [line.trim(), '']
+                                const colonIdx = line.indexOf(':')
+                                const label = colonIdx !== -1 ? line.substring(0, colonIdx).trim() : line.trim()
+                                const time = colonIdx !== -1 ? line.substring(colonIdx + 1).trim() : ''
                                 const isClosed = time.toLowerCase() === 'closed'
                                 return (
                                   <p key={i} className={`text-sm ${isClosed ? 'text-red-400/80' : 'text-gray-400'}`}>
