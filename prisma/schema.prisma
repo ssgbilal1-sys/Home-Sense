@@ -33,6 +33,7 @@ model SiteSettings {
   instagram     String   @default("@zilver.co")
   facebook      String   @default("")
   youtube       String   @default("")
+  tiktok        String   @default("")
   address       String   @default("")
   businessHours String   @default("Mon-Sat: 10:00 AM - 8:00 PM|Sunday: Closed")
   mapUrl        String   @default("")

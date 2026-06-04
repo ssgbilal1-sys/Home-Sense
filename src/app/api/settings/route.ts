@@ -24,7 +24,7 @@ export async function PUT(request: Request) {
     const body = await request.json()
 
     const data: Record<string, string> = {}
-    const allowedFields = ['phone', 'whatsapp', 'email', 'instagram', 'facebook', 'youtube', 'address', 'businessHours', 'mapUrl']
+    const allowedFields = ['phone', 'whatsapp', 'email', 'instagram', 'facebook', 'youtube', 'tiktok', 'address', 'businessHours', 'mapUrl', 'metaPixelId', 'tiktokPixelId']
 
     for (const field of allowedFields) {
       if (body[field] !== undefined) {
