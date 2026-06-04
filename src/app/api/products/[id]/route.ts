@@ -32,7 +32,19 @@ export async function PUT(
 
     const { id } = await params
     const body = await request.json()
-    const { name, description, price, discountPrice, onSale, image, images, video, category, featured, order } = body
+    const { name, description, price, discountPrice, onSale, discountPercent, image, images, video, category, featured, order } = body
+
+    // Auto-derive onSale and discountPrice from discountPercent if provided
+    let finalDiscountPrice = discountPrice
+    let finalOnSale = onSale
+    if (discountPercent !== undefined) {
+      const hasDiscount = discountPercent > 0
+      const numPrice = parseFloat(String(price || 0).replace(/[^0-9.]/g, ''))
+      finalDiscountPrice = hasDiscount && numPrice > 0
+        ? 'Rs ' + Math.round(numPrice * (1 - discountPercent / 100)).toLocaleString('en-PK')
+        : ''
+      finalOnSale = hasDiscount
+    }
 
     const product = await db.product.update({
       where: { id },
@@ -40,8 +52,9 @@ export async function PUT(
         ...(name !== undefined && { name }),
         ...(description !== undefined && { description }),
         ...(price !== undefined && { price }),
-        ...(discountPrice !== undefined && { discountPrice }),
-        ...(onSale !== undefined && { onSale }),
+        ...(finalDiscountPrice !== undefined && { discountPrice: finalDiscountPrice }),
+        ...(finalOnSale !== undefined && { onSale: finalOnSale }),
+        ...(discountPercent !== undefined && { discountPercent }),
         ...(image !== undefined && { image }),
         ...(images !== undefined && { images }),
         ...(video !== undefined && { video }),

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import {
   Droplets, Phone, MessageCircle, Star, CheckCircle,
   Wrench, ChevronLeft, Bath, Package,
-  Tag, Send, Loader2, ArrowLeft
+  Tag, Send, Loader2, ArrowLeft, Percent
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,6 +18,7 @@ interface Product {
   price: string
   discountPrice: string
   onSale: boolean
+  discountPercent: number
   image: string
   images: string
   video: string | null
@@ -167,6 +168,16 @@ export default function ProductDetailClient({ productId }: { productId: string }
 
   const isPrimaryCategory = (category: string) => category.toLowerCase() === 'vanities'
 
+  // Calculate discounted price from percentage
+  const calcDiscountedPrice = (priceStr: string, percent: number): string => {
+    if (!percent || percent <= 0) return priceStr
+    const num = parseFloat(priceStr.replace(/[^0-9.]/g, ''))
+    if (isNaN(num) || num <= 0) return priceStr
+    const discounted = Math.round(num * (1 - percent / 100))
+    const prefix = priceStr.match(/^[^0-9]*/)?.[0] || ''
+    return prefix + discounted.toLocaleString('en-PK')
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#080c14] flex items-center justify-center">
@@ -259,11 +270,11 @@ export default function ProductDetailClient({ productId }: { productId: string }
                 className="w-full h-full object-cover"
               />
               {/* SALE badge on image */}
-              {product.onSale && product.discountPrice && (
+              {product.discountPercent > 0 && (
                 <div className="absolute top-4 left-4">
                   <span className="px-3 py-1.5 rounded-full text-sm font-bold bg-red-500 text-white shadow-lg shadow-red-500/40 flex items-center gap-1.5 animate-pulse">
-                    <Tag className="w-4 h-4" />
-                    SALE
+                    <Percent className="w-4 h-4" />
+                    {product.discountPercent}% OFF
                   </span>
                 </div>
               )}
@@ -327,16 +338,16 @@ export default function ProductDetailClient({ productId }: { productId: string }
             <p className="text-gray-400 text-base mb-6 leading-relaxed">{product.description}</p>
 
             <div className="text-4xl font-bold mb-8">
-              {product.onSale && product.discountPrice ? (
+              {product.discountPercent > 0 ? (
                 <div className="flex items-center gap-3 flex-wrap">
                   <span className="bg-gradient-to-r from-red-500 to-orange-400 bg-clip-text text-transparent">
-                    {product.discountPrice}
+                    {calcDiscountedPrice(product.price, product.discountPercent)}
                   </span>
                   <span className="text-lg text-gray-500 line-through">
                     {product.price}
                   </span>
                   <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-red-500/20 text-red-400 border border-red-500/30">
-                    SALE
+                    -{product.discountPercent}%
                   </span>
                 </div>
               ) : (
@@ -368,7 +379,7 @@ export default function ProductDetailClient({ productId }: { productId: string }
                   Get Quote
                 </Button>
               </a>
-              <a href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi Home Sense! 👋\n\nI'm interested in:\n\n📦 *${product.name}*\n💰 Price: ${product.onSale && product.discountPrice ? `${product.discountPrice} (Sale! Was ${product.price})` : product.price}\n📂 Category: ${product.category}\n\nPlease share more details. Thank you!`)}`} target="_blank" rel="noopener noreferrer">
+              <a href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi Home Sense! 👋\n\nI'm interested in:\n\n📦 *${product.name}*\n💰 Price: ${product.discountPercent > 0 ? `${calcDiscountedPrice(product.price, product.discountPercent)} (${product.discountPercent}% OFF! Was ${product.price})` : product.price}\n📂 Category: ${product.category}\n\nPlease share more details. Thank you!`)}`} target="_blank" rel="noopener noreferrer">
                 <Button size="lg" variant="outline" className="border-green-500/50 text-green-400 hover:bg-green-500/10 hover:border-green-400 w-full sm:w-auto">
                   <MessageCircle className="w-5 h-5 mr-2" />
                   WhatsApp

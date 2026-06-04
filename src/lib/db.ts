@@ -52,6 +52,7 @@ export const db = {
       return (data || []).map((item: any) => ({
         discountPrice: '',
         onSale: false,
+        discountPercent: 0,
         ...item,
       }))
     },
@@ -68,6 +69,7 @@ export const db = {
       return {
         discountPrice: '',
         onSale: false,
+        discountPercent: 0,
         ...data,
       }
     },
@@ -77,6 +79,7 @@ export const db = {
       const dataWithDefaults = {
         discountPrice: '',
         onSale: false,
+        discountPercent: 0,
         ...opts.data,
       }
       const dataWithIdAndTimestamp = {

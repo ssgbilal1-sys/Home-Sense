@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     if (!auth.authenticated) return auth.response!
 
     const body = await request.json()
-    const { name, description, price, discountPrice, onSale, image, images, video, category, featured, order } = body
+    const { name, description, price, discountPrice, onSale, discountPercent, image, images, video, category, featured, order } = body
 
     if (!name || !description || !price || !image) {
       return NextResponse.json(
@@ -32,13 +32,21 @@ export async function POST(request: Request) {
       )
     }
 
+    // Auto-derive onSale and discountPrice from discountPercent
+    const hasDiscount = discountPercent && discountPercent > 0
+    const numPrice = parseFloat(String(price).replace(/[^0-9.]/g, ''))
+    const derivedDiscountPrice = hasDiscount && numPrice > 0
+      ? 'Rs ' + Math.round(numPrice * (1 - discountPercent / 100)).toLocaleString('en-PK')
+      : ''
+
     const product = await db.product.create({
       data: {
         name,
         description,
         price,
-        discountPrice: discountPrice || '',
-        onSale: onSale ?? false,
+        discountPrice: derivedDiscountPrice || discountPrice || '',
+        onSale: hasDiscount ? true : (onSale ?? false),
+        discountPercent: discountPercent ?? 0,
         image,
         images: images || '[]',
         video: video || null,
