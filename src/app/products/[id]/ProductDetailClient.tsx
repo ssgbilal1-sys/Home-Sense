@@ -1,11 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
 import {
-  Droplets, Phone, Mail, MessageCircle, Star, CheckCircle,
-  Wrench, ChevronLeft, Play, Menu, X, Bath, Package,
-  ArrowRight, Shield, Facebook, Instagram, Youtube, Settings, Tag, Send, Loader2
+  Droplets, Phone, MessageCircle, Star, CheckCircle,
+  Wrench, ChevronLeft, Bath, Package,
+  Tag, Send, Loader2, ArrowLeft
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -211,35 +210,19 @@ export default function ProductDetailClient({ productId }: { productId: string }
   }
 
   return (
-    <div className="min-h-screen bg-[#080c14] text-white">
+    <div>
       {/* Structured Data for SEO */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
 
-      {/* Navigation */}
-      <nav className="border-b border-white/8 bg-[#080c14]/95 relative z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-20">
-            <a href="/" className="flex items-center gap-2 sm:gap-3">
-              <img src="/logo-homesense.jpg" alt="Home Sense" className="h-10 sm:h-12 w-auto object-contain rounded-lg" />
-              <span className="text-xl sm:text-2xl font-extrabold tracking-wider">
-                <span className="bg-gradient-to-r from-sky-400 via-sky-300 to-sky-500 bg-clip-text text-transparent">HOME</span>
-                <span className="text-white">{' '}SENSE</span>
-              </span>
-            </a>
-            <div className="flex items-center gap-4">
-              <a href="/" className="text-sm text-gray-300 hover:text-white transition-colors">Home</a>
-              <a href="/#products" className="text-sm text-gray-300 hover:text-white transition-colors">Products</a>
-              <a href="/#contact" className="text-sm text-gray-300 hover:text-white transition-colors">Contact</a>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Breadcrumb for SEO */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      {/* Back button + Breadcrumb */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <a href="/products" className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-sky-400 transition-colors mb-3 group">
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          Back to Products
+        </a>
         <nav className="text-sm text-gray-500" aria-label="Breadcrumb">
           <ol className="flex items-center gap-2" itemScope itemType="https://schema.org/BreadcrumbList">
             <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
@@ -250,7 +233,7 @@ export default function ProductDetailClient({ productId }: { productId: string }
             </li>
             <span className="text-gray-600">/</span>
             <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-              <a href={`/#products`} itemProp="item" className="hover:text-sky-400 transition-colors">
+              <a href="/products" itemProp="item" className="hover:text-sky-400 transition-colors">
                 <span itemProp="name">Products</span>
               </a>
               <meta itemProp="position" content="2" />
@@ -510,28 +493,7 @@ export default function ProductDetailClient({ productId }: { productId: string }
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-white/8 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <a href="/" className="flex items-center gap-2">
-              <img src="/logo-homesense.jpg" alt="Home Sense" className="h-12 w-auto object-contain rounded-lg" />
-            </a>
-            <div className="flex items-center gap-4">
-              {[
-                { Icon: Facebook, href: settings.facebook || '#' },
-                { Icon: Instagram, href: settings.instagram ? `https://instagram.com/${settings.instagram.replace('@', '')}` : '#' },
-                { Icon: Youtube, href: settings.youtube || '#' },
-              ].filter(s => s.href !== '#').map((social, i) => (
-                <a key={i} href={social.href} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-gray-300 transition-colors">
-                  <social.Icon className="w-4 h-4" />
-                </a>
-              ))}
-            </div>
-            <p className="text-gray-600 text-xs">&copy; {new Date().getFullYear()} Home Sense. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+
     </div>
   )
 }
