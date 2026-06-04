@@ -132,7 +132,6 @@ export default function ContactPage() {
                     </div>
                     <div className="text-center">
                       <div className="font-semibold text-white text-xs">{contact.label}</div>
-                      <div className="text-gray-400 text-[11px] mt-0.5 break-all leading-tight max-w-[140px]">{contact.value}</div>
                     </div>
                   </a>
                 ))}
