@@ -65,9 +65,10 @@ export async function PUT(
     })
 
     return NextResponse.json(product)
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating product:', error)
-    return NextResponse.json({ error: 'Failed to update product' }, { status: 500 })
+    const errMsg = error?.message || 'Failed to update product'
+    return NextResponse.json({ error: errMsg }, { status: 500 })
   }
 }
 

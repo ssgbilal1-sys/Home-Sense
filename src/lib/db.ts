@@ -100,12 +100,33 @@ export const db = {
     update: async (opts: { where: { id: string }; data: Record<string, any> }) => {
       const supabase = getSupabaseAdmin()
       const dataWithTimestamp = { ...opts.data, updatedAt: new Date().toISOString() }
-      const { data, error } = await supabase
+
+      // Try full update first
+      let { data, error } = await supabase
         .from('Product')
         .update(dataWithTimestamp)
         .eq('id', opts.where.id)
         .select()
         .single()
+
+      // If column doesn't exist, remove problematic columns and retry
+      if (error && (error.message?.includes('column') || error.message?.includes('does not exist') || error.code === '42703')) {
+        console.warn('Product update failed with column error, retrying without optional columns:', error.message)
+        const knownOptionalCols = ['discountPrice', 'onSale', 'discountPercent', 'video']
+        const safeData = { ...dataWithTimestamp }
+        for (const col of knownOptionalCols) {
+          delete safeData[col]
+        }
+        const retry = await supabase
+          .from('Product')
+          .update(safeData)
+          .eq('id', opts.where.id)
+          .select()
+          .single()
+        if (retry.error) throw new Error(retry.error.message)
+        return retry.data
+      }
+
       if (error) throw new Error(error.message)
       return data
     },
