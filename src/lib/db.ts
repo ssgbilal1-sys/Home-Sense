@@ -144,6 +144,8 @@ export const db = {
       return {
         businessHours: 'Mon-Sat: 10:00 AM - 8:00 PM|Sunday: Closed',
         mapUrl: '',
+        metaPixelId: '',
+        tiktokPixelId: '',
         ...data,
       }
     },
@@ -165,6 +167,8 @@ export const db = {
           const fallbackData = { ...mergedData }
           delete fallbackData.businessHours
           delete fallbackData.mapUrl
+          delete fallbackData.metaPixelId
+          delete fallbackData.tiktokPixelId
           const { data: fallbackResult, error: fallbackError } = await supabase
             .from('SiteSettings')
             .upsert(fallbackData, { onConflict: 'id' })
@@ -174,6 +178,8 @@ export const db = {
           return {
             businessHours: 'Mon-Sat: 10:00 AM - 8:00 PM|Sunday: Closed',
             mapUrl: '',
+            metaPixelId: '',
+            tiktokPixelId: '',
             ...fallbackResult,
           }
         }

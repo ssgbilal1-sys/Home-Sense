@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AnimatePresence } from 'framer-motion'
+import { trackContact, trackViewContent } from '@/lib/pixel'
 
 // Types
 interface Product {
@@ -422,7 +423,7 @@ export default function HomePage() {
                     Get Quote
                   </Button>
                 </Link>
-                <a href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi Home Sense! 👋\n\nI'm interested in:\n\n📦 *${selectedProduct.name}*\n💰 Price: ${selectedProduct.discountPercent > 0 ? `${calcDiscountedPrice(selectedProduct.price, selectedProduct.discountPercent)} (${selectedProduct.discountPercent}% OFF! Was ${selectedProduct.price})` : selectedProduct.price}\n📂 Category: ${selectedProduct.category}\n\nPlease share more details. Thank you!`)}`} target="_blank" rel="noopener noreferrer">
+                <a href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi Home Sense! 👋\n\nI'm interested in:\n\n📦 *${selectedProduct.name}*\n💰 Price: ${selectedProduct.discountPercent > 0 ? `${calcDiscountedPrice(selectedProduct.price, selectedProduct.discountPercent)} (${selectedProduct.discountPercent}% OFF! Was ${selectedProduct.price})` : selectedProduct.price}\n📂 Category: ${selectedProduct.category}\n\nPlease share more details. Thank you!`)}`} target="_blank" rel="noopener noreferrer" onClick={() => trackContact('whatsapp_product')}>
                   <Button size="lg" variant="outline" className="border-green-500/50 text-green-400 hover:bg-green-500/10 hover:border-green-400">
                     <MessageCircle className="w-5 h-5 mr-2" />
                     WhatsApp
@@ -562,7 +563,7 @@ export default function HomePage() {
                   <div key={product.id} className={`scroll-reveal scroll-reveal-delay-${Math.min((index % 4) + 1, 4)}`}>
                     <div
                       className="product-card group relative rounded-2xl overflow-hidden bg-white/5 border border-white/8 hover:border-sky-600/40 transition-all duration-500 cursor-pointer card-shine"
-                      onClick={() => { setSelectedProduct(product); setDetailImageIndex(0); setDetailImageKey(prev => prev + 1) }}
+                      onClick={() => { setSelectedProduct(product); setDetailImageIndex(0); setDetailImageKey(prev => prev + 1); trackViewContent(product.name, product.category, product.price) }}
                     >
                       <div className="relative aspect-square overflow-hidden">
                         <img src={product.image} alt={product.name} loading="lazy" className="product-card-img w-full h-full object-cover" />
@@ -810,7 +811,7 @@ export default function HomePage() {
                   Contact Us
                 </Button>
               </Link>
-              <a href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Hi Home Sense! 👋\n\nI\'m interested in your sanitary ware products. Please share more details. Thank you!')}`} target="_blank" rel="noopener noreferrer">
+              <a href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Hi Home Sense! 👋\n\nI\'m interested in your sanitary ware products. Please share more details. Thank you!')}`} target="_blank" rel="noopener noreferrer" onClick={() => trackContact('whatsapp_home')}>
                 <Button size="lg" variant="outline" className="border-green-500/50 text-green-400 hover:bg-green-500/10 hover:border-green-400">
                   <MessageCircle className="w-5 h-5 mr-2" />
                   WhatsApp

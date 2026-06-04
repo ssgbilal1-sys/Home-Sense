@@ -36,6 +36,8 @@ model SiteSettings {
   address       String   @default("")
   businessHours String   @default("Mon-Sat: 10:00 AM - 8:00 PM|Sunday: Closed")
   mapUrl        String   @default("")
+  metaPixelId   String   @default("")
+  tiktokPixelId String   @default("")
   updatedAt     DateTime @updatedAt
 }
 

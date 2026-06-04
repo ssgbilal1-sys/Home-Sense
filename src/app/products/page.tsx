@@ -8,6 +8,7 @@ import {
   Eye, Percent
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { trackContact, trackViewContent } from '@/lib/pixel'
 
 interface Product {
   id: string
@@ -275,7 +276,7 @@ export default function ProductsPage() {
                     <Phone className="w-5 h-5 mr-2" />Get Quote
                   </Button>
                 </a>
-                <a href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi Home Sense! 👋\n\nI'm interested in:\n\n📦 *${selectedProduct.name}*\n💰 Price: ${selectedProduct.discountPercent > 0 ? `${calcDiscountedPrice(selectedProduct.price, selectedProduct.discountPercent)} (${selectedProduct.discountPercent}% OFF! Was ${selectedProduct.price})` : selectedProduct.price}\n📂 Category: ${selectedProduct.category}\n\nPlease share more details. Thank you!`)}`} target="_blank" rel="noopener noreferrer">
+                <a href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi Home Sense! 👋\n\nI'm interested in:\n\n📦 *${selectedProduct.name}*\n💰 Price: ${selectedProduct.discountPercent > 0 ? `${calcDiscountedPrice(selectedProduct.price, selectedProduct.discountPercent)} (${selectedProduct.discountPercent}% OFF! Was ${selectedProduct.price})` : selectedProduct.price}\n📂 Category: ${selectedProduct.category}\n\nPlease share more details. Thank you!`)}`} target="_blank" rel="noopener noreferrer" onClick={() => trackContact('whatsapp_product')}>
                   <Button size="lg" variant="outline" className="border-green-500/50 text-green-400 hover:bg-green-500/10 hover:border-green-400">
                     <MessageCircle className="w-5 h-5 mr-2" />WhatsApp
                   </Button>
@@ -389,7 +390,7 @@ export default function ProductsPage() {
                   <div key={product.id} className={`scroll-reveal scroll-reveal-delay-${Math.min((index % 4) + 1, 4)}`}>
                     <div
                       className="product-card group relative rounded-2xl overflow-hidden bg-white/5 border border-white/8 hover:border-sky-600/40 transition-all duration-500 cursor-pointer card-shine"
-                      onClick={() => { setSelectedProduct(product); setDetailImageIndex(0); setDetailImageKey(p => p + 1) }}
+                      onClick={() => { setSelectedProduct(product); setDetailImageIndex(0); setDetailImageKey(p => p + 1); trackViewContent(product.name, product.category, product.price) }}
                     >
                       <div className="relative aspect-square overflow-hidden">
                         <img src={product.image} alt={product.name} loading="lazy" className="product-card-img w-full h-full object-cover" />
@@ -444,7 +445,7 @@ export default function ProductsPage() {
                             )}
                           </div>
                           <Button size="sm" className="bg-gradient-to-r from-sky-700 to-sky-500 hover:from-sky-600 hover:to-sky-400 text-white border-0 shadow-md shadow-sky-600/20 btn-gradient-shift"
-                            onClick={(e) => { e.stopPropagation(); setSelectedProduct(product); setDetailImageIndex(0); setDetailImageKey(p => p + 1) }}>
+                            onClick={(e) => { e.stopPropagation(); setSelectedProduct(product); setDetailImageIndex(0); setDetailImageKey(p => p + 1); trackViewContent(product.name, product.category, product.price) }}>
                             View Details
                           </Button>
                         </div>

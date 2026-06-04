@@ -6,6 +6,7 @@ import {
   MapPin, Clock, Navigation, ExternalLink
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { trackContact, trackInitiateCheckout } from '@/lib/pixel'
 
 interface SiteSettings {
   phone: string
@@ -104,12 +105,12 @@ export default function ContactPage() {
             <div className="rounded-2xl border border-white/8 bg-white/3 p-6 sm:p-8 card-shine">
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {[
-                  { icon: Phone, label: 'Call Us', value: settings.phone, href: `tel:${settings.phone}`, color: 'from-green-500/20 to-green-600/20 border-green-500/20', iconColor: 'text-green-400' },
-                  { icon: MessageCircle, label: 'WhatsApp', value: settings.whatsapp, href: `https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Hi Home Sense! 👋\n\nI\'m interested in your sanitary ware products. Please share more details. Thank you!')}`, color: 'from-green-500/20 to-green-600/20 border-green-500/20', iconColor: 'text-green-400' },
-                  { icon: Mail, label: 'Email', value: settings.email, href: `mailto:${settings.email}`, color: 'from-sky-500/20 to-sky-700/20 border-sky-500/20 border-sky-500/20', iconColor: 'text-sky-400' },
-                  { icon: Instagram, label: 'Instagram', value: settings.instagram, href: `https://instagram.com/${settings.instagram.replace('@', '')}`, color: 'from-pink-500/20 to-purple-600/20 border-pink-500/20', iconColor: 'text-pink-400' },
-                  ...(settings.facebook ? [{ icon: Facebook, label: 'Facebook', value: settings.facebook.replace(/https?:\/\/(www\.)?facebook\.com\/?/i, '').replace(/\/$/, '') || 'Facebook Page', href: settings.facebook, color: 'from-sky-600/20 to-sky-800/20 border-sky-600/20', iconColor: 'text-sky-500' }] : []),
-                  ...(settings.youtube ? [{ icon: Youtube, label: 'YouTube', value: settings.youtube.replace(/https?:\/\/(www\.)?youtube\.com\/(c\/|@)?/i, '').replace(/\/$/, '') || 'YouTube Channel', href: settings.youtube, color: 'from-red-500/20 to-red-700/20 border-red-500/20', iconColor: 'text-red-400' }] : []),
+                  { icon: Phone, label: 'Call Us', value: settings.phone, href: `tel:${settings.phone}`, color: 'from-green-500/20 to-green-600/20 border-green-500/20', iconColor: 'text-green-400', trackAction: 'phone_call' },
+                  { icon: MessageCircle, label: 'WhatsApp', value: settings.whatsapp, href: `https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Hi Home Sense! 👋\n\nI\'m interested in your sanitary ware products. Please share more details. Thank you!')}`, color: 'from-green-500/20 to-green-600/20 border-green-500/20', iconColor: 'text-green-400', trackAction: 'whatsapp_contact' },
+                  { icon: Mail, label: 'Email', value: settings.email, href: `mailto:${settings.email}`, color: 'from-sky-500/20 to-sky-700/20 border-sky-500/20 border-sky-500/20', iconColor: 'text-sky-400', trackAction: 'email' },
+                  { icon: Instagram, label: 'Instagram', value: settings.instagram, href: `https://instagram.com/${settings.instagram.replace('@', '')}`, color: 'from-pink-500/20 to-purple-600/20 border-pink-500/20', iconColor: 'text-pink-400', trackAction: 'instagram' },
+                  ...(settings.facebook ? [{ icon: Facebook, label: 'Facebook', value: settings.facebook.replace(/https?:\/\/(www\.)?facebook\.com\/?/i, '').replace(/\/$/, '') || 'Facebook Page', href: settings.facebook, color: 'from-sky-600/20 to-sky-800/20 border-sky-600/20', iconColor: 'text-sky-500', trackAction: 'facebook' }] : []),
+                  ...(settings.youtube ? [{ icon: Youtube, label: 'YouTube', value: settings.youtube.replace(/https?:\/\/(www\.)?youtube\.com\/(c\/|@)?/i, '').replace(/\/$/, '') || 'YouTube Channel', href: settings.youtube, color: 'from-red-500/20 to-red-700/20 border-red-500/20', iconColor: 'text-red-400', trackAction: 'youtube' }] : []),
                 ].map((contact, i) => (
                   <a
                     key={i}
@@ -117,6 +118,7 @@ export default function ContactPage() {
                     target={contact.href.startsWith('http') ? '_blank' : undefined}
                     rel={contact.href.startsWith('http') ? 'noopener noreferrer' : undefined}
                     className="flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-white/5 transition-colors group"
+                    onClick={() => trackContact(contact.trackAction || 'contact')}
                   >
                     <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${contact.color} border flex items-center justify-center icon-bounce-hover`}>
                       <contact.icon className={`w-5 h-5 ${contact.iconColor}`} />
@@ -279,6 +281,7 @@ export default function ContactPage() {
                         href={directionsUrl}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={() => trackInitiateCheckout('get_directions')}
                         className="flex items-center justify-center gap-2 w-full px-5 py-3 rounded-xl bg-gradient-to-r from-sky-700 to-sky-500 hover:from-sky-600 hover:to-sky-400 text-white font-medium text-sm transition-all hover:-translate-y-0.5"
                       >
                         <Navigation className="w-4 h-4" />

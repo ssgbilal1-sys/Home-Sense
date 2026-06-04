@@ -70,9 +70,21 @@ export async function POST() {
       ADD COLUMN IF NOT EXISTS "discountPercent" INTEGER NOT NULL DEFAULT 0;
     `)
 
+    // Add metaPixelId column to SiteSettings if not exists
+    await pool.query(`
+      ALTER TABLE "SiteSettings"
+      ADD COLUMN IF NOT EXISTS "metaPixelId" TEXT NOT NULL DEFAULT '';
+    `)
+
+    // Add tiktokPixelId column to SiteSettings if not exists
+    await pool.query(`
+      ALTER TABLE "SiteSettings"
+      ADD COLUMN IF NOT EXISTS "tiktokPixelId" TEXT NOT NULL DEFAULT '';
+    `)
+
     return NextResponse.json({
       success: true,
-      message: 'Migration completed: businessHours, mapUrl columns added to SiteSettings; discountPrice, onSale, discountPercent columns added to Product; Review table created.',
+      message: 'Migration completed: businessHours, mapUrl, metaPixelId, tiktokPixelId columns added to SiteSettings; discountPrice, onSale, discountPercent columns added to Product; Review table created.',
     })
   } catch (error: any) {
     console.error('Migration error:', error)
