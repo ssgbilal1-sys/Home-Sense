@@ -379,7 +379,7 @@ export default function ProductDetailClient({ productId }: { productId: string }
         </div>
 
         {/* Reviews Section */}
-        <div className="mt-16 scroll-reveal">
+        <div className="mt-16">
           <div className="rounded-2xl border border-white/8 bg-white/3 p-6 sm:p-8">
             {/* Reviews Header */}
             <div className="flex items-center gap-4 mb-6">
