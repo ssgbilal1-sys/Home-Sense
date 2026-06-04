@@ -49,12 +49,19 @@ export const db = {
       const { data, error } = await query
       if (error) throw new Error(error.message)
       // Provide defaults for new columns that may not exist yet in the database
-      return (data || []).map((item: any) => ({
-        discountPrice: '',
-        onSale: false,
-        discountPercent: 0,
-        ...item,
-      }))
+      return (data || []).map((item: any) => {
+        // Check if discount has expired
+        const isExpired = item.discountExpiresAt && new Date(item.discountExpiresAt) < new Date()
+        return {
+          discountPrice: '',
+          onSale: false,
+          discountPercent: 0,
+          discountExpiresAt: null,
+          ...item,
+          // If discount expired, override to no discount
+          ...(isExpired ? { discountPercent: 0, onSale: false, discountPrice: '' } : {}),
+        }
+      })
     },
 
     findUnique: async (opts: { where: { id: string } }) => {
@@ -66,11 +73,17 @@ export const db = {
         .single()
       if (error && error.code !== 'PGRST116') throw new Error(error.message)
       // Provide defaults for new columns that may not exist yet in the database
+      if (!data) return null
+      // Check if discount has expired
+      const isExpired = data.discountExpiresAt && new Date(data.discountExpiresAt) < new Date()
       return {
         discountPrice: '',
         onSale: false,
         discountPercent: 0,
+        discountExpiresAt: null,
         ...data,
+        // If discount expired, override to no discount
+        ...(isExpired ? { discountPercent: 0, onSale: false, discountPrice: '' } : {}),
       }
     },
 
@@ -80,6 +93,7 @@ export const db = {
         discountPrice: '',
         onSale: false,
         discountPercent: 0,
+        discountExpiresAt: null,
         ...opts.data,
       }
       const dataWithIdAndTimestamp = {
@@ -112,7 +126,7 @@ export const db = {
       // If column doesn't exist, remove problematic columns and retry
       if (error && (error.message?.includes('column') || error.message?.includes('does not exist') || error.code === '42703')) {
         console.warn('Product update failed with column error, retrying without optional columns:', error.message)
-        const knownOptionalCols = ['discountPrice', 'onSale', 'discountPercent', 'video']
+        const knownOptionalCols = ['discountPrice', 'onSale', 'discountPercent', 'discountExpiresAt', 'video']
         const safeData = { ...dataWithTimestamp }
         for (const col of knownOptionalCols) {
           delete safeData[col]

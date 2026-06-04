@@ -9,20 +9,22 @@ datasource db {
 }
 
 model Product {
-  id            String   @id @default(cuid())
-  name          String
-  description   String
-  price         String
-  discountPrice String   @default("")
-  onSale        Boolean  @default(false)
-  image         String
-  images        String   @default("[]")
-  video         String?
-  category      String   @default("Vanities")
-  featured      Boolean  @default(true)
-  order         Int      @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                 String    @id @default(cuid())
+  name               String
+  description        String
+  price              String
+  discountPrice      String    @default("")
+  onSale             Boolean   @default(false)
+  discountPercent    Int       @default(0)
+  discountExpiresAt  DateTime?
+  image              String
+  images             String    @default("[]")
+  video              String?
+  category           String    @default("Vanities")
+  featured           Boolean   @default(true)
+  order              Int       @default(0)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 }
 
 model SiteSettings {

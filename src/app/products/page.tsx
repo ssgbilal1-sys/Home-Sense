@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Droplets, Phone, Star, CheckCircle, Package, Play,
   ChevronLeft, ImageIcon, MessageCircle, Wrench, Bath,
-  Eye, Percent
+  Eye, Percent, Clock
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { trackContact, trackViewContent } from '@/lib/pixel'
@@ -17,6 +17,7 @@ interface Product {
   description: string
   price: string
   discountPercent: number
+  discountExpiresAt: string | null
   image: string
   images: string
   video: string | null
@@ -62,6 +63,20 @@ const getCategoryIcon = (category: string) => {
 }
 
 const isPrimaryCategory = (category: string) => category.toLowerCase() === 'vanities'
+
+// Get remaining time text for discount expiry
+const getDiscountTimeLeft = (expiresAt: string | null): string | null => {
+  if (!expiresAt) return null
+  const now = new Date()
+  const expiry = new Date(expiresAt)
+  const diffMs = expiry.getTime() - now.getTime()
+  if (diffMs <= 0) return null
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+  const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+  if (diffDays > 0) return `${diffDays}d ${diffHours}h left`
+  const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
+  return `${diffHours}h ${diffMins}m left`
+}
 
 const calcDiscountedPrice = (priceStr: string, percent: number): string => {
   if (!percent || percent <= 0) return priceStr
@@ -420,10 +435,15 @@ export default function ProductsPage() {
                           </span>
                         </div>
                         {product.discountPercent > 0 && (
-                          <div className="absolute top-3 right-3">
+                          <div className="absolute top-3 right-3 flex flex-col gap-1">
                             <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-red-500 text-white shadow-lg shadow-red-500/40 flex items-center gap-1 animate-pulse">
                               <Percent className="w-3 h-3" />{product.discountPercent}% OFF
                             </span>
+                            {product.discountExpiresAt && getDiscountTimeLeft(product.discountExpiresAt) && (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-500/90 text-white flex items-center gap-1 shadow-lg shadow-amber-500/30">
+                                <Clock className="w-2.5 h-2.5" />{getDiscountTimeLeft(product.discountExpiresAt)}
+                              </span>
+                            )}
                           </div>
                         )}
                         {totalImages > 1 && (

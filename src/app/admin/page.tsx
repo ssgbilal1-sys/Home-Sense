@@ -101,7 +101,7 @@ export default function AdminPage() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [showProductDialog, setShowProductDialog] = useState(false)
   const [formData, setFormData] = useState({
-    name: '', description: '', price: '', discountPercent: 0,
+    name: '', description: '', price: '', discountPercent: 0, discountDuration: 0,
     image: '', images: [] as string[], video: '', category: 'Vanities',
     featured: true, order: 0,
   })
@@ -386,14 +386,14 @@ export default function AdminPage() {
       try { parsedImages = JSON.parse(product.images || '[]') } catch {}
       setFormData({
         name: product.name, description: product.description, price: product.price,
-        discountPercent: product.discountPercent || 0,
+        discountPercent: product.discountPercent || 0, discountDuration: 0,
         image: product.image, images: parsedImages, video: product.video || '',
         category: product.category, featured: product.featured, order: product.order,
       })
     } else {
       setEditingProduct(null)
       setFormData({
-        name: '', description: '', price: '', discountPercent: 0,
+        name: '', description: '', price: '', discountPercent: 0, discountDuration: 0,
         image: '', images: [], video: '', category: 'Vanities', featured: true, order: products.length + 1,
       })
     }
@@ -1276,6 +1276,32 @@ ALTER TABLE "Review" DISABLE ROW LEVEL SECURITY;</pre>
                   <span className="text-gray-400 text-lg font-bold">%</span>
                 </div>
               </div>
+              {/* Discount Duration */}
+              {formData.discountPercent > 0 && (
+                <div>
+                  <Label className="text-gray-300">Discount Duration</Label>
+                  <p className="text-xs text-gray-500 mb-2">How long should this discount last? It will auto-expire after the set time.</p>
+                  <div className="flex items-center gap-3">
+                    <Input type="number" min={0} max={365} value={formData.discountDuration || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, discountDuration: Math.min(365, Math.max(0, parseInt(e.target.value) || 0)) }))}
+                      placeholder="0 = no expiry" className="flex-1 bg-white/5 border-amber-500/30 text-white placeholder:text-gray-600 focus:border-amber-500" />
+                    <span className="text-gray-400 text-sm font-medium whitespace-nowrap">Days</span>
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    {[1, 2, 3, 7, 14, 30].map(d => (
+                      <button key={d} type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, discountDuration: d }))}
+                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                          formData.discountDuration === d
+                            ? 'bg-amber-500/30 text-amber-300 border border-amber-500/50'
+                            : 'bg-white/5 text-gray-400 border border-white/10 hover:border-white/30'
+                        }`}>
+                        {d === 1 ? '1 Day' : d < 7 ? `${d} Days` : d === 7 ? '1 Week' : d === 14 ? '2 Weeks' : '1 Month'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               {formData.discountPercent > 0 && formData.price && (
                 <div className="rounded-lg bg-black/30 border border-white/5 p-3 space-y-2">
                   <p className="text-xs text-gray-500 font-medium">Live Preview:</p>
@@ -1284,6 +1310,12 @@ ALTER TABLE "Review" DISABLE ROW LEVEL SECURITY;</pre>
                     <span className="text-sm text-gray-500 line-through">{formData.price}</span>
                     <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-red-500/20 text-red-400 border border-red-500/30">-{formData.discountPercent}%</span>
                   </div>
+                  {formData.discountDuration > 0 && (
+                    <p className="text-xs text-amber-400/80 flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      Expires in {formData.discountDuration} day{formData.discountDuration !== 1 ? 's' : ''} — then auto-removes discount
+                    </p>
+                  )}
                 </div>
               )}
             </div>

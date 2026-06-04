@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import {
   Droplets, Phone, MessageCircle, Star, CheckCircle,
   Wrench, ChevronLeft, Bath, Package,
-  Tag, Send, Loader2, ArrowLeft, Percent
+  Tag, Send, Loader2, ArrowLeft, Percent, Clock
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -19,6 +19,7 @@ interface Product {
   discountPrice: string
   onSale: boolean
   discountPercent: number
+  discountExpiresAt: string | null
   image: string
   images: string
   video: string | null
@@ -178,6 +179,19 @@ export default function ProductDetailClient({ productId }: { productId: string }
     return prefix + discounted.toLocaleString('en-PK')
   }
 
+  // Get remaining time for discount
+  const getDiscountTimeLeft = (expiresAt: string | null): string | null => {
+    if (!expiresAt) return null
+    const diffMs = new Date(expiresAt).getTime() - Date.now()
+    if (diffMs <= 0) return null
+    const d = Math.floor(diffMs / 86400000)
+    const h = Math.floor((diffMs % 86400000) / 3600000)
+    const m = Math.floor((diffMs % 3600000) / 60000)
+    if (d > 0) return `${d} day${d > 1 ? 's' : ''} ${h}h left`
+    if (h > 0) return `${h}h ${m}m left`
+    return `${m} min${m > 1 ? 's' : ''} left`
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#080c14] flex items-center justify-center">
@@ -276,6 +290,12 @@ export default function ProductDetailClient({ productId }: { productId: string }
                     <Percent className="w-4 h-4" />
                     {product.discountPercent}% OFF
                   </span>
+                  {product.discountExpiresAt && getDiscountTimeLeft(product.discountExpiresAt) && (
+                    <span className="mt-2 px-3 py-1 rounded-full text-xs font-medium bg-amber-500/90 text-white flex items-center gap-1.5 shadow-lg shadow-amber-500/30">
+                      <Clock className="w-3 h-3" />
+                      {getDiscountTimeLeft(product.discountExpiresAt)}
+                    </span>
+                  )}
                 </div>
               )}
               {displayImages.length > 1 && (
@@ -349,6 +369,12 @@ export default function ProductDetailClient({ productId }: { productId: string }
                   <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-red-500/20 text-red-400 border border-red-500/30">
                     -{product.discountPercent}%
                   </span>
+                  {product.discountExpiresAt && getDiscountTimeLeft(product.discountExpiresAt) && (
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {getDiscountTimeLeft(product.discountExpiresAt)}
+                    </span>
+                  )}
                 </div>
               ) : (
                 <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent">

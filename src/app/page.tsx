@@ -23,6 +23,7 @@ interface Product {
   description: string
   price: string
   discountPercent: number
+  discountExpiresAt: string | null
   image: string
   images: string
   video: string | null

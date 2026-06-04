@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     if (!auth.authenticated) return auth.response!
 
     const body = await request.json()
-    const { name, description, price, discountPrice, onSale, discountPercent, image, images, video, category, featured, order } = body
+    const { name, description, price, discountPrice, onSale, discountPercent, discountDuration, image, images, video, category, featured, order } = body
 
     if (!name || !description || !price || !image) {
       return NextResponse.json(
@@ -39,6 +39,14 @@ export async function POST(request: Request) {
       ? 'Rs ' + Math.round(numPrice * (1 - discountPercent / 100)).toLocaleString('en-PK')
       : ''
 
+    // Calculate discount expiry time
+    let discountExpiresAt = null
+    if (hasDiscount && discountDuration && discountDuration > 0) {
+      const expiry = new Date()
+      expiry.setDate(expiry.getDate() + discountDuration)
+      discountExpiresAt = expiry.toISOString()
+    }
+
     const product = await db.product.create({
       data: {
         name,
@@ -47,6 +55,7 @@ export async function POST(request: Request) {
         discountPrice: derivedDiscountPrice || discountPrice || '',
         onSale: hasDiscount ? true : (onSale ?? false),
         discountPercent: discountPercent ?? 0,
+        discountExpiresAt,
         image,
         images: images || '[]',
         video: video || null,

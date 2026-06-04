@@ -32,7 +32,7 @@ export async function PUT(
 
     const { id } = await params
     const body = await request.json()
-    const { name, description, price, discountPrice, onSale, discountPercent, image, images, video, category, featured, order } = body
+    const { name, description, price, discountPrice, onSale, discountPercent, discountDuration, image, images, video, category, featured, order } = body
 
     // Auto-derive onSale and discountPrice from discountPercent if provided
     let finalDiscountPrice = discountPrice
@@ -46,6 +46,18 @@ export async function PUT(
       finalOnSale = hasDiscount
     }
 
+    // Calculate discount expiry time
+    let discountExpiresAt: string | null | undefined = undefined
+    if (discountPercent !== undefined && discountDuration !== undefined) {
+      if (discountPercent > 0 && discountDuration > 0) {
+        const expiry = new Date()
+        expiry.setDate(expiry.getDate() + discountDuration)
+        discountExpiresAt = expiry.toISOString()
+      } else {
+        discountExpiresAt = null // Clear expiry if no discount or no duration
+      }
+    }
+
     const product = await db.product.update({
       where: { id },
       data: {
@@ -55,6 +67,7 @@ export async function PUT(
         ...(finalDiscountPrice !== undefined && { discountPrice: finalDiscountPrice }),
         ...(finalOnSale !== undefined && { onSale: finalOnSale }),
         ...(discountPercent !== undefined && { discountPercent }),
+        ...(discountExpiresAt !== undefined && { discountExpiresAt }),
         ...(image !== undefined && { image }),
         ...(images !== undefined && { images }),
         ...(video !== undefined && { video }),
