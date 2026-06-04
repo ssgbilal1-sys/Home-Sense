@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Droplets, Phone, Star, CheckCircle, Package, Play,
@@ -80,6 +81,7 @@ const getProductImages = (product: Product): string[] => {
 }
 
 export default function ProductsPage() {
+  const router = useRouter()
   const [products, setProducts] = useState<Product[]>([])
   const [settings, setSettings] = useState<SiteSettings>({
     phone: '', whatsapp: '', email: '', instagram: '', facebook: '', youtube: '', tiktok: '',
@@ -403,7 +405,7 @@ export default function ProductsPage() {
                   <div key={product.id} className={`scroll-reveal scroll-reveal-delay-${Math.min((index % 4) + 1, 4)}`}>
                     <div
                       className="product-card group relative rounded-2xl overflow-hidden bg-white/5 border border-white/8 hover:border-sky-600/40 transition-all duration-500 cursor-pointer card-shine"
-                      onClick={() => { setSelectedProduct(product); setDetailImageIndex(0); setDetailImageKey(p => p + 1); trackViewContent(product.name, product.category, product.price) }}
+                      onClick={() => { trackViewContent(product.name, product.category, product.price); router.push(`/products/${product.id}`) }}
                     >
                       <div className="relative aspect-square overflow-hidden">
                         <img src={product.image} alt={product.name} loading="lazy" className="product-card-img w-full h-full object-cover" />
@@ -468,7 +470,7 @@ export default function ProductsPage() {
                             )}
                           </div>
                           <Button size="sm" className="bg-gradient-to-r from-sky-700 to-sky-500 hover:from-sky-600 hover:to-sky-400 text-white border-0 shadow-md shadow-sky-600/20 btn-gradient-shift"
-                            onClick={(e) => { e.stopPropagation(); setSelectedProduct(product); setDetailImageIndex(0); setDetailImageKey(p => p + 1); trackViewContent(product.name, product.category, product.price) }}>
+                            onClick={(e) => { e.stopPropagation(); trackViewContent(product.name, product.category, product.price); router.push(`/products/${product.id}`) }}>
                             View Details
                           </Button>
                         </div>
