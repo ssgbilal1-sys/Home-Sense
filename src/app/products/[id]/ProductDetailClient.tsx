@@ -33,13 +33,14 @@ interface SiteSettings {
   instagram: string
   facebook: string
   youtube: string
+  tiktok: string
   address: string
 }
 
 export default function ProductDetailClient({ productId }: { productId: string }) {
   const [product, setProduct] = useState<Product | null>(null)
   const [settings, setSettings] = useState<SiteSettings>({
-    phone: '', whatsapp: '', email: '', instagram: '', facebook: '', youtube: '', address: ''
+    phone: '', whatsapp: '', email: '', instagram: '', facebook: '', youtube: '', tiktok: '', address: ''
   })
   const [loading, setLoading] = useState(true)
   const [imageIndex, setImageIndex] = useState(0)

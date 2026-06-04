@@ -49,6 +49,7 @@ interface SiteSettings {
   instagram: string
   facebook: string
   youtube: string
+  tiktok: string
   address: string
   businessHours: string
   mapUrl: string
@@ -166,6 +167,7 @@ export default function HomePage() {
     instagram: '@zilver.co',
     facebook: '',
     youtube: '',
+    tiktok: '',
     address: '',
     businessHours: 'Mon-Sat: 10:00 AM - 8:00 PM|Sunday: Closed',
     mapUrl: '',

@@ -33,6 +33,7 @@ interface SiteSettings {
   instagram: string
   facebook: string
   youtube: string
+  tiktok: string
   address: string
   businessHours: string
   mapUrl: string
@@ -81,7 +82,7 @@ const getProductImages = (product: Product): string[] => {
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [settings, setSettings] = useState<SiteSettings>({
-    phone: '', whatsapp: '', email: '', instagram: '', facebook: '', youtube: '',
+    phone: '', whatsapp: '', email: '', instagram: '', facebook: '', youtube: '', tiktok: '',
     address: '', businessHours: '', mapUrl: '',
   })
   const [loading, setLoading] = useState(true)

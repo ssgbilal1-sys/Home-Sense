@@ -15,6 +15,7 @@ interface SiteSettings {
   instagram: string
   facebook: string
   youtube: string
+  tiktok: string
   address: string
   businessHours: string
   mapUrl: string
@@ -57,6 +58,7 @@ export default function ContactPage() {
     instagram: '@zilver.co',
     facebook: '',
     youtube: '',
+    tiktok: '',
     address: '',
     businessHours: 'Mon-Sat: 10:00 AM - 8:00 PM|Sunday: Closed',
     mapUrl: '',
@@ -111,6 +113,7 @@ export default function ContactPage() {
                   { icon: Instagram, label: 'Instagram', value: settings.instagram, href: `https://instagram.com/${settings.instagram.replace('@', '')}`, color: 'from-pink-500/20 to-purple-600/20 border-pink-500/20', iconColor: 'text-pink-400', trackAction: 'instagram' },
                   ...(settings.facebook ? [{ icon: Facebook, label: 'Facebook', value: settings.facebook.replace(/https?:\/\/(www\.)?facebook\.com\/?/i, '').replace(/\/$/, '') || 'Facebook Page', href: settings.facebook, color: 'from-sky-600/20 to-sky-800/20 border-sky-600/20', iconColor: 'text-sky-500', trackAction: 'facebook' }] : []),
                   ...(settings.youtube ? [{ icon: Youtube, label: 'YouTube', value: settings.youtube.replace(/https?:\/\/(www\.)?youtube\.com\/(c\/|@)?/i, '').replace(/\/$/, '') || 'YouTube Channel', href: settings.youtube, color: 'from-red-500/20 to-red-700/20 border-red-500/20', iconColor: 'text-red-400', trackAction: 'youtube' }] : []),
+                  ...(settings.tiktok ? [{ icon: null, label: 'TikTok', value: settings.tiktok.replace(/https?:\/\/(www\.)?tiktok\.com\//i, '').replace(/\/$/, '') || 'TikTok', href: settings.tiktok, color: 'from-pink-500/20 to-purple-700/20 border-pink-500/20', iconColor: 'text-pink-400', trackAction: 'tiktok', isTikTok: true }] : []),
                 ].map((contact, i) => (
                   <a
                     key={i}
@@ -121,7 +124,11 @@ export default function ContactPage() {
                     onClick={() => trackContact(contact.trackAction || 'contact')}
                   >
                     <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${contact.color} border flex items-center justify-center icon-bounce-hover`}>
-                      <contact.icon className={`w-5 h-5 ${contact.iconColor}`} />
+                      {contact.isTikTok ? (
+                        <svg className={`w-5 h-5 ${contact.iconColor}`} viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+                      ) : (
+                        <contact.icon className={`w-5 h-5 ${contact.iconColor}`} />
+                      )}
                     </div>
                     <div className="text-center">
                       <div className="font-semibold text-white text-xs">{contact.label}</div>
