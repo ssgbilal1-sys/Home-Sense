@@ -95,7 +95,7 @@ export default function AdminPage() {
   const [adminPassword, setAdminPassword] = useState('')
   const [loginLoading, setLoginLoading] = useState(false)
   const [showAdminLogin, setShowAdminLogin] = useState(true)
-  const [adminTab, setAdminTab] = useState<'products' | 'categories' | 'settings' | 'reviews'>('products')
+  const [adminTab, setAdminTab] = useState<'products' | 'categories' | 'settings' | 'reviews' | 'productReviews'>('products')
 
   // Product form state
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
@@ -137,6 +137,10 @@ export default function AdminPage() {
     address: '', businessHours: 'Mon-Sat: 10:00 AM - 8:00 PM|Sunday: Closed', mapUrl: '', metaPixelId: '', tiktokPixelId: '',
   })
   const [savingSettings, setSavingSettings] = useState(false)
+
+  // Product Reviews state
+  const [productReviews, setProductReviews] = useState<any[]>([])
+  const [productReviewsLoading, setProductReviewsLoading] = useState(false)
 
   const { toast } = useToast()
   const extraImageInputRef = useRef<HTMLInputElement>(null)
@@ -251,6 +255,26 @@ export default function AdminPage() {
   }, [])
 
   useEffect(() => { fetchSettings() }, [fetchSettings])
+
+  // Fetch product reviews when tab is active
+  const fetchProductReviews = useCallback(async () => {
+    setProductReviewsLoading(true)
+    try {
+      const res = await fetch('/api/product-reviews')
+      if (res.ok) {
+        const data = await res.json()
+        setProductReviews(data)
+      }
+    } catch (error) {
+      console.error('Error fetching product reviews:', error)
+    } finally {
+      setProductReviewsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (adminTab === 'productReviews') fetchProductReviews()
+  }, [adminTab, fetchProductReviews])
 
   // Admin login
   const handleAdminLogin = async () => {
@@ -605,7 +629,8 @@ export default function AdminPage() {
             { key: 'products' as const, label: 'Products', icon: Package },
             { key: 'categories' as const, label: 'Categories', icon: Bath },
             { key: 'settings' as const, label: 'Contact Details', icon: Settings },
-            { key: 'reviews' as const, label: 'Reviews', icon: Star },
+            { key: 'reviews' as const, label: 'Site Reviews', icon: Star },
+            { key: 'productReviews' as const, label: 'Product Reviews', icon: Star },
           ].map((tab) => (
             <button
               key={tab.key}
@@ -973,6 +998,129 @@ ALTER TABLE "Review" DISABLE ROW LEVEL SECURITY;</pre>
                   </div>
                 ))}
               </div>
+            )}
+          </>
+        )}
+
+        {/* Product Reviews Tab */}
+        {adminTab === 'productReviews' && (
+          <>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold">Product Reviews</h2>
+                <p className="text-xs text-gray-500 mt-1">Customer-submitted reviews on products. Approve to make them visible.</p>
+              </div>
+              <Button onClick={() => fetchProductReviews()} variant="outline" size="sm" className="border-white/10 text-sky-400 hover:bg-sky-500/10 hover:border-sky-400">
+                Refresh
+              </Button>
+            </div>
+            {productReviewsLoading ? (
+              <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-sky-400" /></div>
+            ) : productReviews.length === 0 ? (
+              <div className="text-center py-20 rounded-2xl border border-dashed border-white/10">
+                <Star className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-400 mb-2">No Product Reviews Yet</h3>
+                <p className="text-gray-600">When customers submit reviews on products, they will appear here for approval.</p>
+              </div>
+            ) : (
+              <>
+                {/* Pending reviews first */}
+                {productReviews.filter(r => !r.approved).length > 0 && (
+                  <div className="mb-8">
+                    <h3 className="text-sm font-semibold text-amber-400 mb-3 flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                      Pending Approval ({productReviews.filter(r => !r.approved).length})
+                    </h3>
+                    <div className="space-y-3">
+                      {productReviews.filter(r => !r.approved).map((review) => (
+                        <div key={review.id} className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-600/30 to-amber-400/30 border border-amber-500/20 flex items-center justify-center text-amber-300 font-bold text-sm">
+                                {review.name.charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <div className="text-white text-sm font-medium">{review.name}</div>
+                                <div className="flex items-center gap-1 mt-0.5">
+                                  {[1, 2, 3, 4, 5].map(s => (
+                                    <Star key={s} className={`w-3 h-3 ${s <= review.rating ? 'text-amber-400 fill-amber-400' : 'text-gray-600'}`} />
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                            <span className="text-xs text-gray-500">{new Date(review.createdAt).toLocaleDateString('en-PK', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                          </div>
+                          <p className="text-sm text-gray-300 mb-3 ml-12">&ldquo;{review.comment}&rdquo;</p>
+                          <div className="flex gap-2 ml-12">
+                            <Button onClick={async () => {
+                              await fetch(`/api/product-reviews/${review.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ approved: true }) })
+                              toast({ title: 'Approved', description: 'Review is now visible on the product page.' })
+                              fetchProductReviews()
+                            }} size="sm" className="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white border-0">
+                              Approve
+                            </Button>
+                            <Button onClick={async () => {
+                              await fetch(`/api/product-reviews/${review.id}`, { method: 'DELETE' })
+                              toast({ title: 'Deleted', description: 'Review has been removed.' })
+                              fetchProductReviews()
+                            }} variant="outline" size="sm" className="border-white/10 text-red-400 hover:bg-red-500/10 hover:border-red-400">
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {/* Approved reviews */}
+                {productReviews.filter(r => r.approved).length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-green-400 mb-3 flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-green-400" />
+                      Approved ({productReviews.filter(r => r.approved).length})
+                    </h3>
+                    <div className="space-y-3">
+                      {productReviews.filter(r => r.approved).map((review) => (
+                        <div key={review.id} className="rounded-xl border border-white/8 bg-white/3 p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-sky-600/30 to-sky-400/30 border border-white/10 flex items-center justify-center text-sky-300 font-bold text-sm">
+                                {review.name.charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <div className="text-white text-sm font-medium">{review.name}</div>
+                                <div className="flex items-center gap-1 mt-0.5">
+                                  {[1, 2, 3, 4, 5].map(s => (
+                                    <Star key={s} className={`w-3 h-3 ${s <= review.rating ? 'text-amber-400 fill-amber-400' : 'text-gray-600'}`} />
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                            <span className="text-xs text-gray-500">{new Date(review.createdAt).toLocaleDateString('en-PK', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                          </div>
+                          <p className="text-sm text-gray-400 ml-12">&ldquo;{review.comment}&rdquo;</p>
+                          <div className="flex gap-2 ml-12 mt-3">
+                            <Button onClick={async () => {
+                              await fetch(`/api/product-reviews/${review.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ approved: false }) })
+                              toast({ title: 'Hidden', description: 'Review has been hidden.' })
+                              fetchProductReviews()
+                            }} variant="outline" size="sm" className="border-white/10 text-amber-400 hover:bg-amber-500/10 hover:border-amber-400">
+                              Hide
+                            </Button>
+                            <Button onClick={async () => {
+                              await fetch(`/api/product-reviews/${review.id}`, { method: 'DELETE' })
+                              toast({ title: 'Deleted', description: 'Review has been removed.' })
+                              fetchProductReviews()
+                            }} variant="outline" size="sm" className="border-white/10 text-red-400 hover:bg-red-500/10 hover:border-red-400">
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </>
         )}

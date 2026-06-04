@@ -5,9 +5,12 @@ import { motion } from 'framer-motion'
 import {
   Droplets, Phone, Mail, MessageCircle, Star, CheckCircle,
   Wrench, ChevronLeft, Play, Menu, X, Bath, Package,
-  ArrowRight, Shield, Facebook, Instagram, Youtube, Settings, Tag
+  ArrowRight, Shield, Facebook, Instagram, Youtube, Settings, Tag, Send, Loader2
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { useToast } from '@/hooks/use-toast'
 
 interface Product {
   id: string
@@ -37,6 +40,16 @@ interface SiteSettings {
   address: string
 }
 
+interface ProductReview {
+  id: string
+  productId: string
+  name: string
+  rating: number
+  comment: string
+  approved: boolean
+  createdAt: string
+}
+
 export default function ProductDetailClient({ productId }: { productId: string }) {
   const [product, setProduct] = useState<Product | null>(null)
   const [settings, setSettings] = useState<SiteSettings>({
@@ -44,6 +57,15 @@ export default function ProductDetailClient({ productId }: { productId: string }
   })
   const [loading, setLoading] = useState(true)
   const [imageIndex, setImageIndex] = useState(0)
+
+  // Reviews state
+  const [reviews, setReviews] = useState<ProductReview[]>([])
+  const [reviewName, setReviewName] = useState('')
+  const [reviewRating, setReviewRating] = useState(5)
+  const [reviewComment, setReviewComment] = useState('')
+  const [submittingReview, setSubmittingReview] = useState(false)
+  const [hoverRating, setHoverRating] = useState(0)
+  const { toast } = useToast()
 
   useEffect(() => {
     const fetchData = async () => {
@@ -67,6 +89,53 @@ export default function ProductDetailClient({ productId }: { productId: string }
     }
     fetchData()
   }, [productId])
+
+  // Fetch product reviews
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const res = await fetch(`/api/product-reviews?productId=${productId}`)
+        if (res.ok) {
+          setReviews(await res.json())
+        }
+      } catch (e) {
+        console.error('Error fetching reviews:', e)
+      }
+    }
+    fetchReviews()
+  }, [productId])
+
+  // Submit review
+  const handleSubmitReview = async () => {
+    if (!reviewName.trim() || !reviewComment.trim()) {
+      toast({ title: 'Missing Fields', description: 'Please enter your name and review.', variant: 'destructive' })
+      return
+    }
+    setSubmittingReview(true)
+    try {
+      const res = await fetch('/api/product-reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId, name: reviewName, rating: reviewRating, comment: reviewComment }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        toast({ title: 'Review Submitted!', description: 'Thank you! Your review will appear after approval.' })
+        setReviewName('')
+        setReviewRating(5)
+        setReviewComment('')
+      } else {
+        toast({ title: 'Error', description: data.error || 'Failed to submit review.', variant: 'destructive' })
+      }
+    } catch {
+      toast({ title: 'Error', description: 'Failed to submit review.', variant: 'destructive' })
+    } finally {
+      setSubmittingReview(false)
+    }
+  }
+
+  // Average rating
+  const avgRating = reviews.length > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 0
 
   const getProductImages = (): string[] => {
     if (!product) return []
@@ -322,6 +391,120 @@ export default function ProductDetailClient({ productId }: { productId: string }
                   WhatsApp
                 </Button>
               </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="mt-16 scroll-reveal">
+          <div className="rounded-2xl border border-white/8 bg-white/3 p-6 sm:p-8">
+            {/* Reviews Header */}
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-600/20 border border-amber-500/20 flex items-center justify-center">
+                <Star className="w-6 h-6 text-amber-400" />
+              </div>
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-white">Customer Reviews</h2>
+                <div className="flex items-center gap-2 mt-1">
+                  {reviews.length > 0 ? (
+                    <>
+                      <div className="flex items-center">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Star key={s} className={`w-4 h-4 ${s <= Math.round(avgRating) ? 'text-amber-400 fill-amber-400' : 'text-gray-600'}`} />
+                        ))}
+                      </div>
+                      <span className="text-sm text-gray-400">{avgRating.toFixed(1)} out of 5</span>
+                      <span className="text-xs text-gray-500">({reviews.length} review{reviews.length !== 1 ? 's' : ''})</span>
+                    </>
+                  ) : (
+                    <span className="text-sm text-gray-500">No reviews yet. Be the first to review!</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Existing Reviews */}
+            {reviews.length > 0 && (
+              <div className="space-y-4 mb-8">
+                {reviews.map((review) => (
+                  <div key={review.id} className="rounded-xl border border-white/8 bg-white/3 p-4 sm:p-5">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-sky-600/30 to-sky-400/30 border border-sky-500/20 flex items-center justify-center text-sm font-bold text-sky-300">
+                          {review.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="font-medium text-white text-sm">{review.name}</div>
+                          <div className="flex items-center gap-1 mt-0.5">
+                            {[1, 2, 3, 4, 5].map((s) => (
+                              <Star key={s} className={`w-3 h-3 ${s <= review.rating ? 'text-amber-400 fill-amber-400' : 'text-gray-600'}`} />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <span className="text-xs text-gray-500">{new Date(review.createdAt).toLocaleDateString('en-PK', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                    </div>
+                    <p className="text-gray-300 text-sm leading-relaxed ml-12">{review.comment}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Write a Review Form */}
+            <div className="border-t border-white/8 pt-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Write a Review</h3>
+              <div className="space-y-4">
+                {/* Star Rating */}
+                <div>
+                  <label className="text-gray-300 text-sm mb-2 block">Your Rating</label>
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setReviewRating(s)}
+                        onMouseEnter={() => setHoverRating(s)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        className="transition-transform hover:scale-110"
+                      >
+                        <Star className={`w-7 h-7 transition-colors ${(hoverRating || reviewRating) >= s ? 'text-amber-400 fill-amber-400' : 'text-gray-600 hover:text-amber-400/50'}`} />
+                      </button>
+                    ))}
+                    <span className="text-sm text-gray-400 ml-2">{reviewRating}/5</span>
+                  </div>
+                </div>
+
+                {/* Name */}
+                <div>
+                  <label className="text-gray-300 text-sm mb-2 block">Your Name</label>
+                  <Input
+                    value={reviewName}
+                    onChange={(e) => setReviewName(e.target.value)}
+                    placeholder="Enter your name"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-500"
+                  />
+                </div>
+
+                {/* Comment */}
+                <div>
+                  <label className="text-gray-300 text-sm mb-2 block">Your Review</label>
+                  <Textarea
+                    value={reviewComment}
+                    onChange={(e) => setReviewComment(e.target.value)}
+                    placeholder="Share your experience with this product..."
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-500 min-h-[100px]"
+                  />
+                </div>
+
+                <Button
+                  onClick={handleSubmitReview}
+                  disabled={submittingReview}
+                  className="bg-gradient-to-r from-sky-700 to-sky-500 hover:from-sky-600 hover:to-sky-400 text-white border-0"
+                >
+                  {submittingReview ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
+                  {submittingReview ? 'Submitting...' : 'Submit Review'}
+                </Button>
+              </div>
             </div>
           </div>
         </div>

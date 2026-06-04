@@ -90,6 +90,7 @@ export default function ProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [detailImageIndex, setDetailImageIndex] = useState(0)
   const [detailImageKey, setDetailImageKey] = useState(0)
+  const [reviewStats, setReviewStats] = useState<Record<string, { avg: number; count: number }>>({})
 
   // Scroll-reveal observer
   useEffect(() => {
@@ -127,6 +128,17 @@ export default function ProductsPage() {
   }, [])
 
   useEffect(() => { fetchSettings() }, [fetchSettings])
+
+  // Fetch review stats
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch('/api/product-reviews/stats')
+        if (res.ok) setReviewStats(await res.json())
+      } catch {}
+    }
+    fetchStats()
+  }, [])
 
   const filteredProducts = useMemo(() =>
     products.filter(p => !selectedCategory || p.category.toLowerCase() === selectedCategory.toLowerCase()),
@@ -431,7 +443,17 @@ export default function ProductsPage() {
                         </div>
                       </div>
                       <div className="p-5">
-                        <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-sky-300 transition-colors duration-300">{product.name}</h3>
+                        <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-sky-300 transition-colors duration-300">{product.name}</h3>
+                        {reviewStats[product.id] && reviewStats[product.id].count > 0 && (
+                          <div className="flex items-center gap-1.5 mb-2">
+                            <div className="flex items-center">
+                              {[1, 2, 3, 4, 5].map((s) => (
+                                <Star key={s} className={`w-3.5 h-3.5 ${s <= Math.round(reviewStats[product.id].avg) ? 'text-amber-400 fill-amber-400' : 'text-gray-600'}`} />
+                              ))}
+                            </div>
+                            <span className="text-xs text-gray-400">({reviewStats[product.id].count})</span>
+                          </div>
+                        )}
                         <p className="text-sm text-gray-400 mb-4 line-clamp-2">{product.description}</p>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
